@@ -1,0 +1,445 @@
+<html>
+<head>
+  <title>JavaScript API</title>
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js">
+
+</head>
+
+<body>
+
+  <div class="header">
+    <h3>Talking to Geth</h3>
+  </div>
+
+  <div id="infodiv">
+
+  </div>
+
+</body>
+
+<script src="web3.min.js"></script>
+<script src="bignumber.min.js"></script>
+<script src ="https://code.jquery.com/jquery-3.1.0.slim.min.js"></script>
+<script type="text/javascript">
+
+// borrowed from http://stackoverflow.com/questions/14895287/how-to-print-object-array-in-javascript
+function print_r(printthis, returnoutput) {
+    var output = '';
+
+    if($.isArray(printthis) || typeof(printthis) == 'object') {
+        for(var i in printthis) {
+            output += i + ' : ' + print_r(printthis[i], true) + '\n';
+        }
+    }else {
+        output += printthis;
+    }
+    if(returnoutput && returnoutput == true) {
+        return output;
+    }else {
+        append(output);
+    }
+}
+
+function append(extra) {
+    var div = document.getElementById('infodiv');
+    div.innerHTML = div.innerHTML + "<br>" + "<p>" + extra + "</p>";
+}
+
+var web3;
+
+if (typeof web3 !== 'undefined') {
+  web3 = new Web3(web3.currentProvider);
+} else {
+  // set the provider you want from Web3.providers
+  web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+}
+
+
+for(var i=0; i<web3.eth.accounts.length; i++) {
+  var account = web3.eth.accounts[i];
+  var password = "ilikelittlepaddy";
+  var balance = web3.eth.getBalance(web3.eth.accounts[i]);
+  web3.personal.unlockAccount(account,password);
+  append("Key: " + web3.eth.accounts[i] + " Balance: " + balance.toString(10));
+}
+
+var abi = [{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"eligible","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"vG","type":"uint256[3]"},{"name":"r","type":"uint256"}],"name":"register","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeTally","outputs":[{"name":"res","type":"uint256[2]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"addressid","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"xG","type":"uint256[2]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"submitVote","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"addr","type":"address"}],"name":"signup","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"testingEvents","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"name":"registeredkey","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"votecast","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"x","type":"uint256"},{"name":"v","type":"uint256"},{"name":"xG","type":"uint256[2]"}],"name":"createZKP","outputs":[{"name":"res","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeReconstructedPublicKeys","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"registered","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"name":"reconstructed","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"name":"votes","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"r1","type":"uint256"},{"name":"d1","type":"uint256"},{"name":"x","type":"uint256"},{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"}],"name":"create1outof2ZKPYesVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"privkeys","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"r2","type":"uint256"},{"name":"d2","type":"uint256"},{"name":"x","type":"uint256"},{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"}],"name":"create1outof2ZKPNoVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"},{"indexed":false,"name":"res","type":"bool"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"Registered","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"x","type":"uint256"},{"indexed":false,"name":"y","type":"uint256"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"ReconstructedKey","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"},{"indexed":false,"name":"res","type":"bool"}],"name":"RegisterVote","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"tally","type":"uint256"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"Tally","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"message","type":"string"},{"indexed":false,"name":"c","type":"uint256"}],"name":"TestEvent","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"x","type":"uint256"},{"indexed":false,"name":"y","type":"uint256"},{"indexed":false,"name":"c","type":"uint256"}],"name":"Spy","type":"event"}];
+
+var vetoprotocol = web3.eth.contract(abi);
+
+var vetoprotocolAddr = vetoprotocol.at("0xacde33f925e7669e16f14e55ee84dae57867442b");
+
+var registeredCounter = 0;
+var reconstructedCounter = 0;
+var submitVoteCounter = 0;
+
+// var printStrEvt = vetoprotocolAddr.TestEvent({}, '', function(error, result){
+//   if (!error){
+//     print_r("Response: " + result);
+//     append(result.event);
+//     append(result.args.message + "," + result.args.c);
+//   }
+// });
+
+var allevents = vetoprotocolAddr.allEvents({}, '', function(error, result){
+  if (!error){
+    // append("All - " + result.event);
+    if(result.event === "Registered") {
+        append(result.event + "," + result.args.addr + "," + result.args.res + "," + result.args.counter);
+
+        // We need to know the index for each person...
+        // We can use this later on to store reconstructed keys
+        for(var i=0; i<people.length; i++) {
+              if(people[i][8] === result.args.addr) {
+                   people[i][9] = result.args.counter;
+
+                   append(people[i][6] + " -> " + people[i][9]);
+               }
+         }
+
+         registeredCounter = registeredCounter + 1;
+
+         // Once everyone has registered, recompue public keys!
+         if(registeredCounter == people.length) {
+           computePublicKeys();
+         }
+
+    }
+
+    if(result.event === "ReconstructedKey") {
+         append(result.event + "," + result.args.x.toString(10) + "," + result.args.y.toString(10) + "," + result.args.counter);
+         reconstructedCounter = reconstructedCounter + 1;
+
+         for(var i=0; i<people.length; i++) {
+           if(people[i][9].equals(result.args.counter)) {
+             people[i][10] = [result.args.x,result.args.y];
+             append("Found " + people[i][6] + "," + result.args.counter + " reconstructed public key");
+           }
+         }
+
+         // Once we know everyones recomputed public key. We can submit votes.
+         if(reconstructedCounter == people.length) {
+              submitVotes();
+         }
+    }
+
+    if(result.event === "RegisterVote") {
+         append(result.event + "," + result.args.addr + "," + result.args.res);
+         submitVoteCounter = submitVoteCounter + 1;
+
+         if(submitVoteCounter == people.length) {
+            tally();
+         }
+    }
+
+    if(result.event === "Tally") {
+      append(result.event + " - Yes Votes: " + result.args.tally.toString(10) + " and Total Votes Counted: " + result.args.counter.toString(10));
+    }
+
+    if(result.event === "Spy") {
+      // append(result.event + ",(" + result.args.x.toString(10) + "," + result.args.y.toString(10) + ")," + result.args.c);
+    }
+  }
+});
+
+// var res = vetoprotocolAddr.testingEvents.sendTransaction(1,{from:web3.eth.accounts[0]});
+
+// append("Test Event TX id: " + res);
+
+// We submit our ZKP
+// We need to compute yG...
+// We submit yes or no votes
+// Finally tally
+var people = new Array();
+var patrick = new Array();
+var feng = new Array();
+var taha = new Array();
+var sia = new Array();
+var maryam = new Array();
+var ehsan = new Array();
+
+//[0] = x (private key)
+//[1] = xG (public key)
+//[2] = v (random nonce for zkp)
+//[3] = w (random nonce for 1outof2 zkp)
+//[4] = r (1 or 2, random nonce for 1outof2 zkp)
+//[5] = d (1 or 2, random nonce for 1outof2 zkp)
+//[6] = name
+//[7] = vote yes or no
+//[8] = address id
+//[9] = counter;
+//[10] = recomputed public key
+patrick[0] = new BigNumber('98267360357474222909507269499109860943098040616372036222428003026510694303941');
+patrick[1] = [new BigNumber('73237939612439032476053182180693706768154793929054933759978491887589814909358'), new BigNumber('51735071007182064948766754389355348773577567540930203850771361048988074334267')];
+patrick[2] = new BigNumber('20567594079356498279925534677734220219087865066183208809980476230715258100185');
+patrick[3] = new BigNumber('94381251930491405730143977052876021556273283215554481093363017236006934550584');
+patrick[4] = new BigNumber('80225843843476056873522610900451495788177758832197203352493362781152968148130');
+patrick[5] = new BigNumber('23581441608088862935798017677864529356664667380540346511868284012053516044590');
+patrick[6] = "Patrick";
+patrick[7] = 1;
+patrick[8] = web3.eth.accounts[0];
+patrick[9] = -1;
+patrick[10] = -1;
+// patrick[8] = [new BigNumber('73237939612439032476053182180693706768154793929054933759978491887589814909358'), new BigNumber('51735071007182064948766754389355348773577567540930203850771361048988074334267')];
+// patrick[8] = [new BigNumber('47869875940533227780626759400547557891024422879209792968266145471858918538224'), new BigNumber('37064172086712717354299900362532125165644112113493350343365362429513655132928')];
+
+people.push(patrick);
+
+feng[0] = new BigNumber('91616888762172736811586080859376071019633632803310470843089906031712897414792');
+feng[1] = [new BigNumber('98735681744714630642743483097800862353369401550947225088847087710048848386374'), new BigNumber('13826685335838001344479865841588745757909471940456229131161236253679515530141')];
+feng[2] = new BigNumber('39750568983563575713910354091905378398331786984895612428090829311568616298650');
+feng[3] = new BigNumber('59497272847749347865825188717787655436390328093646372868539343728278028930933');
+feng[4] = new BigNumber('98760288597306371886767144220932951701305963103229022325818452690020564263154');
+feng[5] = new BigNumber('36214366681315272551016022635817843447898869475308023075238479560425362695207');
+feng[6] = "Feng";
+feng[7] = 1;
+feng[8] = web3.eth.accounts[1];
+feng[9] = -1;
+feng[10] = -1;
+people.push(feng);
+
+taha[0] = new BigNumber('109402078252857745402963682003683599478026683281064142801306146919960062030548');
+taha[1] = [new BigNumber('73891047028608636261730567712315703888885130564186295496345116265520285326718'), new BigNumber('85241152277283069845961752440936525947975332262875449311549285388203144795282')];
+taha[2] = new BigNumber('20634018444281284629148439426239156496932900402489913763994629811598052478208');
+taha[3] = new BigNumber('28975397104621519589795421719456652076498530655341803386966096001245423594775');
+taha[4] = new BigNumber('4969571242739638889507678364421747311329023545056466613493687477211511733972');
+taha[5] = new BigNumber('19109142950137220591039218245881558485593096170576466431815020936176882773954');
+taha[6] = "Taha";
+taha[7] = 1;
+taha[8] = web3.eth.accounts[2];
+taha[9] = -1;
+taha[10] = -1;
+
+people.push(taha);
+
+sia[0] = new BigNumber('9073565903026305994331790431113063213073520639281103315058995779978408546765');
+sia[1] = [new BigNumber('61200139242402789771335758792865702331985068248021114238146832152736685014790'), new BigNumber('115241844175697074068949825392369202338566538444598900258788430084632692164997')];
+sia[2] = new BigNumber('112461650979764450326012137006810804069579812580356695161513980320050995102732');
+sia[3] = new BigNumber('62455804719711954805443097764119435728418134298204233218609110348138125320212');
+sia[4] = new BigNumber('74401542347211566522063634556300061683436763831781698510001634163929529305840');
+sia[5] = new BigNumber('6176005070485332297925641761414558793386607766193472307642985025557731627871');
+sia[6] = "Sia";
+sia[7] = 0;
+sia[8] = web3.eth.accounts[3];
+sia[9] = -1;
+sia[10] = -1;
+
+people.push(sia);
+
+maryam[0] = new BigNumber('12372184528843748725850089882460936877472400900765042130399532948940327322517');
+maryam[1] = [new BigNumber('66518800250616444070470184795568470602760975659270689603339272143346806257606'), new BigNumber('80679501822415150606509492110127284855692464379352227165905029145426932349059')];
+maryam[2] = new BigNumber('35378442568974853688767179188306562252571726495144345556371206330700611217395');
+maryam[3] = new BigNumber('106309471435305338941503666204482842029376414392176095638817629442688312041994');
+maryam[4] = new BigNumber('11210146967376478834039294386109249296495828827802338640828770731562301561244');
+maryam[5] = new BigNumber('106207464179611757036451622507217791191934085578170152650584480468525331203060');
+maryam[6] = "Maryam";
+maryam[7] = 0;
+maryam[8] = web3.eth.accounts[4];
+maryam[9] = -1;
+maryam[10] = -1;
+
+people.push(maryam);
+
+ehsan[0] = new BigNumber('12372184528843748725850089882460936877472400900765042130399532948940327322517');
+ehsan[1] = [new BigNumber('66518800250616444070470184795568470602760975659270689603339272143346806257606'), new BigNumber('80679501822415150606509492110127284855692464379352227165905029145426932349059')];
+ehsan[2] = new BigNumber('35378442568974853688767179188306562252571726495144345556371206330700611217395');
+ehsan[3] = new BigNumber('106309471435305338941503666204482842029376414392176095638817629442688312041994');
+ehsan[4] = new BigNumber('11210146967376478834039294386109249296495828827802338640828770731562301561244');
+ehsan[5] = new BigNumber('106207464179611757036451622507217791191934085578170152650584480468525331203060');
+ehsan[6] = "Ehsan";
+ehsan[7] = 1;
+ehsan[8] = web3.eth.accounts[5];
+ehsan[9] = -1;
+ehsan[10] = -1;
+
+people.push(ehsan);
+// people.push(maryam);
+// var yG = [new BigNumber('22422137133616293857725977654726326027238999334597864951071762023967408716854'), new BigNumber('61096081894944633852879146450805064300029454931780869317860535680532946669083')];
+
+// var keys = new Array();
+// keys[0] = patrick[1][0];
+// keys[1] = patrick[1][1];
+// keys[2] = feng[1][0];
+// keys[3] = feng[1][1];
+// keys[4] = taha[1][0];
+// keys[5] = taha[1][1];
+//
+// var privkeys = new Array();
+// privkeys[0] = patrick[0];
+// privkeys[1] = feng[0];
+// privkeys[2] = taha[0];
+//
+
+// Make sure there are as many ETH accounts with Ether as there is people in the election!
+// One ETH account per voter!
+function register() {
+  append("====== Registering Voters ======");
+  for(var i=0; i<people.length; i++) {
+    var person = people[i];
+    var zkp = vetoprotocolAddr.createZKP.call(person[0], person[2], person[1]);
+    var vG = [zkp[1], zkp[2], zkp[3]];
+    var res = vetoprotocolAddr.register.call(person[1], vG, zkp[0]);
+    append("Registration for " + person[6] + " TxID: " +vetoprotocolAddr.register.sendTransaction(person[1], vG, zkp[0], {from:person[8], gas: 900000}));
+    append("Can " + person[6] + " Register OK? " + res);
+
+  }
+}
+// function register() {
+//
+//   var zkp = vetoprotocolAddr.createZKP.call(patrick[0], patrick[2], patrick[1]);
+//   var vG = [zkp[1], zkp[2], zkp[3]];
+//   var res = vetoprotocolAddr.register.call(patrick[1], vG, zkp[0]);
+//   append("Registration for Paddy TxID: " +vetoprotocolAddr.register.sendTransaction(patrick[1], vG, zkp[0], {from:web3.eth.accounts[0], gas: 900000}));
+//   append("Can Paddy Register OK? " + res);
+//
+//   var zkp = vetoprotocolAddr.createZKP.call(feng[0], feng[2], feng[1]);
+//   vG = [zkp[1], zkp[2], zkp[3]];
+//   res = vetoprotocolAddr.register.call(feng[1], vG, zkp[0]);
+//   append("Registration for Feng TxID: " + vetoprotocolAddr.register.sendTransaction(feng[1], vG, zkp[0], {from:web3.eth.accounts[1], gas: 900000}));
+//   append("Can Feng Register OK? " + res);
+//
+//
+//   var zkp = vetoprotocolAddr.createZKP.call(taha[0], taha[2], taha[1]);
+//
+//   vG = [zkp[1], zkp[2], zkp[3]];
+//   res = vetoprotocolAddr.register.call(taha[1], vG, zkp[0]);
+//   append("Registration for Taha TxID: " + vetoprotocolAddr.register.sendTransaction(taha[1], vG, zkp[0] ,{from:web3.eth.accounts[2], gas: 900000}));
+//   append("Can Taha Register OK? " + res);
+//
+//   var zkp = vetoprotocolAddr.createZKP.call(sia[0], sia[2], sia[1]);
+//
+//   vG = [zkp[1], zkp[2], zkp[3]];
+//   res = vetoprotocolAddr.register.call(sia[1], vG, zkp[0]);
+//   append("Registration for Sia TxID: " + vetoprotocolAddr.register.sendTransaction(sia[1], vG, zkp[0] ,{from:web3.eth.accounts[3], gas: 900000}));
+//   append("Can Sia Register OK? " + res);
+//
+//
+// }
+
+function computePublicKeys() {
+  append("====== Compute Reconstructed Public Keys ======");
+  append("Computing Reconstructed Public Keys TxID: " + vetoprotocolAddr.computeReconstructedPublicKeys.sendTransaction({from:web3.eth.accounts[0], gas: 4000000}));
+}
+
+function submitVotes() {
+  append("====== Submit Votes ======");
+  append("Ready to submit votes");
+
+  for(var i=0; i<people.length; i++) {
+    var person = people[i];
+
+    var w = person[3];
+    var r = person[4];
+    var d = person[5];
+    var yG = person[10];
+    var xG = person[1];
+    var x = person[0];
+    var result;
+
+    if(person[7] == 1) {
+      append(person[6] + " is voting yes");
+      result = vetoprotocolAddr.create1outof2ZKPYesVote.call(w,r,d,x,xG,yG);
+    } else {
+      append(person[6] + " is voting no");
+      result = vetoprotocolAddr.create1outof2ZKPNoVote.call(w,r,d,x,xG,yG);
+    }
+
+    var y = [result[0][0], result[0][1]];
+    var a1 = [result[0][2], result[0][3]];
+    var b1 = [result[0][4], result[0][5]];
+    var a2 = [result[0][6], result[0][7]];
+    var b2 = [result[0][8], result[0][9]];
+
+    var params = [result[1][0], result[1][1], result[1][2], result[1][3]];
+
+    result = vetoprotocolAddr.verify1outof2ZKP.call(params, xG, yG, y, a1, b1, a2, b2);
+    append("Does the 1 out of 2 ZKP Verify for " + person[6] + " = " + result);
+
+    // result = vetoprotocolAddr.submitVote.call(params, xG, y, a1, b1, a2, b2);
+
+    // append("Simulating: Register vote for " + person[6] + "? " + result);
+
+    result = vetoprotocolAddr.submitVote.sendTransaction(params, xG, y, a1, b1, a2, b2, {from:person[8], gas: 4000000});
+
+    // append("TxID for " + person[6] + " is " + result);
+  }
+}
+
+function tally() {
+  append("====== Tally ======");
+  // var result = vetoprotocolAddr.computeTally.call();
+
+  // append("Final tally: " + "(" + result[0] + "," + result[1] + ")");
+
+  result = vetoprotocolAddr.computeTally.sendTransaction({from:web3.eth.accounts[0], gas: 4000000});
+
+  append("TxID for tally: " + result);
+}
+
+register();
+// setTimeout(computePublicKeys(), 60000)
+// res = vetoprotocolAddr.computeReconstructedPublicKeys.sendTransaction(keys, {from: web3.eth.accounts[0]});
+// append("Compute reconstructed public keys = " + res);
+// var res = vetoprotocolAddr.computeReconstructedPublicKeys.call(keys, privkeys);
+//
+// append(res[0].toString(10));
+// append("(" + res[1].toString(10) + "," + res[2].toString(10) + ")");
+// append("(" + res[3].toString(10) + "," + res[4].toString(10) + ")");
+// append("(" + res[5].toString(10) + "," + res[6].toString(10) + ")");
+// append("(" + res[7].toString(10) + "," + res[8].toString(10) + ")");
+// append("(" + res[9].toString(10) + "," + res[10].toString(10) + ")");
+// append("Tally: " + res[11].toString(10));
+//
+// // 1. Create a ZKP for xG and verify it is correct
+// // 2. Register for the election
+// // 3. TODO: Compute yG that is shared by all (so we will have two loops)
+// // 4. Create a 1 out of 2 ZKP for yes or no, and verify it is correct
+// // 5. Submit vote for the election
+// for(var i=0; i<people.length; i++) {
+//   var person = people[i];
+//   var x = person[0];
+//   var v = person[2];
+//   var xG = person[1];
+//   append("=== " + person[6] + " ===");
+//   result = vetoprotocolAddr.createZKP.call(x,v,xG);
+//
+//   var vG = [result[1], result[2], result[3]];
+//   var s = result[0];
+//
+//   result = vetoprotocolAddr.verifyZKP.call(xG,s,vG);
+//
+//   append("ZKP(xG) = " + result);
+//
+//   result = vetoprotocolAddr.register.call(xG, x);
+//   append("Registered = " + result);
+//
+//   // result = vetoprotocolAddr.register.sendTransaction(xG,vG,s, {from: web3.eth.accounts[0]});
+//   // append("Registered = " + result);
+//
+  // var w = person[3];
+  // var r = person[4];
+  // var d = person[5];
+//
+//   if(person[7] == 0) {
+//     result = vetoprotocolAddr.create1outof2ZKPYesVote.call(w,r,d,x,xG,yG);
+//   } else {
+//     result = vetoprotocolAddr.create1outof2ZKPNoVote.call(w,r,d,x,xG,yG);
+//   }
+//
+  // var y = [result[0][0], result[0][1]];
+  // var a1 = [result[0][2], result[0][3]];
+  // var b1 = [result[0][4], result[0][5]];
+  // var a2 = [result[0][6], result[0][7]];
+  // var b2 = [result[0][8], result[0][9]];
+  //
+  // var params = [result[1][0], result[1][1], result[1][2], result[1][3]];
+  //
+  // result = vetoprotocolAddr.verify1outof2ZKP.call(params, xG, yG, y, a1, b1, a2, b2);
+  // append("Does the 1 out of 2 ZKP Verify = " + result);
+// }
+
+
+</script>
+
+</html>
