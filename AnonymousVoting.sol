@@ -417,14 +417,36 @@ library Secp256k1 {
 
 }
 
-contract VetoProtocol {
 
+contract owned {
+    address public owner;
+
+    /* Initialise contract creator as owner */
+    function owned() {
+        owner = msg.sender;
+    }
+
+    /* Function to dictate that only the designated owner can call a function */
+	  modifier onlyOwner {
+        if(owner != msg.sender) throw;
+        _
+    }
+
+    /* Transfer ownership of this contract to someone else */
+    function transferOwnership(address newOwner) onlyOwner() {
+        owner = newOwner;
+    }
+}
+
+contract AnonymousVoting is owned {
+
+  event Eligible(address addr);
+  event StartTimer(string message, uint currentblock, uint futureblock);
   event Registered(address addr, bool res, uint counter);
   event ReconstructedKey(uint x, uint y, uint counter);
-  event RegisterVote(address addr, bool res);
+  event RegisterVote(address addr, bool res, uint counter);
   event Tally(uint tally, uint counter);
-  event TestEvent(string message, uint c);
-  event Spy(uint x, uint y, uint c);
+  event Reset();
 
   // Modulus for public keys
   uint constant pp = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F;
@@ -438,167 +460,237 @@ contract VetoProtocol {
 
   uint[2] G;
 
+  //Every address has an index
+  //This makes looping in the program easier.
+  address[] addresses;
   mapping (address => uint) public addressid; // Address to Counter
   mapping (address => bool) public eligible; // White list of addresses allowed to vote
   mapping (address => bool) public registered; // Address registered?
-  mapping (address => bool) public votecast; // Address voted?
-  mapping (uint => uint[2]) public registeredkey;
-  mapping (uint => uint[2]) public reconstructed;
-  mapping (uint => uint[2]) public votes;
-  mapping (uint => uint) public privkeys; // to be removed
-  uint counter;
-  uint c;
+  mapping (uint => bool) public votecast; // Address voted?
+  mapping (uint => uint[2]) public registeredkey; //Voting key registered
+  mapping (uint => uint[2]) public reconstructed; //Reconstructed key
+  mapping (uint => uint[2]) public votes; //Stored votes for each person.
 
-  enum State { SETUP, SIGNUP, VOTEPHASE, READYTOTALLY }
+  uint counter; //Total number of participants that have submited a voting key
+  uint public timer; // Period of time until the voting phase can begin.
+
+  enum State { SETUP, SIGNUP, VOTEPHASE, FINISHED }
   State state;
 
-  function VetoProtocol() {
+  modifier inState(State s) {
+    if(state != s) {
+        throw;
+    }
+
+    _
+  }
+
+  // 2 round anonymous voting protocol
+  // TODO: Right now due to gas limits there is an upper limit
+  // on the number of participants that we can have voting...
+  // I need to split the functions up... so if they cannot
+  // finish their entire workload in 1 transaction, then
+  // it does the maximum. This way we can chain transactions
+  // to complete the job...
+  function AnonymousVoting() {
     G[0] = Gx;
     G[1] = Gy;
     counter = 0;
-    c = 0;
     state = State.SETUP;
   }
 
-  function testingEvents() {
-      c += 1;
-      TestEvent("hello",c);
+  // We need to clear all the variables we stored for this election
+  function reset() onlyOwner {
+    uint[2] memory empty;
+
+    for(uint i=0; i<addresses.length; i++) {
+       address addr = addresses[i];
+       eligible[addr] = false; // No longer eligible
+       registered[addr] = false; // Remove voting registration
+       registeredkey[index] = empty; // Remove voting key
+       uint index = addressid[addr];
+       addressid[addr] = 0; // Remove index
+       votecast[index] = false; // Remove that vote was cast
+       reconstructed[index] = empty; // Remove recomputed key
+       votes[index] = empty; // Remove stored vote
+    }
+
+    Reset();
+    state = State.SETUP;
   }
 
-  // Run by owner of contract to whitelist voters
-  // Run during the SETUP phase
-  // TODO: Change to array... only runnable by owner of contract
-  function signup(address addr) {
-      eligible[addr] = true;
+  // Owner of contract sets a whitelist of addresses that are eligible to vote.
+  function setEligible(address[] addr) onlyOwner {
+    for(uint i=0; i<addr.length; i++) {
+
+      if(!eligible[addr[i]]) {
+        eligible[addr[i]] = true;
+        addresses.push(addr[i]);
+        Eligible(addr[i]);
+      }
+    }
   }
 
+  // Owner of contract declares that eligible addresses begin round 1 of the protocol
+  // Time is the number of 'blocks' we must wait until we can move onto round 2.
+  function beginSignUp(uint time) inState(State.SETUP) onlyOwner {
 
-  // Register for election  uint[3] vG, uint r)
-  // TODO: Make sure people cannot register twie
-  function register(uint[2] xG, uint[3] vG, uint r) returns (bool) {
-    if(verifyZKP(xG,r,vG) && !registered[msg.sender]) {
+    if(time > 1) {
+      state = State.SIGNUP;
+      timer = block.number + time;
 
-      Registered(msg.sender, true, counter);
-      addressid[msg.sender] = counter;
-      registeredkey[counter] = xG;
-      registered[msg.sender] = true;
-      counter += 1;
+      StartTimer("The sign up round has begun. Please submit your voting key.", block.number, timer);
+      return;
+    }
 
-      return true;
+    throw;
+  }
+
+  // Called by participants to register their voting public key
+  // Participant mut be eligible, and can only register the first key sent key.
+  function register(uint[2] xG, uint[3] vG, uint r) inState(State.SIGNUP) returns (bool) {
+
+    // Only white-listed addresses can vote
+    if(eligible[msg.sender]) {
+        if(verifyZKP(xG,r,vG) && !registered[msg.sender]) {
+
+            Registered(msg.sender, true, counter);
+            addressid[msg.sender] = counter;
+            registeredkey[counter] = xG;
+            registered[msg.sender] = true;
+            counter += 1;
+
+            return true;
+        }
     }
 
     Registered(msg.sender, false, counter);
     return false;
   }
 
-  function computeReconstructedPublicKeys() {
+  // Once the sign up phase is ready to end...
+  // We must compute each participant's g^{y} which is a
+  // "reconstructed public key". It is used as part of the
+  // protocol's cancellation later on - which ultimately
+  // leaks the tally!
+  // Debate: Should this be an onlyOwner function?
+  function computeReconstructedPublicKeys() inState(State.SIGNUP) onlyOwner {
+
+    // We can only compute the public keys once participants
+    // have been given an opportunity to regstier their
+    // voting public key.
+    if(block.number <= timer) {
+      throw;
+    }
+
+    uint[2] memory temp;
     uint[3] memory yG;
     uint[3] memory beforei;
     uint[3] memory afteri;
 
-    // We need to compute g^{y} which is the addition of all points; except our own
-    for(uint i=0; i<counter; i++) {
+    // Step 1 is to compute the index 1 reconstructed key
+    afteri[0] = registeredkey[1][0];
+    afteri[1] = registeredkey[1][1];
+    afteri[2] = 1;
 
-       // Reset 'x' co-ordinates...
-       beforei[0] = 0;
-       afteri[0] = 0;
+    for(uint i=2; i<counter; i++) {
 
-       // 0 to i (not including i)
-       for(uint j=0; j<i; j++) {
-
-         // Sum all publuc keys before 'i'
-         if(j == 0) {
-           beforei[0] = registeredkey[j][0];
-           beforei[1] = registeredkey[j][1];
-           beforei[2] = 1;
-         } else {
-           Secp256k1._addMixedM(beforei, registeredkey[j]);
-         }
-
-       }
-
-       // Sum all public keys after 'i'
-       for(j=i+1; j<counter; j++) {
-          if(j==i+1) {
-            afteri[0] = registeredkey[j][0];
-            afteri[1] = registeredkey[j][1];
-            afteri[2] = 1;
-          } else {
-            Secp256k1._addMixedM(afteri, registeredkey[j]);
-          }
-       }
-
-       /*
-        * If we are missing before or after i points, then
-        * we just store the other point we do have....
-        * If we have both before/after i.. then we can do
-        * the subtraction!
-        */
-       if(beforei[0] == 0) {
-         // No 'before i' exists...
-         ECCMath.toZ1(afteri,pp);
-         reconstructed[i][0] = afteri[0];
-         reconstructed[i][1] = pp - afteri[1];
-
-       } else if(afteri[0] == 0) {
-         // No 'after i' exists...
-         ECCMath.toZ1(beforei,pp);
-         reconstructed[i][0] = beforei[0];
-         reconstructed[i][1] = beforei[1];
-       } else {
-         // Convert to affine points..
-         ECCMath.toZ1(afteri,pp);
-
-         // We need to negate afteri
-         afteri[1] = pp - afteri[1];
-
-         // beforei - afteri
-         yG = Secp256k1._add(beforei, afteri);
-         ECCMath.toZ1(yG,pp);
-         reconstructed[i][0] = yG[0];
-         reconstructed[i][1] = yG[1];
-       }
-
-        ReconstructedKey(reconstructed[i][0], reconstructed[i][1], i);
+       Secp256k1._addMixedM(afteri, registeredkey[i]);
     }
+
+    ECCMath.toZ1(afteri,pp);
+    reconstructed[0][0] = afteri[0];
+    reconstructed[0][1] = pp - afteri[1];
+    ReconstructedKey(reconstructed[0][0], reconstructed[0][1], 0);
+
+    // Step 2 is to add to beforei, and subtract from afteri.
+   for(i=1; i<counter; i++) {
+
+     if(i==1) {
+       beforei[0] = registeredkey[0][0];
+       beforei[1] = registeredkey[0][1];
+       beforei[2] = 1;
+     } else {
+       Secp256k1._addMixedM(beforei, registeredkey[i-1]);
+     }
+
+     ECCMath.toZ1(beforei,pp);
+
+     // If we have reached the end... just store beforei
+     // Otherwise, we need to compute a key.
+     if(i==(counter-1)) {
+
+       reconstructed[i][0] = beforei[0];
+       reconstructed[i][1] = beforei[1];
+
+     } else {
+
+        // Subtract 'i' from afteri
+        temp[0] = registeredkey[i][0];
+        temp[1] = pp - registeredkey[i][1];
+
+        Secp256k1._addMixedM(afteri,temp);
+        ECCMath.toZ1(afteri,pp);
+
+        temp[0] = afteri[0];
+        temp[1] = pp - afteri[1];
+
+        // Now we do beforei - afteri...
+        yG = Secp256k1._addMixed(beforei, temp);
+
+        ECCMath.toZ1(yG,pp);
+
+        reconstructed[i][0] = yG[0];
+        reconstructed[i][1] = yG[1];
+     }
+
+     ReconstructedKey(reconstructed[i][0], reconstructed[i][1], i);
+   }
+
+    // Finally we are reading to enter the voting state
+    state = State.VOTEPHASE;
   }
 
-  //TODO: Add 'i' as part of the ZKP and make sure vote has not already been cast!
-  function submitVote(uint[4] params, uint[2] xG, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) returns (bool){
+  function submitVote(uint[4] params, uint[2] xG, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) inState(State.VOTEPHASE) returns (bool){
 
-     if(registered[msg.sender] && !votecast[msg.sender]) {
-       uint c = addressid[msg.sender];
+     uint c = addressid[msg.sender];
+
+     if(registered[msg.sender] && !votecast[c]) {
 
        uint[2] memory yG = reconstructed[c];
 
-       // TODO: Need to include 'i'
-       if(verify1outof2ZKP(params, xG, yG, y, a1, b1, a2, b2)) {
+       // Verify the ZKP for the vote being cast
+       if(verify1outof2ZKP(params, c, xG, yG, y, a1, b1, a2, b2)) {
          votes[c][0] = y[0];
          votes[c][1] = y[1];
 
-         Spy(votes[c][0], votes[c][1], c);
-
-         RegisterVote(msg.sender, true);
-         votecast[msg.sender] = true;
+         votecast[c] = true;
+         RegisterVote(msg.sender, votecast[c], c);
          return true;
        }
      }
 
-
-     RegisterVote(msg.sender, false);
+     // Either vote has already been cast, or ZKP verification failed.
+     RegisterVote(msg.sender, false, c);
      return false;
   }
 
-  function computeTally() returns (uint[2] res){
+  // Assuming all votes have been submitted. We can leak the tally.
+  // Anyone can close the election. No need for Election Authority to do it.
+  function computeTally() inState(State.VOTEPHASE) returns (uint[2] res){
 
      uint[3] memory temp;
      uint[2] memory vote;
 
      // Sum all votes
      for(uint i=0; i<counter; i++) {
-         vote = votes[i];
 
-         Spy(vote[0], vote[1], i);
+         // Confirm all votes have been cast...
+         if(!votecast[i]) {
+            throw;
+         }
+
+         vote = votes[i];
 
          if(i==0) {
            temp[0] = vote[0];
@@ -607,11 +699,14 @@ contract VetoProtocol {
          } else {
              Secp256k1._addMixedM(temp, vote);
          }
-
-         Spy(temp[0], temp[1], 97);
-
      }
 
+     // All votes have been accounted for...
+     // Get tally, and change state to 'Finished'
+     state = State.FINISHED;
+
+     // Each vote is represented by a G.
+     // If there are no votes... then it is 0G = (0,0)...
      if(temp[0] == 0) {
        res[0] = 0;
        res[1] = counter;
@@ -619,6 +714,9 @@ contract VetoProtocol {
        return;
      } else {
 
+       // There must be a vote. So lets
+       // start adding 'G' until we
+       // find the result.
        ECCMath.toZ1(temp,pp);
        uint[3] memory tempG;
        tempG[0] = G[0];
@@ -635,58 +733,23 @@ contract VetoProtocol {
              return;
          }
 
-         //TODO: Will do a fourth time if we fail...
-         //Need to think how to re-structure this bit.
+         // If something bad happens and we cannot find the Tally
+         // Then this 'addition' will be run 1 extra time due to how
+         // we have structured the for loop.
+         // TODO: Does it need fixed?
          Secp256k1._addMixedM(tempG, G);
          ECCMath.toZ1(tempG,pp);
        }
 
-       res[0] = 11;
-       res[1] = 11;
-       Tally(temp[0],11);
+       // Something bad happened. We should never get here....
+       // This represents an error message... best telling people
+       // As we cannot recover from it anyway.
+       // TODO: Handle this better....
+       res[0] = 0;
+       res[1] = 0;
+       Tally(0,0);
        return;
      }
-/*
-     // temp[0] is 0 if no votes, otherwise a multiple of G
-     if(temp[0] != 0) {
-        ECCMath.toZ1(temp,pp);
-
-        Spy(temp[0], temp[1], 98);
-        uint[3] tempG;
-        tempG[0] = G[0];
-        tempG[1] = G[1];
-        tempG[2] = 1;
-
-        Spy(tempG[0], tempG[1], 98);
-        // Start adding 'G' and looking for a match
-        for(i=1; i<=counter; i++) {
-
-          if(temp[0] == tempG[0]) {
-              res[0] = i;
-              res[1] = counter;
-              Tally(i,counter);
-              return res;
-          }
-
-          Secp256k1._addMixedM(tempG, G);
-
-          ECCMath.toZ1(tempG,pp);
-        }
-
-     } else {
-        // Looks like we had no votes
-        res[0] = 0;
-        res[1] = counter;
-        Tally(0,counter);
-        return res;
-     }
-
-     // Could not find a tally... 0,0 represent error values.
-     res[0] = 0;
-     res[1] = 0;
-     Tally(0,0);**/
-
-     /*return res;*/
   }
 
   // vG (blinding value), xG (public key), x (what we are proving)
@@ -786,8 +849,7 @@ contract VetoProtocol {
   }
 
   // random 'w', 'r1', 'd1'
-  // TODO: add 'i'
-  function create1outof2ZKPYesVote(uint w, uint r1, uint d1, uint x, uint[2] xG, uint[2] yG) returns (uint[10] res, uint[4] res2){
+  function create1outof2ZKPYesVote(uint w, uint i, uint r1, uint d1, uint x, uint[2] xG, uint[2] yG) returns (uint[10] res, uint[4] res2){
     uint[2] memory temp;
 
     // y = h^{x} * g
@@ -829,7 +891,7 @@ contract VetoProtocol {
     res[9] = temp1[1];
 
     // Get c = H(i, x, y, a1, b1, a2, b2);
-    bytes32 b_c = sha256(xG[0], xG[1], res);
+    bytes32 b_c = sha256(i, xG[0], xG[1], res);
     uint c = uint(b_c);
 
     // d2 = c - d1 mod q
@@ -838,7 +900,7 @@ contract VetoProtocol {
     // r2 = w - (x * d2)
     temp[1] = submod(w, mulmod(x,temp[0],nn));
 
-    /* We return the following (TODO: not everything needs returned):
+    /* We return the following
     * res[0] = y_x;
     * res[1] = y_y;
     * res[2] = a1_x;
@@ -861,8 +923,7 @@ contract VetoProtocol {
   }
 
   // random 'w', 'r1', 'd1'
-  // TODO: add 'i'
-  function create1outof2ZKPNoVote(uint w, uint r2, uint d2, uint x, uint[2] xG, uint[2] yG) returns (uint[10] res, uint[4] res2){
+  function create1outof2ZKPNoVote(uint w, uint i, uint r2, uint d2, uint x, uint[2] xG, uint[2] yG) returns (uint[10] res, uint[4] res2){
       uint[2] memory temp_affine1;
       uint[2] memory temp_affine2;
 
@@ -917,7 +978,7 @@ contract VetoProtocol {
       res[9] = temp1[1];
 
       // Get c = H(i, x, y, a1, b1, a2, b2);
-      bytes32 b_c = sha256(xG[0], xG[1], res);
+      bytes32 b_c = sha256(i, xG[0], xG[1], res);
       uint c = uint(b_c);
 
       // d1 = c - d2 mod q
@@ -926,7 +987,7 @@ contract VetoProtocol {
       // r1 = w - (x * d1)
       temp1[1] = submod(w, mulmod(x,temp1[0],nn));
 
-      /* We return the following (TODO: not everything needs returned):
+      /* We return the following
       * res[0] = y_x;
       * res[1] = y_y;
       * res[2] = a1_x;
@@ -948,13 +1009,19 @@ contract VetoProtocol {
       res2[3] = r2;
     }
 
-  function verify1outof2ZKP(uint[4] params, uint[2] xG, uint[2] yG, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) returns (bool) {
+  function verify1outof2ZKP(uint[4] params, uint i, uint[2] xG, uint[2] yG, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) returns (bool) {
       uint[2] memory temp1;
       uint[3] memory temp2;
       uint[3] memory temp3;
 
+      // Make sure we are only dealing with valid public keys!
+      if(!Secp256k1.isPubKey(xG) || !Secp256k1.isPubKey(yG) || !Secp256k1.isPubKey(y) || !Secp256k1.isPubKey(a1) ||
+         !Secp256k1.isPubKey(b1) || !Secp256k1.isPubKey(a2) || !Secp256k1.isPubKey(b2)) {
+         throw;
+      }
+
       // Does c =? d1 + d2 (mod n)
-      if(uint(sha256(xG, y, a1, b1, a2, b2)) != addmod(params[0],params[1],nn)) {
+      if(uint(sha256(i, xG, y, a1, b1, a2, b2)) != addmod(params[0],params[1],nn)) {
         return false;
       }
 
