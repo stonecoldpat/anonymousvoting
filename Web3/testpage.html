@@ -11,7 +11,8 @@
   <div class="header">
     <h3>Talking to Geth</h3>
   </div>
-
+     <input type='file' accept='text/plain' onchange='openFile(event)'>
+     <button onclick="setEligible()">Kick-start election!</button>
   <div id="infodiv">
 
   </div>
@@ -58,7 +59,7 @@ if (typeof web3 !== 'undefined') {
 var abi = [{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"eligible","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"vG","type":"uint256[3]"},{"name":"r","type":"uint256"}],"name":"register","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeTally","outputs":[{"name":"res","type":"uint256[2]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"addressid","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"xG","type":"uint256[2]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"submitVote","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"votecast","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"addr","type":"address[]"}],"name":"setEligible","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"name":"registeredkey","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"i","type":"uint256"},{"name":"r1","type":"uint256"},{"name":"d1","type":"uint256"},{"name":"x","type":"uint256"},{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"}],"name":"create1outof2ZKPYesVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":true,"inputs":[],"name":"timer","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"x","type":"uint256"},{"name":"v","type":"uint256"},{"name":"xG","type":"uint256[2]"}],"name":"createZKP","outputs":[{"name":"res","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeReconstructedPublicKeys","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"registered","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"name":"reconstructed","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"name":"votes","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"time","type":"uint256"}],"name":"beginSignUp","outputs":[],"type":"function"},{"constant":false,"inputs":[],"name":"reset","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"i","type":"uint256"},{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"i","type":"uint256"},{"name":"r2","type":"uint256"},{"name":"d2","type":"uint256"},{"name":"x","type":"uint256"},{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"}],"name":"create1outof2ZKPNoVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"}],"name":"Eligible","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"message","type":"string"},{"indexed":false,"name":"currentblock","type":"uint256"},{"indexed":false,"name":"futureblock","type":"uint256"}],"name":"StartTimer","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"},{"indexed":false,"name":"res","type":"bool"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"Registered","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"x","type":"uint256"},{"indexed":false,"name":"y","type":"uint256"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"ReconstructedKey","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"},{"indexed":false,"name":"res","type":"bool"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"RegisterVote","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"tally","type":"uint256"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"Tally","type":"event"},{"anonymous":false,"inputs":[],"name":"Reset","type":"event"}];
 var anonymousvoting = web3.eth.contract(abi);
 
-var anonymousvotingAddr = anonymousvoting.at("0x66a3c2e3b23c5d04b1b2b10d305151ca31940659");
+var anonymousvotingAddr = anonymousvoting.at("0x1bb17ce947cae74df944daac29ab6cf2e3b1aa03");
 
 var eligibleCounter = 0;
 var registeredCounter = 0;
@@ -81,7 +82,7 @@ var allevents = anonymousvotingAddr.allEvents({}, '', function(error, result){
     // append("All - " + result.event);
 
     if(result.event === "Eligible") {
-      append(result.event + "," + result.args.addr);
+      append(result.event + "," + result.args.addr + "," + eligibleCounter + "," + people.length);
 
       eligibleCounter = eligibleCounter + 1;
 
@@ -164,6 +165,7 @@ var allevents = anonymousvotingAddr.allEvents({}, '', function(error, result){
 
     if(result.event === "Tally") {
       append(result.event + " - Yes Votes: " + result.args.tally.toString(10) + " and Total Votes Counted: " + result.args.counter.toString(10));
+      reset();
     }
 
     if(result.event === "Reset") {
@@ -191,6 +193,48 @@ var sia = new Array();
 var maryam = new Array();
 var ehsan = new Array();
 
+// var EC = require('elliptic').ec;
+
+var openFile = function(event) {
+  var input = event.target;
+
+  var reader = new FileReader();
+  reader.onload = function(){
+    var text = reader.result.split("\n");
+
+
+    for(var i=1; i<web3.eth.accounts.length; i++) {
+      var row = text[i].split(",");
+      var person = new Array();
+
+      person[0] = new BigNumber(row[0]);
+      person[1] = [new BigNumber(row[1]), new BigNumber(row[2])];
+      person[2] = new BigNumber(row[3]);
+      person[3] = new BigNumber(row[4]);
+      person[4] = new BigNumber(row[5]);
+      person[5] = new BigNumber(row[6]);
+      person[6] = row[7];
+      person[7] = row[8];
+      person[8] = web3.eth.accounts[i];
+      person[9] = -1;
+      person[10] = -1;
+
+      people.push(person);
+
+      append(text[i]);
+    }
+
+    if(i > 0) {
+      append("You can now start the election");
+    } else {
+      append("No one was found in the file...");
+    }
+  };
+  reader.readAsText(input.files[0]);
+
+
+};
+
 //[0] = x (private key)
 //[1] = xG (public key)
 //[2] = v (random nonce for zkp)
@@ -202,90 +246,90 @@ var ehsan = new Array();
 //[8] = address id
 //[9] = counter;
 //[10] = recomputed public key
-patrick[0] = new BigNumber('98267360357474222909507269499109860943098040616372036222428003026510694303941');
-patrick[1] = [new BigNumber('73237939612439032476053182180693706768154793929054933759978491887589814909358'), new BigNumber('51735071007182064948766754389355348773577567540930203850771361048988074334267')];
-patrick[2] = new BigNumber('20567594079356498279925534677734220219087865066183208809980476230715258100185');
-patrick[3] = new BigNumber('94381251930491405730143977052876021556273283215554481093363017236006934550584');
-patrick[4] = new BigNumber('80225843843476056873522610900451495788177758832197203352493362781152968148130');
-patrick[5] = new BigNumber('23581441608088862935798017677864529356664667380540346511868284012053516044590');
-patrick[6] = "Patrick";
-patrick[7] = 1;
-patrick[8] = web3.eth.accounts[11];
-patrick[9] = -1;
-patrick[10] = -1;
-// patrick[8] = [new BigNumber('73237939612439032476053182180693706768154793929054933759978491887589814909358'), new BigNumber('51735071007182064948766754389355348773577567540930203850771361048988074334267')];
-// patrick[8] = [new BigNumber('47869875940533227780626759400547557891024422879209792968266145471858918538224'), new BigNumber('37064172086712717354299900362532125165644112113493350343365362429513655132928')];
-
-people.push(patrick);
-
-feng[0] = new BigNumber('91616888762172736811586080859376071019633632803310470843089906031712897414792');
-feng[1] = [new BigNumber('98735681744714630642743483097800862353369401550947225088847087710048848386374'), new BigNumber('13826685335838001344479865841588745757909471940456229131161236253679515530141')];
-feng[2] = new BigNumber('39750568983563575713910354091905378398331786984895612428090829311568616298650');
-feng[3] = new BigNumber('59497272847749347865825188717787655436390328093646372868539343728278028930933');
-feng[4] = new BigNumber('98760288597306371886767144220932951701305963103229022325818452690020564263154');
-feng[5] = new BigNumber('36214366681315272551016022635817843447898869475308023075238479560425362695207');
-feng[6] = "Feng";
-feng[7] = 0;
-feng[8] = web3.eth.accounts[6];
-feng[9] = -1;
-feng[10] = -1;
-people.push(feng);
-
-taha[0] = new BigNumber('109402078252857745402963682003683599478026683281064142801306146919960062030548');
-taha[1] = [new BigNumber('73891047028608636261730567712315703888885130564186295496345116265520285326718'), new BigNumber('85241152277283069845961752440936525947975332262875449311549285388203144795282')];
-taha[2] = new BigNumber('20634018444281284629148439426239156496932900402489913763994629811598052478208');
-taha[3] = new BigNumber('28975397104621519589795421719456652076498530655341803386966096001245423594775');
-taha[4] = new BigNumber('4969571242739638889507678364421747311329023545056466613493687477211511733972');
-taha[5] = new BigNumber('19109142950137220591039218245881558485593096170576466431815020936176882773954');
-taha[6] = "Taha";
-taha[7] = 0;
-taha[8] = web3.eth.accounts[7];
-taha[9] = -1;
-taha[10] = -1;
-
-people.push(taha);
-
-sia[0] = new BigNumber('9073565903026305994331790431113063213073520639281103315058995779978408546765');
-sia[1] = [new BigNumber('61200139242402789771335758792865702331985068248021114238146832152736685014790'), new BigNumber('115241844175697074068949825392369202338566538444598900258788430084632692164997')];
-sia[2] = new BigNumber('112461650979764450326012137006810804069579812580356695161513980320050995102732');
-sia[3] = new BigNumber('62455804719711954805443097764119435728418134298204233218609110348138125320212');
-sia[4] = new BigNumber('74401542347211566522063634556300061683436763831781698510001634163929529305840');
-sia[5] = new BigNumber('6176005070485332297925641761414558793386607766193472307642985025557731627871');
-sia[6] = "Sia";
-sia[7] = 1;
-sia[8] = web3.eth.accounts[8];
-sia[9] = -1;
-sia[10] = -1;
-
-people.push(sia);
-
-maryam[0] = new BigNumber('12372184528843748725850089882460936877472400900765042130399532948940327322517');
-maryam[1] = [new BigNumber('66518800250616444070470184795568470602760975659270689603339272143346806257606'), new BigNumber('80679501822415150606509492110127284855692464379352227165905029145426932349059')];
-maryam[2] = new BigNumber('35378442568974853688767179188306562252571726495144345556371206330700611217395');
-maryam[3] = new BigNumber('106309471435305338941503666204482842029376414392176095638817629442688312041994');
-maryam[4] = new BigNumber('11210146967376478834039294386109249296495828827802338640828770731562301561244');
-maryam[5] = new BigNumber('106207464179611757036451622507217791191934085578170152650584480468525331203060');
-maryam[6] = "Maryam";
-maryam[7] = 1;
-maryam[8] = web3.eth.accounts[9];
-maryam[9] = -1;
-maryam[10] = -1;
-
-people.push(maryam);
-
-ehsan[0] = new BigNumber('12372184528843748725850089882460936877472400900765042130399532948940327322517');
-ehsan[1] = [new BigNumber('66518800250616444070470184795568470602760975659270689603339272143346806257606'), new BigNumber('80679501822415150606509492110127284855692464379352227165905029145426932349059')];
-ehsan[2] = new BigNumber('35378442568974853688767179188306562252571726495144345556371206330700611217395');
-ehsan[3] = new BigNumber('106309471435305338941503666204482842029376414392176095638817629442688312041994');
-ehsan[4] = new BigNumber('11210146967376478834039294386109249296495828827802338640828770731562301561244');
-ehsan[5] = new BigNumber('106207464179611757036451622507217791191934085578170152650584480468525331203060');
-ehsan[6] = "Ehsan";
-ehsan[7] = 1;
-ehsan[8] = web3.eth.accounts[10];
-ehsan[9] = -1;
-ehsan[10] = -1;
-
-people.push(ehsan);
+// patrick[0] = new BigNumber('98267360357474222909507269499109860943098040616372036222428003026510694303941');
+// patrick[1] = [new BigNumber('73237939612439032476053182180693706768154793929054933759978491887589814909358'), new BigNumber('51735071007182064948766754389355348773577567540930203850771361048988074334267')];
+// patrick[2] = new BigNumber('20567594079356498279925534677734220219087865066183208809980476230715258100185');
+// patrick[3] = new BigNumber('94381251930491405730143977052876021556273283215554481093363017236006934550584');
+// patrick[4] = new BigNumber('80225843843476056873522610900451495788177758832197203352493362781152968148130');
+// patrick[5] = new BigNumber('23581441608088862935798017677864529356664667380540346511868284012053516044590');
+// patrick[6] = "Patrick";
+// patrick[7] = 1;
+// patrick[8] = web3.eth.accounts[11];
+// patrick[9] = -1;
+// patrick[10] = -1;
+// // patrick[8] = [new BigNumber('73237939612439032476053182180693706768154793929054933759978491887589814909358'), new BigNumber('51735071007182064948766754389355348773577567540930203850771361048988074334267')];
+// // patrick[8] = [new BigNumber('47869875940533227780626759400547557891024422879209792968266145471858918538224'), new BigNumber('37064172086712717354299900362532125165644112113493350343365362429513655132928')];
+//
+// people.push(patrick);
+//
+// feng[0] = new BigNumber('91616888762172736811586080859376071019633632803310470843089906031712897414792');
+// feng[1] = [new BigNumber('98735681744714630642743483097800862353369401550947225088847087710048848386374'), new BigNumber('13826685335838001344479865841588745757909471940456229131161236253679515530141')];
+// feng[2] = new BigNumber('39750568983563575713910354091905378398331786984895612428090829311568616298650');
+// feng[3] = new BigNumber('59497272847749347865825188717787655436390328093646372868539343728278028930933');
+// feng[4] = new BigNumber('98760288597306371886767144220932951701305963103229022325818452690020564263154');
+// feng[5] = new BigNumber('36214366681315272551016022635817843447898869475308023075238479560425362695207');
+// feng[6] = "Feng";
+// feng[7] = 0;
+// feng[8] = web3.eth.accounts[6];
+// feng[9] = -1;
+// feng[10] = -1;
+// people.push(feng);
+//
+// taha[0] = new BigNumber('109402078252857745402963682003683599478026683281064142801306146919960062030548');
+// taha[1] = [new BigNumber('73891047028608636261730567712315703888885130564186295496345116265520285326718'), new BigNumber('85241152277283069845961752440936525947975332262875449311549285388203144795282')];
+// taha[2] = new BigNumber('20634018444281284629148439426239156496932900402489913763994629811598052478208');
+// taha[3] = new BigNumber('28975397104621519589795421719456652076498530655341803386966096001245423594775');
+// taha[4] = new BigNumber('4969571242739638889507678364421747311329023545056466613493687477211511733972');
+// taha[5] = new BigNumber('19109142950137220591039218245881558485593096170576466431815020936176882773954');
+// taha[6] = "Taha";
+// taha[7] = 0;
+// taha[8] = web3.eth.accounts[7];
+// taha[9] = -1;
+// taha[10] = -1;
+//
+// people.push(taha);
+//
+// sia[0] = new BigNumber('9073565903026305994331790431113063213073520639281103315058995779978408546765');
+// sia[1] = [new BigNumber('61200139242402789771335758792865702331985068248021114238146832152736685014790'), new BigNumber('115241844175697074068949825392369202338566538444598900258788430084632692164997')];
+// sia[2] = new BigNumber('112461650979764450326012137006810804069579812580356695161513980320050995102732');
+// sia[3] = new BigNumber('62455804719711954805443097764119435728418134298204233218609110348138125320212');
+// sia[4] = new BigNumber('74401542347211566522063634556300061683436763831781698510001634163929529305840');
+// sia[5] = new BigNumber('6176005070485332297925641761414558793386607766193472307642985025557731627871');
+// sia[6] = "Sia";
+// sia[7] = 1;
+// sia[8] = web3.eth.accounts[8];
+// sia[9] = -1;
+// sia[10] = -1;
+//
+// people.push(sia);
+//
+// maryam[0] = new BigNumber('12372184528843748725850089882460936877472400900765042130399532948940327322517');
+// maryam[1] = [new BigNumber('66518800250616444070470184795568470602760975659270689603339272143346806257606'), new BigNumber('80679501822415150606509492110127284855692464379352227165905029145426932349059')];
+// maryam[2] = new BigNumber('35378442568974853688767179188306562252571726495144345556371206330700611217395');
+// maryam[3] = new BigNumber('106309471435305338941503666204482842029376414392176095638817629442688312041994');
+// maryam[4] = new BigNumber('11210146967376478834039294386109249296495828827802338640828770731562301561244');
+// maryam[5] = new BigNumber('106207464179611757036451622507217791191934085578170152650584480468525331203060');
+// maryam[6] = "Maryam";
+// maryam[7] = 1;
+// maryam[8] = web3.eth.accounts[9];
+// maryam[9] = -1;
+// maryam[10] = -1;
+//
+// people.push(maryam);
+//
+// ehsan[0] = new BigNumber('12372184528843748725850089882460936877472400900765042130399532948940327322517');
+// ehsan[1] = [new BigNumber('66518800250616444070470184795568470602760975659270689603339272143346806257606'), new BigNumber('80679501822415150606509492110127284855692464379352227165905029145426932349059')];
+// ehsan[2] = new BigNumber('35378442568974853688767179188306562252571726495144345556371206330700611217395');
+// ehsan[3] = new BigNumber('106309471435305338941503666204482842029376414392176095638817629442688312041994');
+// ehsan[4] = new BigNumber('11210146967376478834039294386109249296495828827802338640828770731562301561244');
+// ehsan[5] = new BigNumber('106207464179611757036451622507217791191934085578170152650584480468525331203060');
+// ehsan[6] = "Ehsan";
+// ehsan[7] = 1;
+// ehsan[8] = web3.eth.accounts[10];
+// ehsan[9] = -1;
+// ehsan[10] = -1;
+//
+// people.push(ehsan);
 // people.push(maryam);
 // var yG = [new BigNumber('22422137133616293857725977654726326027238999334597864951071762023967408716854'), new BigNumber('61096081894944633852879146450805064300029454931780869317860535680532946669083')];
 
@@ -303,30 +347,43 @@ people.push(ehsan);
 // privkeys[2] = taha[0];
 //
 
+function topupEther() {
+  for(var i=1; i<web3.eth.accounts.length; i++) {
+    web3.eth.sendTransaction({from:web3.eth.coinbase, to:web3.eth.accounts[i], value: web3.toWei(1, "ether")});
+  }
+}
+
+// topupEther();
+
 function setEligible() {
 
-  append("====== Establish which voters are eligible ======");
-  var addresses = new Array();
+  if(people.length > 0) {
+    append("====== Establish which voters are eligible ======");
+    var addresses = new Array();
 
-  for(var i=0; i<web3.eth.accounts.length; i++) {
-    var account = web3.eth.accounts[i];
-    var balance = web3.eth.getBalance(web3.eth.accounts[i]);
-    append("Key: " + web3.eth.accounts[i] + " Balance: " + balance.toString(10) + " Unlocked: " +  web3.personal.unlockAccount(account,password));
+    for(var i=0; i<web3.eth.accounts.length; i++) {
+      var account = web3.eth.accounts[i];
+      var balance = web3.eth.getBalance(web3.eth.accounts[i]);
+      append("Key: " + web3.eth.accounts[i] + " Balance: " + balance.toString(10) + " Unlocked: " +  web3.personal.unlockAccount(account,password));
 
-    addresses.push(web3.eth.accounts[i]);
+      addresses.push(web3.eth.accounts[i]);
+    }
+
+    var res = anonymousvotingAddr.setEligible.sendTransaction(addresses, {from:web3.eth.accounts[0], gas: 4200000})
+
+    append("Eligible whitelist sent from " + web3.eth.accounts[0]);
+
+    append("Eligible TxID: " + res);
+
+  } else {
+    append("Please read a file with the people's information first!");
   }
-
-  var res = anonymousvotingAddr.setEligible.sendTransaction(addresses, {from:web3.eth.accounts[0], gas: 1000000})
-
-  append("Eligible whitelist sent from " + web3.eth.accounts[0]);
-
-  append("Eligible TxID: " + res);
 
 }
 
 function allowSignUp() {
   web3.personal.unlockAccount(web3.eth.accounts[0],password);
-  var res = anonymousvotingAddr.beginSignUp.sendTransaction(2, {from:web3.eth.accounts[0], gas: 900000})
+  var res = anonymousvotingAddr.beginSignUp.sendTransaction(2, {from:web3.eth.accounts[0], gas: 4200000})
   append("Allow signup sent from " + web3.eth.accounts[0]);
 
   append("Allow Sign Up TxID: " + res);
@@ -342,7 +399,7 @@ function register() {
     var vG = [zkp[1], zkp[2], zkp[3]];
     // var res = anonymousvotingAddr.register.call(person[1], vG, zkp[0]);
     web3.personal.unlockAccount(person[8],password);
-    append("Registration for " + person[6] + " TxID: " + anonymousvotingAddr.register.sendTransaction(person[1], vG, zkp[0], {from:person[8], gas: 900000}));
+    append("Registration for " + person[6] + " TxID: " + anonymousvotingAddr.register.sendTransaction(person[1], vG, zkp[0], {from:person[8], gas: 4200000}));
     // append("Can " + person[6] + " Register OK? " + res);
   }
 }
@@ -351,7 +408,7 @@ function computePublicKeys() {
   append("====== Compute Reconstructed Public Keys ======");
   //append("Computing Reconstructed Public Keys TxID: " +
   web3.personal.unlockAccount(web3.eth.accounts[0],password);
-  var res = anonymousvotingAddr.computeReconstructedPublicKeys.sendTransaction({from:web3.eth.accounts[0], gas: 4000000});
+  var res = anonymousvotingAddr.computeReconstructedPublicKeys.sendTransaction({from:web3.eth.accounts[0], gas: 4200000});
 
   append("Compute public keys TxiD: " + res);
 }
@@ -394,7 +451,7 @@ function submitVotes() {
     // append("Simulating: Register vote for " + person[6] + "? " + result);
 
     web3.personal.unlockAccount(person[8],password);
-    result = anonymousvotingAddr.submitVote.sendTransaction(params, xG, y, a1, b1, a2, b2, {from:person[8], gas: 4000000});
+    result = anonymousvotingAddr.submitVote.sendTransaction(params, xG, y, a1, b1, a2, b2, {from:person[8], gas: 4200000});
 
     append(person[6] + ": Submit vote... TxID is " + result);
   }
@@ -407,7 +464,7 @@ function tally() {
   // append("Final tally: " + "(" + result[0] + "," + result[1] + ")");
 
   web3.personal.unlockAccount(web3.eth.accounts[0],password);
-  result = anonymousvotingAddr.computeTally.sendTransaction({from:web3.eth.accounts[0], gas: 4100000});
+  result = anonymousvotingAddr.computeTally.sendTransaction({from:web3.eth.accounts[0], gas: 4200000});
 
   append("TxID for tally: " + result);
 }
@@ -421,7 +478,7 @@ function checkOwner() {
 function reset() {
   append("=== Reset Election ===");
   web3.personal.unlockAccount(web3.eth.accounts[0],password);
-  result = anonymousvotingAddr.reset.sendTransaction({from:web3.eth.accounts[0], gas: 4100000});
+  result = anonymousvotingAddr.reset.sendTransaction({from:web3.eth.accounts[0], gas: 4200000});
   eligibleCounter = 0;
   registeredCounter = 0;
   submitedVoteLog = new Array();
@@ -429,11 +486,5 @@ function reset() {
   submitVoteCounter = 0;
 }
 
-checkOwner();
-setEligible();
-
-
-
 </script>
-
 </html>

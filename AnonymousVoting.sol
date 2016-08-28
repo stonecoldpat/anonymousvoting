@@ -500,6 +500,7 @@ contract AnonymousVoting is owned {
   }
 
   // We need to clear all the variables we stored for this election
+  // Can be run at ANY time... esp if someone refuses to submit their vote.
   function reset() onlyOwner {
     uint[2] memory empty;
 
@@ -514,6 +515,9 @@ contract AnonymousVoting is owned {
        reconstructed[index] = empty; // Remove recomputed key
        votes[index] = empty; // Remove stored vote
     }
+    
+    counter = 0;
+    timer = 0;
 
     Reset();
     state = State.SETUP;
@@ -1009,6 +1013,7 @@ contract AnonymousVoting is owned {
       res2[3] = r2;
     }
 
+  // We verify that the ZKP is of 0 or 1.
   function verify1outof2ZKP(uint[4] params, uint i, uint[2] xG, uint[2] yG, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) returns (bool) {
       uint[2] memory temp1;
       uint[3] memory temp2;
@@ -1055,8 +1060,22 @@ contract AnonymousVoting is owned {
       // Negate the 'y' co-ordinate of g
       temp1[0] = G[0];
       temp1[1] = pp - G[1];
-      // We should end up with y^{d2} + g^{d2} .... (but we have the negation of g.. so y-g).
-      temp2 = Secp256k1._add(Secp256k1._mul(params[1],y), Secp256k1._mul(params[1],temp1));
+
+      // get 'y'
+      temp3[0] = y[0];
+      temp3[1] = y[1];
+      temp3[2] = 1;
+
+      // y-g
+      temp2 = Secp256k1._addMixed(temp3,temp1);
+
+      // Return to affine co-ordinates
+      ECCMath.toZ1(temp2, pp);
+      temp1[0] = temp2[0];
+      temp1[1] = temp2[1];
+
+      // (y-g)^{d2}
+      temp2 = Secp256k1._mul(params[1],temp1);
 
       // Now... it is h^{r2} + temp2..
       temp3 = Secp256k1._add(Secp256k1._mul(params[3],yG),temp2);
