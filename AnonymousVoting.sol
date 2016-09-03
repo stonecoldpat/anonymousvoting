@@ -443,10 +443,12 @@ contract AnonymousVoting is owned {
   event Eligible(address addr);
   event StartTimer(string message, uint currentblock, uint futureblock);
   event Registered(address addr, bool res, uint counter);
+  event RegistrationFinished();
   event ReconstructedKey(uint x, uint y, uint counter);
   event RegisterVote(address addr, bool res, uint counter);
   event Tally(uint tally, uint counter);
   event Reset();
+  event Debug(uint op, uint x, uint y, uint z, uint gas);
 
   // Modulus for public keys
   uint constant pp = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F;
@@ -462,7 +464,7 @@ contract AnonymousVoting is owned {
 
   //Every address has an index
   //This makes looping in the program easier.
-  address[] addresses;
+  address[] public addresses;
   mapping (address => uint) public addressid; // Address to Counter
   mapping (address => bool) public eligible; // White list of addresses allowed to vote
   mapping (address => bool) public registered; // Address registered?
@@ -474,7 +476,7 @@ contract AnonymousVoting is owned {
   uint counter; //Total number of participants that have submited a voting key
   uint public timer; // Period of time until the voting phase can begin.
 
-  enum State { SETUP, SIGNUP, VOTEPHASE, FINISHED }
+  enum State { SETUP, SIGNUP, COMPUTE, VOTEPHASE, FINISHED }
   State state;
 
   modifier inState(State s) {
@@ -515,7 +517,8 @@ contract AnonymousVoting is owned {
        reconstructed[index] = empty; // Remove recomputed key
        votes[index] = empty; // Remove stored vote
     }
-    
+
+    delete addresses;
     counter = 0;
     timer = 0;
 
@@ -525,6 +528,13 @@ contract AnonymousVoting is owned {
 
   // Owner of contract sets a whitelist of addresses that are eligible to vote.
   function setEligible(address[] addr) onlyOwner {
+
+    // We can only handle up to about 35-40 people at the moment.
+    if(addresses.length + addr.length > 42) {
+      throw;
+    }
+
+    // Sign up the addresses
     for(uint i=0; i<addr.length; i++) {
 
       if(!eligible[addr[i]]) {
@@ -572,20 +582,28 @@ contract AnonymousVoting is owned {
     return false;
   }
 
+
+  // Timer has expired - we want to start computing the reconstructed keys
+  function finishRegistrationPhase() inState(State.SIGNUP) onlyOwner {
+
+     // We can only compute the public keys once participants
+     // have been given an opportunity to regstier their
+     // voting public key.
+     if(block.number <= timer) {
+       throw;
+     }
+     state = State.COMPUTE;
+     RegistrationFinished();
+  }
+
+
   // Once the sign up phase is ready to end...
   // We must compute each participant's g^{y} which is a
   // "reconstructed public key". It is used as part of the
   // protocol's cancellation later on - which ultimately
   // leaks the tally!
   // Debate: Should this be an onlyOwner function?
-  function computeReconstructedPublicKeys() inState(State.SIGNUP) onlyOwner {
-
-    // We can only compute the public keys once participants
-    // have been given an opportunity to regstier their
-    // voting public key.
-    if(block.number <= timer) {
-      throw;
-    }
+  function computeReconstructedPublicKeys() inState(State.COMPUTE) onlyOwner {
 
     uint[2] memory temp;
     uint[3] memory yG;
@@ -618,12 +636,11 @@ contract AnonymousVoting is owned {
        Secp256k1._addMixedM(beforei, registeredkey[i-1]);
      }
 
-     ECCMath.toZ1(beforei,pp);
-
      // If we have reached the end... just store beforei
      // Otherwise, we need to compute a key.
+     // Counting from 0 to n-1...
      if(i==(counter-1)) {
-
+       ECCMath.toZ1(beforei,pp);
        reconstructed[i][0] = beforei[0];
        reconstructed[i][1] = beforei[1];
 
@@ -633,6 +650,7 @@ contract AnonymousVoting is owned {
         temp[0] = registeredkey[i][0];
         temp[1] = pp - registeredkey[i][1];
 
+        // Grab negation of afteri (did not seem to work with Jacob co-ordinates)
         Secp256k1._addMixedM(afteri,temp);
         ECCMath.toZ1(afteri,pp);
 
@@ -655,10 +673,12 @@ contract AnonymousVoting is owned {
     state = State.VOTEPHASE;
   }
 
+  //Given the 1 out of 2 ZKP - record the users vote!
   function submitVote(uint[4] params, uint[2] xG, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) inState(State.VOTEPHASE) returns (bool){
 
      uint c = addressid[msg.sender];
 
+     // Make sure the sender can vote, and hasn't already voted.
      if(registered[msg.sender] && !votecast[c]) {
 
        uint[2] memory yG = reconstructed[c];
@@ -681,6 +701,7 @@ contract AnonymousVoting is owned {
 
   // Assuming all votes have been submitted. We can leak the tally.
   // Anyone can close the election. No need for Election Authority to do it.
+  // TODO: Allow someone to submit the tally and to verify it here. Would be cheaper!
   function computeTally() inState(State.VOTEPHASE) returns (uint[2] res){
 
      uint[3] memory temp;
