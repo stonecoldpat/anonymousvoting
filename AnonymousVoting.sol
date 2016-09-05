@@ -448,7 +448,6 @@ contract AnonymousVoting is owned {
   event RegisterVote(address addr, bool res, uint counter);
   event Tally(uint tally, uint counter);
   event Reset();
-  event Debug(uint op, uint x, uint y, uint z, uint gas);
 
   // Modulus for public keys
   uint constant pp = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F;
@@ -475,9 +474,10 @@ contract AnonymousVoting is owned {
 
   uint counter; //Total number of participants that have submited a voting key
   uint public timer; // Period of time until the voting phase can begin.
+  string public question;
 
   enum State { SETUP, SIGNUP, COMPUTE, VOTEPHASE, FINISHED }
-  State state;
+  State public state;
 
   modifier inState(State s) {
     if(state != s) {
@@ -499,6 +499,7 @@ contract AnonymousVoting is owned {
     G[1] = Gy;
     counter = 0;
     state = State.SETUP;
+    question = "No question set";
   }
 
   // We need to clear all the variables we stored for this election
@@ -547,11 +548,12 @@ contract AnonymousVoting is owned {
 
   // Owner of contract declares that eligible addresses begin round 1 of the protocol
   // Time is the number of 'blocks' we must wait until we can move onto round 2.
-  function beginSignUp(uint time) inState(State.SETUP) onlyOwner {
+  function beginSignUp(uint time, string _question) inState(State.SETUP) onlyOwner {
 
     if(time > 1) {
       state = State.SIGNUP;
       timer = block.number + time;
+      question = _question;
 
       StartTimer("The sign up round has begun. Please submit your voting key.", block.number, timer);
       return;
@@ -588,8 +590,8 @@ contract AnonymousVoting is owned {
 
      // We can only compute the public keys once participants
      // have been given an opportunity to regstier their
-     // voting public key.
-     if(block.number <= timer) {
+     // voting public key. We also need at least 3 people...
+     if(block.number <= timer && counter < 3) {
        throw;
      }
      state = State.COMPUTE;
@@ -674,17 +676,17 @@ contract AnonymousVoting is owned {
   }
 
   //Given the 1 out of 2 ZKP - record the users vote!
-  function submitVote(uint[4] params, uint[2] xG, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) inState(State.VOTEPHASE) returns (bool){
+  function submitVote(uint[4] params, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) inState(State.VOTEPHASE) returns (bool){
 
      uint c = addressid[msg.sender];
 
      // Make sure the sender can vote, and hasn't already voted.
      if(registered[msg.sender] && !votecast[c]) {
 
-       uint[2] memory yG = reconstructed[c];
+       /*uint[2] memory xG = registeredkey[c]; // need to test this...*/
 
        // Verify the ZKP for the vote being cast
-       if(verify1outof2ZKP(params, c, xG, yG, y, a1, b1, a2, b2)) {
+       if(verify1outof2ZKP(params, c, y, a1, b1, a2, b2)) {
          votes[c][0] = y[0];
          votes[c][1] = y[1];
 
@@ -874,8 +876,17 @@ contract AnonymousVoting is owned {
   }
 
   // random 'w', 'r1', 'd1'
-  function create1outof2ZKPYesVote(uint w, uint i, uint r1, uint d1, uint x, uint[2] xG, uint[2] yG) returns (uint[10] res, uint[4] res2){
+  // TODO: Make constant
+  function create1outof2ZKPYesVote(uint w, uint i, uint r1, uint d1, uint x) returns (uint[10] res, uint[4] res2){
     uint[2] memory temp;
+
+    // No point doing this if vote has already been cast.
+    if(votecast[i]) {
+      throw;
+    }
+
+    uint[2] memory yG = reconstructed[i];
+    uint[2] memory xG = registeredkey[i];
 
     // y = h^{x} * g
     uint[3] memory temp1 = Secp256k1._mul(x,yG);
@@ -948,9 +959,12 @@ contract AnonymousVoting is owned {
   }
 
   // random 'w', 'r1', 'd1'
-  function create1outof2ZKPNoVote(uint w, uint i, uint r2, uint d2, uint x, uint[2] xG, uint[2] yG) returns (uint[10] res, uint[4] res2){
+  function create1outof2ZKPNoVote(uint w, uint i, uint r2, uint d2, uint x) returns (uint[10] res, uint[4] res2){
       uint[2] memory temp_affine1;
       uint[2] memory temp_affine2;
+
+      uint[2] memory yG = reconstructed[i];
+      uint[2] memory xG = registeredkey[i];
 
       // y = h^{x} * g
       uint[3] memory temp1 = Secp256k1._mul(x,yG);
@@ -1035,10 +1049,14 @@ contract AnonymousVoting is owned {
     }
 
   // We verify that the ZKP is of 0 or 1.
-  function verify1outof2ZKP(uint[4] params, uint i, uint[2] xG, uint[2] yG, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) returns (bool) {
+  function verify1outof2ZKP(uint[4] params, uint i, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) returns (bool) {
       uint[2] memory temp1;
       uint[3] memory temp2;
       uint[3] memory temp3;
+
+      // We already have them stored...
+      uint[2] memory yG = reconstructed[i];
+      uint[2] memory xG = registeredkey[i];
 
       // Make sure we are only dealing with valid public keys!
       if(!Secp256k1.isPubKey(xG) || !Secp256k1.isPubKey(yG) || !Secp256k1.isPubKey(y) || !Secp256k1.isPubKey(a1) ||

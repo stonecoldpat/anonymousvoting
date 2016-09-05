@@ -1,0 +1,308 @@
+<html>
+<head>
+  <title>Admin Page</title>
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js">
+
+</head>
+
+<body>
+
+  <div class="header">
+    <h3>Voting Homepage - Admin Page</h3>
+  </div>
+  <div id="state">
+  </div>
+  <div id="dropdown">
+  </div>
+  <div id="eligible">
+
+    <p>Any addresses that should be set as eligible? (seperate addresses by a comma ",")</p>
+    <textarea id="addresses" name="list" cols="40" rows="5"></textarea> <br>
+    <button onclick="setEligible()">Set as eligible</button>
+    <p>Finished setting addresses as eliglible?</p>
+
+  </div>
+  <div id="beginsignup">
+    <p>Timer (blocks)</p> <input type='text' id='timer' value='100'/>
+    <p>What is the question? </p> <input type='text' id='question' /> <br>
+    <button onclick="beginsignup()">Begin Registration Phase</button>
+  </div>
+  <div id="finishsignup">
+        <p>Have we waited long enough for people to submit their voting key?</p>
+        <button onclick="finishsignup()">Finish Registration Phase</button>
+  </div>
+  <div id="computekeys">
+    <p>Compute the reconstructed keys</p>
+    <button onclick="computekeys()">Compute Keys</button>
+  </div>
+  <div id="tally">
+    <p>Has everyone submitted their vote? Compute tally!</p>
+    <button onclick="tally()">Get Tally</button>
+  </div>
+  <div id="reset">
+    <button onclick="reset()">Reset</button>
+  </div>
+
+  <div id="txlist">
+    <p>Transaction List:</p>
+
+  </div>
+  <div id="infodiv">
+    <p>Events from Ethereum:</p>
+
+  </div>
+
+</body>
+
+<script src="web3.min.js"></script>
+<script src="bignumber.min.js"></script>
+<script src ="https://code.jquery.com/jquery-3.1.0.slim.min.js"></script>
+
+<script>
+
+var web3;
+var password = "ilikelittlepaddy";
+var addressChosen = false;
+var addr = 0;
+var state = 0;
+
+if (typeof web3 !== 'undefined') {
+  web3 = new Web3(web3.currentProvider);
+} else {
+  // set the provider you want from Web3.providers
+  web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+}
+
+var abi = [{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"eligible","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"vG","type":"uint256[3]"},{"name":"r","type":"uint256"}],"name":"register","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeTally","outputs":[{"name":"res","type":"uint256[2]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"addressid","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"votecast","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"i","type":"uint256"},{"name":"r1","type":"uint256"},{"name":"d1","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPYesVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"question","outputs":[{"name":"","type":"string"}],"type":"function"},{"constant":false,"inputs":[{"name":"addr","type":"address[]"}],"name":"setEligible","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"name":"registeredkey","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"finishRegistrationPhase","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"submitVote","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"timer","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"x","type":"uint256"},{"name":"v","type":"uint256"},{"name":"xG","type":"uint256[2]"}],"name":"createZKP","outputs":[{"name":"res","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeReconstructedPublicKeys","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"registered","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"name":"reconstructed","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"name":"","type":"uint8"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"i","type":"uint256"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"time","type":"uint256"},{"name":"_question","type":"string"}],"name":"beginSignUp","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"name":"votes","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"reset","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"i","type":"uint256"},{"name":"r2","type":"uint256"},{"name":"d2","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPNoVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"addresses","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"}],"name":"Eligible","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"message","type":"string"},{"indexed":false,"name":"currentblock","type":"uint256"},{"indexed":false,"name":"futureblock","type":"uint256"}],"name":"StartTimer","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"},{"indexed":false,"name":"res","type":"bool"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"Registered","type":"event"},{"anonymous":false,"inputs":[],"name":"RegistrationFinished","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"x","type":"uint256"},{"indexed":false,"name":"y","type":"uint256"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"ReconstructedKey","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"},{"indexed":false,"name":"res","type":"bool"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"RegisterVote","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"tally","type":"uint256"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"Tally","type":"event"},{"anonymous":false,"inputs":[],"name":"Reset","type":"event"}];
+var anonymousvoting = web3.eth.contract(abi);
+var anonymousvotingAddr = anonymousvoting.at("0x9528622a884ee4731ac5a3ff8b5c00001ea95bfa");
+
+var selectbox = "<p>Address:</p><select id='addrs'>";
+
+// Let user select one of their Ethereum addresses
+for(var i=0; i<web3.eth.accounts.length; i++) {
+  selectbox = selectbox + '<option value="' + i + '">' + web3.eth.accounts[i] + '</option>';
+}
+
+selectbox = selectbox + "</select> <p>Password:</p> <input type='text' id='passwordf' value='ilikelittlepaddy' name='fname'><button onclick='unlock()'>Unlock</button>";
+document.getElementById('dropdown').innerHTML = selectbox;
+
+function unlock() {
+  var _addr = $('#addrs').find(":selected").text();
+  var _password = document.getElementById('passwordf').value;
+
+  if(web3.personal.unlockAccount(_addr,_password)) {
+    addressChosen = true;
+    addr = _addr;
+    password = _password;
+    document.getElementById('dropdown').innerHTML = "You have selected the address " + addr;
+  }
+}
+// Check that the user is eligible to vote
+function setEligible() {
+  var tempaddr;
+
+  if(addressChosen) {
+
+    var lastchar = document.getElementById('addresses').value.trim().slice(-1);
+    var toSplit;
+
+    // Make sure the user has not ended the list with ','
+    if(lastchar == ',') {
+      var len = document.getElementById('addresses').value.length;
+      toSplit = document.getElementById('addresses').value.substring(0,len-1);
+
+    } else {
+      toSplit = document.getElementById('addresses').value;
+    }
+
+    var split = toSplit.split(",");
+
+    // TODO: Sanity check the list ... verify they are all valid Ethereum addresses
+    var addresses = new Array();
+
+    // No point re-submiting an address if it is already eligible
+    for(var i=0; i<split.length; i++) {
+      if(!anonymousvotingAddr.eligible(split[i])) {
+        addresses.push(split[i]);
+      }
+    }
+
+    // Do we have any addresses that are not yet eligible?
+    if(addresses.length > 0) {
+      web3.personal.unlockAccount(addr,password)
+      var res = anonymousvotingAddr.setEligible.sendTransaction(addresses, {from:web3.eth.accounts[0], gas: 4200000})
+
+      txlist("Set Eligible: " + res);
+    } else {
+      alert("All addresses are already eligible!");
+    }
+
+  } else {
+    alert("You need to select the admin address first!");
+  }
+}
+
+// Try and fetch the re-computed key... required for tallying
+function checkForReconstructedKey() {
+
+  if(anonymousvotingAddr.reconstructed(addr) != 0) {
+      computedKey = true;
+      document.getElementById('reconstructed').innerHTML = "Reconstructed key found";
+      index = anonymousvotingAddr.addressid(addr); // What is our index for the vote?
+
+  } else {
+      document.getElementById('foundreconstructedkey').innerHTML = "Reconstructed key NOT found";
+  }
+}
+
+// Allow people to start submiting their voting key.
+function beginsignup() {
+
+  if(addressChosen && state == 0) {
+     var timer = document.getElementById('timer').value;
+     var question = document.getElementById('question').value;
+
+     web3.personal.unlockAccount(addr,password);
+     var res = anonymousvotingAddr.beginSignUp.sendTransaction(timer, question, {from:web3.eth.accounts[0], gas: 4200000});
+     txlist("Begin Registration Phase: " + res);
+  }
+}
+
+function finishsignup() {
+  if(addressChosen && state == 1) {
+    web3.personal.unlockAccount(addr,password);
+    var res = anonymousvotingAddr.finishRegistrationPhase.sendTransaction({from:web3.eth.accounts[0], gas: 4200000});
+    txlist("Finish Registration Phase: " + res);
+  }
+}
+
+function computekeys() {
+  if(addressChosen && state == 2) {
+    web3.personal.unlockAccount(web3.eth.accounts[0],password);
+    var res = anonymousvotingAddr.computeReconstructedPublicKeys.sendTransaction({from:web3.eth.accounts[0], gas: 4200000});
+    txlist("Computing Keys: " + res);
+  }
+}
+
+
+function tally() {
+  web3.personal.unlockAccount(web3.eth.accounts[0],password);
+  var res = anonymousvotingAddr.computeTally.sendTransaction({from:web3.eth.accounts[0], gas: 4200000});
+  txlist("Compute Tally: " + res);
+}
+
+function reset() {
+  web3.personal.unlockAccount(web3.eth.accounts[0],password);
+  var res = anonymousvotingAddr.reset.sendTransaction({from:web3.eth.accounts[0], gas: 4200000});
+    txlist("Reset: " + res);
+}
+
+
+function whatIsQuestion() {
+  document.getElementById('question').value = anonymousvotingAddr.question();
+}
+
+
+/*
+ * Catch events in real-time and update the site with the voting progress..
+ */
+var allevents = anonymousvotingAddr.allEvents({}, '', function(error, result){
+  if (!error){
+
+    // Tell the admin if the address became eligible...
+    if(result.event === "Eligible") {
+       var receipt = web3.eth.getTransactionReceipt(result.transactionHash);
+       append(result.event + "," + result.args.addr);
+       currentState();
+    }
+
+    // Voting phase has begun!
+    if(result.event === "StartTimer") {
+       append(result.event + "," + result.args.message + "," + result.args.currentblock + "," + result.args.futureblock);
+       currentState();
+    }
+
+    // Registration Phase has Finished!
+    if(result.event === "RegistrationFinished") {
+       append(result.event);
+       currentState();
+    }
+
+    if(result.event === "Registered") {
+       append(result.event + "," + result.args.addr + "," + result.args.res + ","  + result.args.counter);
+    }
+
+    if(result.event === "RegisterVote") {
+      append(result.event + "," + result.args.addr + "," + result.args.res + "," + result.args.counter);
+    }
+
+    // Compute the reconstructed keys
+    if(result.event === "ReconstructedKey") {
+       var receipt = web3.eth.getTransactionReceipt(result.transactionHash);
+       append(result.event + "," + result.args.x.toString(10) + "," + result.args.y.toString(10) + "," + result.args.counter);
+       currentState();
+    }
+
+    // Final tally... tell us gas usage as well.
+    if(result.event === "Tally") {
+      var receipt = web3.eth.getTransactionReceipt(result.transactionHash);
+      append(result.event + " - Yes Votes: " + result.args.tally.toString(10) + " and Total Votes Counted: " + result.args.counter.toString(10));
+    }
+  }
+});
+
+function append(extra) {
+    var div = document.getElementById('infodiv');
+    div.innerHTML = div.innerHTML + "<br>" + "<p>" + extra + "</p>";
+}
+
+function txlist(extra) {
+    document.getElementById('txlist').innerHTML = document.getElementById('txlist').innerHTML + "<br>" + extra;
+}
+
+function currentState() {
+  state = anonymousvotingAddr.state();
+
+  if(state == 0) {
+    document.getElementById('state').innerHTML = "SETUP Phase";
+
+    // LAZY: Pre-fill the text box with my own addresses.
+    for(var i=0; i<web3.eth.accounts.length; i++) {
+       document.getElementById('addresses').value = document.getElementById('addresses').value + web3.eth.accounts[i] + ",";
+    }
+  } else if(state == 1) {
+    document.getElementById('state').innerHTML = "SIGNUP Phase";
+    document.getElementById("eligible").innerHTML = "Can no longer sign up new addresses";
+    document.getElementById('beginsignup').innerHTML = "Can no longer set question of vote";
+  } else if(state == 2) {
+    document.getElementById('state').innerHTML = "COMPUTE Phase";
+    document.getElementById("eligible").innerHTML = "Can no longer sign up new addresses";
+    document.getElementById('beginsignup').innerHTML = "Can no longer set question of vote";
+    document.getElementById('beginsignup').innerHTML = "Can no longer set question of vote";
+    document.getElementById('finishsignup').innerHTML = "Registration phase has already finshed";
+  } else if(state == 3) {
+    document.getElementById('state').innerHTML = "VOTEPHASE Phase";
+    document.getElementById("eligible").innerHTML = "Can no longer sign up new addresses";
+    document.getElementById('beginsignup').innerHTML = "Can no longer set question of vote";
+    document.getElementById('finishsignup').innerHTML = "Registration phase has already finshed";
+    document.getElementById('computekeys').innerHTML = "Voters keys have already been computed";
+  } else if(state == 4) {
+    document.getElementById('state').innerHTML = "FINISH Phase";
+    document.getElementById("eligible").innerHTML = "Can no longer sign up new addresses";
+    document.getElementById('beginsignup').innerHTML = "Can no longer set question of vote";
+    document.getElementById('finishsignup').innerHTML = "Registration phase has already finshed";
+    document.getElementById('computekeys').innerHTML = "Voters keys have already been computed";
+    document.getElementById('tally').innerHTML = "Tally has been computed!";
+  } else {
+    document.getElementById('state').innerHTML = "Undocumented Phase...";
+  }
+
+}
+
+whatIsQuestion();
+currentState();
+
+
+</script>
