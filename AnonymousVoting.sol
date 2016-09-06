@@ -475,6 +475,7 @@ contract AnonymousVoting is owned {
   uint counter; //Total number of participants that have submited a voting key
   uint public timer; // Period of time until the voting phase can begin.
   string public question;
+  uint[2] public finaltally; // Final tally
 
   enum State { SETUP, SIGNUP, COMPUTE, VOTEPHASE, FINISHED }
   State public state;
@@ -522,7 +523,11 @@ contract AnonymousVoting is owned {
     delete addresses;
     counter = 0;
     timer = 0;
+    question = "No question set";
+    finaltally[0] = 0;
+    finaltally[1] = 0;
 
+    // We are finished resetting. 
     Reset();
     state = State.SETUP;
   }
@@ -704,7 +709,7 @@ contract AnonymousVoting is owned {
   // Assuming all votes have been submitted. We can leak the tally.
   // Anyone can close the election. No need for Election Authority to do it.
   // TODO: Allow someone to submit the tally and to verify it here. Would be cheaper!
-  function computeTally() inState(State.VOTEPHASE) returns (uint[2] res){
+  function computeTally() inState(State.VOTEPHASE) returns (uint[2]){
 
      uint[3] memory temp;
      uint[2] memory vote;
@@ -735,8 +740,8 @@ contract AnonymousVoting is owned {
      // Each vote is represented by a G.
      // If there are no votes... then it is 0G = (0,0)...
      if(temp[0] == 0) {
-       res[0] = 0;
-       res[1] = counter;
+       finaltally[0] = 0;
+       finaltally[1] = counter;
        Tally(0,counter);
        return;
      } else {
@@ -754,8 +759,8 @@ contract AnonymousVoting is owned {
        for(i=1; i<=counter; i++) {
 
          if(temp[0] == tempG[0]) {
-             res[0] = i;
-             res[1] = counter;
+             finaltally[0] = i;
+             finaltally[1] = counter;
              Tally(i,counter);
              return;
          }
@@ -772,8 +777,8 @@ contract AnonymousVoting is owned {
        // This represents an error message... best telling people
        // As we cannot recover from it anyway.
        // TODO: Handle this better....
-       res[0] = 0;
-       res[1] = 0;
+       finaltally[0] = 0;
+       finaltally[1] = 0;
        Tally(0,0);
        return;
      }
