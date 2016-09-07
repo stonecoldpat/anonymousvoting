@@ -16,6 +16,8 @@
     <!-- Custom styles for this template -->
     <link href="starter-template.css" rel="stylesheet">
 
+    <link href="css/jquery.datetimepicker.css" rel="stylesheet">
+
   </head>
 
   <body>
@@ -75,10 +77,13 @@
         <div class="col-md-4">
           <div class="thumbnail">
             <h4>3. Begin Registration Phase</h4>
-            <div id="beginsignup">
-              <p>Timer (blocks) <input type='text' id='timer' value='100'/> </p>
+            <div id="beginRegistration">
+              <p id="datepairExample">
+                  When should the Registration phase finish?
+                  <input id="datetimepicker" type="text">
+              </p>
               <p>What is the question? <input type='text' id='questioninput' value='Dummy Question?'/> </p>
-              <p><button onclick="beginsignup()">Begin Registration Phase</button></p>
+              <p id="beginRegistrationbutton"><button onclick="beginRegistration()">Begin Registration Phase</button></p>
             </div>
           </div>
         </div>
@@ -87,8 +92,10 @@
         <div class="col-md-4">
           <div class="thumbnail">
             <h4>4. Finish Registration Phase</h4>
-            <div id="finishsignup">
-                  <button onclick="finishsignup()">Finish Registration Phase</button>
+            <div id="finishRegistration">
+                  <p id="currentRegistration"></p>
+                  <p id="finishby"></p>
+                  <button onclick="finishRegistration()">Finish Registration Phase</button>
             </div>
           </div>
         </div>
@@ -128,9 +135,15 @@
     <script src="js/bootstrap.min.js"></script>
     <script src="web3.min.js"></script>
     <script src="bignumber.min.js"></script>
+    <script src="js/jquery.datetimepicker.js"></script>
 
 <script>
 
+// Sort out datetime picker first
+jQuery('#datetimepicker').datetimepicker();
+$.datetimepicker.setLocale('en');
+
+// Relevant code that talks to Ethereum
 var web3;
 var password = "ilikelittlepaddy";
 var addressChosen = false;
@@ -145,9 +158,9 @@ if (typeof web3 !== 'undefined') {
   web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 }
 
-var abi = [{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"eligible","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"vG","type":"uint256[3]"},{"name":"r","type":"uint256"}],"name":"register","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeTally","outputs":[{"name":"","type":"uint256[2]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"addressid","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"votecast","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"i","type":"uint256"},{"name":"r1","type":"uint256"},{"name":"d1","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPYesVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"question","outputs":[{"name":"","type":"string"}],"type":"function"},{"constant":false,"inputs":[{"name":"addr","type":"address[]"}],"name":"setEligible","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"name":"registeredkey","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"finishRegistrationPhase","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"submitVote","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"timer","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"x","type":"uint256"},{"name":"v","type":"uint256"},{"name":"xG","type":"uint256[2]"}],"name":"createZKP","outputs":[{"name":"res","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeReconstructedPublicKeys","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"registered","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"name":"reconstructed","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"name":"","type":"uint8"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"i","type":"uint256"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"time","type":"uint256"},{"name":"_question","type":"string"}],"name":"beginSignUp","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"name":"votes","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"finaltally","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"reset","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"i","type":"uint256"},{"name":"r2","type":"uint256"},{"name":"d2","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPNoVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"addresses","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"}],"name":"Eligible","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"message","type":"string"},{"indexed":false,"name":"currentblock","type":"uint256"},{"indexed":false,"name":"futureblock","type":"uint256"}],"name":"StartTimer","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"},{"indexed":false,"name":"res","type":"bool"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"Registered","type":"event"},{"anonymous":false,"inputs":[],"name":"RegistrationFinished","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"x","type":"uint256"},{"indexed":false,"name":"y","type":"uint256"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"ReconstructedKey","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"},{"indexed":false,"name":"res","type":"bool"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"RegisterVote","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"tally","type":"uint256"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"Tally","type":"event"},{"anonymous":false,"inputs":[],"name":"Reset","type":"event"}];
+var abi = [{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"eligible","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"vG","type":"uint256[3]"},{"name":"r","type":"uint256"}],"name":"register","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeTally","outputs":[{"name":"","type":"uint256[2]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"addressid","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"i","type":"uint256"},{"name":"r1","type":"uint256"},{"name":"d1","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPYesVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"question","outputs":[{"name":"","type":"string"}],"type":"function"},{"constant":false,"inputs":[{"name":"addr","type":"address[]"}],"name":"setEligible","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"counter","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"finishRegistrationPhase","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"submitVote","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"votecast","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"timer","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"x","type":"uint256"},{"name":"v","type":"uint256"},{"name":"xG","type":"uint256[2]"}],"name":"createZKP","outputs":[{"name":"res","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeReconstructedPublicKeys","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"registered","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"name":"","type":"uint8"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"i","type":"uint256"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"time","type":"uint256"},{"name":"_question","type":"string"}],"name":"beginSignUp","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"finaltally","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"reset","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"i","type":"uint256"},{"name":"r2","type":"uint256"},{"name":"d2","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPNoVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"addresses","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"}],"name":"Eligible","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"message","type":"string"},{"indexed":false,"name":"timestamp","type":"uint256"},{"indexed":false,"name":"current_timestamp","type":"uint256"}],"name":"StartTimer","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"},{"indexed":false,"name":"res","type":"bool"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"Registered","type":"event"},{"anonymous":false,"inputs":[],"name":"RegistrationFinished","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"x","type":"uint256"},{"indexed":false,"name":"y","type":"uint256"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"ReconstructedKey","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"},{"indexed":false,"name":"res","type":"bool"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"RegisterVote","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"tally","type":"uint256"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"Tally","type":"event"}];
 var anonymousvoting = web3.eth.contract(abi);
-var anonymousvotingAddr = anonymousvoting.at("0x85fd95c02b20c9beff9953354fd68df8592dc975");
+var anonymousvotingAddr = anonymousvoting.at("0xc07f349d19a60a23b99f0046ce7af87d15c4c4de");
 
 var selectbox = "<p>Address:</p><select id='addrs'>";
 
@@ -232,7 +245,7 @@ function checkForReconstructedKey() {
 }
 
 // Allow people to start submiting their voting key.
-function beginsignup() {
+function beginRegistration() {
 
   if(!addressChosen) {
     alert("Please unlock your Ethereum address.");
@@ -244,31 +257,38 @@ function beginsignup() {
     return;
   }
 
-  var timer = document.getElementById('timer').value;
+  var d = $('#datetimepicker').datetimepicker('getValue');
+  if(d == null) {
+    alert("Please select the finish time for the Registration phase");
+    return;
+  }
+
+  var timer = Math.floor(d.getTime()/1000); // Ethereum works in seconds, not milliseconds.
   var question = document.getElementById('questioninput').value;
 
   web3.personal.unlockAccount(addr,password);
   var res = anonymousvotingAddr.beginSignUp.sendTransaction(timer, question, {from:web3.eth.accounts[accountindex], gas: 4200000});
-  document.getElementById("beginsignup").innerHTML  = "Waiting for Ethereum to confirm that registration has started.";
+  $('#datetimepicker').datetimepicker('destroy');
+  document.getElementById("beginRegistrationbutton").innerHTML  = "Waiting for Ethereum to confirm that Registration has started.";
 
   txlist("Begin Registration Phase: " + res);
 
 }
 
-function finishsignup() {
+function finishRegistration() {
   if(!addressChosen) {
     alert("Please unlock your Ethereum address.");
     return;
   }
 
   if(state != 1) {
-    alert("Please wait until SIGNUP Phase");
+    alert("Please wait until Registration Phase");
     return;
   }
 
   web3.personal.unlockAccount(addr,password);
   var res = anonymousvotingAddr.finishRegistrationPhase.sendTransaction({from:web3.eth.accounts[accountindex], gas: 4200000});
-  document.getElementById("finishsignup").innerHTML  = "Waiting for Ethereum to confirm that registration has finished.";
+  document.getElementById("finishRegistration").innerHTML  = "Waiting for Ethereum to confirm that Registration has finished.";
 
   txlist("Finish Registration Phase: " + res);
 }
@@ -293,7 +313,7 @@ function computekeys() {
 
 }
 
-
+// Tell Ethereum to compute Tally
 function tally() {
 
   if(!addressChosen) {
@@ -307,7 +327,7 @@ function tally() {
   }
 
   //TODO: Check that all votes have been cast..
-  // Can do this by checking the public 'votecast' mapping... 
+  // Can do this by checking the public 'votecast' mapping...
   web3.personal.unlockAccount(web3.eth.accounts[accountindex],password);
   var res = anonymousvotingAddr.computeTally.sendTransaction({from:web3.eth.accounts[accountindex], gas: 4200000});
   document.getElementById("tally").innerHTML  = "Waiting for Ethereum to confirm tally.";
@@ -342,7 +362,9 @@ var allevents = anonymousvotingAddr.allEvents({}, '', function(error, result){
 
     // Voting phase has begun!
     if(result.event === "StartTimer") {
-       append(result.event + "," + result.args.message + "," + result.args.currentblock + "," + result.args.futureblock);
+       var date = new Date();
+       date.setTime(result.args.timestamp.toNumber() * 1000); // Ethereum is seconds. JS is milliseconds.
+       append(result.event + "," + result.args.message + "," + date);
        currentState();
     }
 
@@ -372,6 +394,10 @@ var allevents = anonymousvotingAddr.allEvents({}, '', function(error, result){
       var receipt = web3.eth.getTransactionReceipt(result.transactionHash);
       append(result.event + " - Yes Votes: " + result.args.tally.toString(10) + " and Total Votes Counted: " + result.args.counter.toString(10));
     }
+
+    if(result.event === "Debug") {
+      append(result.event + "," + result.args.msg + "," + result.args.num);
+    }
   }
 });
 
@@ -392,41 +418,51 @@ function currentState() {
     document.getElementById('state').innerHTML = "SETUP Phase - You need to whitelist each voter's address";
   } else if(state == 1) {
     document.getElementById('state').innerHTML = "SIGNUP Phase - Voters need to register their voting codes.";
-    document.getElementById("eligible").innerHTML = "Can no longer sign up new addresses";
-    document.getElementById('beginsignup').innerHTML = "Can no longer set question of vote";
+    document.getElementById("eligible").innerHTML = "Can no longer Registration new addresses";
+    document.getElementById('beginRegistration').innerHTML = "Can no longer set question of vote";
+    $('#datetimepicker').datetimepicker('destroy');
+    var finishby = document.getElementById('finishby');
+    if(finishby != null) {
+      var date = new Date();
+      date.setTime(anonymousvotingAddr.timer() * 1000);
+      document.getElementById('finishby').innerHTML = "You can finish the Registration phase after  " + date;
+      var c = anonymousvotingAddr.counter();
+      document.getElementById('currentRegistration').innerHTML = "Currently have " + c + " voters signed up.";
+    }
   } else if(state == 2) {
     document.getElementById('state').innerHTML = "COMPUTE Phase - You need to inform Ethereum to compute the voter's special keys";
-    document.getElementById("eligible").innerHTML = "Can no longer sign up new addresses";
-    document.getElementById('beginsignup').innerHTML = "Can no longer set question of vote";
-    document.getElementById('beginsignup').innerHTML = "Can no longer set question of vote";
-    document.getElementById('finishsignup').innerHTML = "Registration phase has already finshed";
+    document.getElementById("eligible").innerHTML = "Can no longer Registration new addresses";
+    document.getElementById('beginRegistration').innerHTML = "Can no longer set question of vote";
+    document.getElementById('beginRegistration').innerHTML = "Can no longer set question of vote";
+    document.getElementById('finishRegistration').innerHTML = "Registration phase has already finshed";
+    $('#datetimepicker').datetimepicker('destroy');
   } else if(state == 3) {
     document.getElementById('state').innerHTML = "VOTE Phase - Voters need to cast their vote. ";
-    document.getElementById("eligible").innerHTML = "Can no longer sign up new addresses";
-    document.getElementById('beginsignup').innerHTML = "Can no longer set question of vote";
-    document.getElementById('finishsignup').innerHTML = "Registration phase has already finshed";
+    document.getElementById("eligible").innerHTML = "Can no longer Registration new addresses";
+    document.getElementById('beginRegistration').innerHTML = "Can no longer set question of vote";
+    document.getElementById('finishRegistration').innerHTML = "Registration phase has already finshed";
     document.getElementById('computekeys').innerHTML = "Voters keys have already been computed";
+    $('#datetimepicker').datetimepicker('destroy');
   } else if(state == 4) {
     var yes = anonymousvotingAddr.finaltally(0);
     var total = anonymousvotingAddr.finaltally(1);
     var no = total - yes;
     document.getElementById('state').innerHTML = "FINISH Phase: Yes - " + yes + " No - " + no;
-    document.getElementById("eligible").innerHTML = "Can no longer sign up new addresses";
-    document.getElementById('beginsignup').innerHTML = "Can no longer set question of vote";
-    document.getElementById('finishsignup').innerHTML = "Registration phase has already finshed";
+    document.getElementById("eligible").innerHTML = "Can no longer Registration new addresses";
+    document.getElementById('beginRegistration').innerHTML = "Can no longer set question of vote";
+    document.getElementById('finishRegistration').innerHTML = "Registration phase has already finshed";
     document.getElementById('computekeys').innerHTML = "Voters keys have already been computed";
     document.getElementById('tally').innerHTML = "Tally has been computed!";
+    $('#datetimepicker').datetimepicker('destroy');
   } else {
     document.getElementById('state').innerHTML = "Undocumented Phase...";
   }
-
 }
 
 // LAZY: Pre-fill the text box with my own addresses.
 for(var i=0; i<web3.eth.accounts.length; i++) {
    document.getElementById('addresses').value = document.getElementById('addresses').value + web3.eth.accounts[i] + ",";
 }
-
 setInterval("currentState()", 1000);
 currentState();
 

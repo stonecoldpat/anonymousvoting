@@ -79,6 +79,7 @@
           <h4> 3. Register for vote</h4>
           <div id="submitvotingkey">
           <p>This will send a voting code to Ethereum.</p>
+          <p id="registerby"></p>
           <button onclick="register()">Register</button>
           </div>
         </div>
@@ -116,9 +117,9 @@
       web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
     }
 
-    var abi = [{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"eligible","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"vG","type":"uint256[3]"},{"name":"r","type":"uint256"}],"name":"register","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeTally","outputs":[{"name":"","type":"uint256[2]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"addressid","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"votecast","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"i","type":"uint256"},{"name":"r1","type":"uint256"},{"name":"d1","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPYesVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"question","outputs":[{"name":"","type":"string"}],"type":"function"},{"constant":false,"inputs":[{"name":"addr","type":"address[]"}],"name":"setEligible","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"name":"registeredkey","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"finishRegistrationPhase","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"submitVote","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"timer","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"x","type":"uint256"},{"name":"v","type":"uint256"},{"name":"xG","type":"uint256[2]"}],"name":"createZKP","outputs":[{"name":"res","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeReconstructedPublicKeys","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"registered","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"name":"reconstructed","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"name":"","type":"uint8"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"i","type":"uint256"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"time","type":"uint256"},{"name":"_question","type":"string"}],"name":"beginSignUp","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"name":"votes","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"finaltally","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"reset","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"i","type":"uint256"},{"name":"r2","type":"uint256"},{"name":"d2","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPNoVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"addresses","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"}],"name":"Eligible","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"message","type":"string"},{"indexed":false,"name":"currentblock","type":"uint256"},{"indexed":false,"name":"futureblock","type":"uint256"}],"name":"StartTimer","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"},{"indexed":false,"name":"res","type":"bool"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"Registered","type":"event"},{"anonymous":false,"inputs":[],"name":"RegistrationFinished","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"x","type":"uint256"},{"indexed":false,"name":"y","type":"uint256"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"ReconstructedKey","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"},{"indexed":false,"name":"res","type":"bool"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"RegisterVote","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"tally","type":"uint256"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"Tally","type":"event"},{"anonymous":false,"inputs":[],"name":"Reset","type":"event"}];
+    var abi = [{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"eligible","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"vG","type":"uint256[3]"},{"name":"r","type":"uint256"}],"name":"register","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeTally","outputs":[{"name":"","type":"uint256[2]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"addressid","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"i","type":"uint256"},{"name":"r1","type":"uint256"},{"name":"d1","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPYesVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"question","outputs":[{"name":"","type":"string"}],"type":"function"},{"constant":false,"inputs":[{"name":"addr","type":"address[]"}],"name":"setEligible","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"counter","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"finishRegistrationPhase","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"submitVote","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"votecast","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"timer","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"x","type":"uint256"},{"name":"v","type":"uint256"},{"name":"xG","type":"uint256[2]"}],"name":"createZKP","outputs":[{"name":"res","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeReconstructedPublicKeys","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"registered","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"name":"","type":"uint8"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"i","type":"uint256"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"time","type":"uint256"},{"name":"_question","type":"string"}],"name":"beginSignUp","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"finaltally","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"reset","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"i","type":"uint256"},{"name":"r2","type":"uint256"},{"name":"d2","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPNoVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"addresses","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"}],"name":"Eligible","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"message","type":"string"},{"indexed":false,"name":"timestamp","type":"uint256"},{"indexed":false,"name":"current_timestamp","type":"uint256"}],"name":"StartTimer","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"},{"indexed":false,"name":"res","type":"bool"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"Registered","type":"event"},{"anonymous":false,"inputs":[],"name":"RegistrationFinished","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"x","type":"uint256"},{"indexed":false,"name":"y","type":"uint256"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"ReconstructedKey","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"},{"indexed":false,"name":"res","type":"bool"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"RegisterVote","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"tally","type":"uint256"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"Tally","type":"event"}];
     var anonymousvoting = web3.eth.contract(abi);
-    var anonymousvotingAddr = anonymousvoting.at("0x85fd95c02b20c9beff9953354fd68df8592dc975");
+    var anonymousvotingAddr = anonymousvoting.at("0xc07f349d19a60a23b99f0046ce7af87d15c4c4de");
     var selectbox = "<p>Address:</p><select id='addrs'>";
 
     // Let user select one of their Ethereum addresses
@@ -155,7 +156,7 @@
         tempaddr = $('#addrs').find(":selected").text();
       }
 
-      if(anonymousvotingAddr.eligible(addr)) {
+      if(anonymousvotingAddr.eligible(tempaddr)) {
         document.getElementById('iseligible').innerHTML = "Yes! This address is eligible to vote!";
       } else {
         alert("You are not yet eligible");
@@ -298,7 +299,7 @@
            w = new BigNumber(row[4]);
            r = new BigNumber(row[5]);
            d = new BigNumber(row[6]);
-           alert("Upload Succesful!");
+          //  alert("Upload Succesful!");
            document.getElementById('upload').innerHTML = "We have extracted your voting codes.";
 
         } else {
@@ -316,6 +317,13 @@
         document.getElementById('state').innerHTML = "SETUP Phase: Election Authority is organising the election. ";
       } else if(state == 1) {
         document.getElementById('state').innerHTML = "SIGNUP Phase: You can now sign up to the election if you are eligible. ";
+        var registerby = document.getElementById('registerby');
+
+        if(registerby != null) {
+          var date = new Date();
+          date.setTime(anonymousvotingAddr.timer() * 1000);
+          document.getElementById('registerby').innerHTML = "Please register by " + date;
+        }
       } else if(state == 2) {
         document.getElementById('state').innerHTML = "COMPUTE Phase: Ethereum is about to compute all voters special keys. ";
       } else if(state == 3) {
@@ -338,8 +346,7 @@
          document.getElementById('submitvotingkey').innerHTML = "Voting key has been accepted by Ethereum";
 
          //Check if vote has already been cast
-         var voter_index = anonymousvotingAddr.addressid(addr);
-         if(anonymousvotingAddr.votecast(voter_index)) {
+         if(anonymousvotingAddr.votecast(addr)) {
            document.getElementById('vote').innerHTML = "Vote has been cast.";
          }
       }
@@ -365,7 +372,9 @@
 
        // Voting phase has begun!
        if(result.event === "StartTimer") {
-          append(result.event + "," + result.args.message + "," + result.args.currentblock + "," + result.args.futureblock);
+         var date = new Date();
+         date.setTime(result.args.timestamp.toNumber() * 1000); // Ethereum is seconds. JS is milliseconds.
+         append(result.event + "," + result.args.message + "," + date);
        }
 
        // Voting key has been submitted.
