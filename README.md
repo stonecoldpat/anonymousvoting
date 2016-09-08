@@ -22,7 +22,7 @@ Why Ethereum?
 
 All communication must be public and authentication between the participants, and  a public bulletin board should be available to store the eligibility white list, voting keys and votes. 
 
-Ethereum's underlying peer to peer network provides the public (and authenticated) communication channel, and its blockchain provides an immutable public ledger to store the voting information. 
+Ethereum's underlying peer to peer network provides the public communication channel. All communication is authenticated as transactions are signed by Ethereum addresses. The blockchain provides an immutable public ledger to store the voting information. 
 
 Furthermore, Ethereum is a platform for 'Smart Contracts' that requires the peer to peer network, the economic majority, and the majority of miners to reach consensus on a program's execution. 
 This allows the Smart Contract that governs the Open Vote Network to self-enforce the execution of the protocol, and allow anyone to verify that the protocol has executed correctly. 
@@ -58,7 +58,7 @@ How can I pick up this library and go?
 =====================================
 
 You need to run 'Geth' in the background:
-
+m
 1. geth <OPTIONAL: --dev/testnet> --rpc --rpcapi="db,eth,net,web3,personal" --rpcport "8545" --rpcaddr "127.0.0.1" --rpccorsdomain "*" console 
 2. Compile the .SOL, and send it to the Ethereum Network. 
 3. Update vote.html and admin.html with the correct abi/contract address. 
@@ -95,56 +95,53 @@ We have implemented the following:
 
 ### Schnorr non-interactive ZKP:
 
-// Function should ONLY be called locally. NEVER send transaction to network. 
-createZKP(uint x, uint v, uint[2] xG) 
-
-// Send transaction to the network to allow Ethereum to verify 
-verifyZKP(uint[2] xG, uint r, uint[3] vG) 
+* Function should ONLY be called locally. NEVER send transaction to network. 
+ * createZKP(uint x, uint v, uint[2] xG)  
+* Send transaction to the network to allow Ethereum to verify 
+ * verifyZKP(uint[2] xG, uint r, uint[3] vG) 
 
 ### 1 out of 2 ZKP:
-// Function should ONLY be called locally. NEVER send transaction to network.
-create1outof2ZKPYesVote(uint w, uint r1, uint d1, uint x)
 
-// Function should ONLY be called locally. NEVER send transaction to network. 
-create1outof2ZKPNoVote(uint w, uint r2, uint d2, uint x)
-
-// Send transaction to the network to allow Ethereum to verify.
-verify1outof2ZKP(uint[4] params, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) 
+* Function should ONLY be called locally. NEVER send transaction to network.
+ * create1outof2ZKPYesVote(uint w, uint r1, uint d1, uint x)
+* Function should ONLY be called locally. NEVER send transaction to network. 
+ * create1outof2ZKPNoVote(uint w, uint r2, uint d2, uint x)
+* Send transaction to the network to allow Ethereum to verify.
+ * verify1outof2ZKP(uint[4] params, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) 
 
 ### Election Functions:
 
-SETUP Phase
+SETUP 
 
-// White list a set of addresses. Only Election Authority can call. 
-setEligible(address[] addr) 
+* White list a set of addresses. Only Election Authority can call. 
+ * setEligible(address[] addr) 
+* Set question and period of time for voters to sign up. Transition from SETUP to SIGNUP Phase. Only Election Authority can call. 
+ * beginSignUp(uint time, string _question)
 
-// Set question and period of time for voters to sign up. Transition from SETUP to SIGNUP Phase. Only Election Authority can call. 
-beginSignUp(uint time, string _question)
+SIGNUP
 
-SIGNUP Phase
-// Voters register their voting key. All eligible voters can call.
-register(uint[2] xG, uint[3] vG, uint r) 
+* Voters register their voting key. All eligible voters can call.
+ * register(uint[2] xG, uint[3] vG, uint r) 
+* Transition from SETUP to COMPUTE Phase. 
+ * finishRegistrationPhase()
 
-// Transition from SETUP to COMPUTE Phase. 
-finishRegistrationPhase()
+COMPUTE
 
-COMPUTE Phase
+* Compute each voter's 'special voting key'. Only Election Authority can call. 
+ * computeReconstructedPublicKeys() 
 
-// Compute each voter's 'special voting key'. Only Election Authority can call. 
-computeReconstructedPublicKeys() 
+VOTE
 
-VOTE Phase
+* Voters submit their vote. All registered votes can call.
+ * submitVote(uint[4] params, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) 
 
-// Voters submit their vote. All registered votes can call.
-submitVote(uint[4] params, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) 
-
-// Compute the final tally. Anyone can call. Transition from VOTE Phase to FINISH Phase. 
-computeTally() 
+* Compute the final tally. Anyone can call. Transition from VOTE Phase to FINISH Phase. 
+ * computeTally() 
 
 ANY Phase. 
 
-// Reset the entire election. Only Election Authority can call. 
-Reset() 
+* Reset the entire election. Only Election Authority can call. 
+ *Reset() 
 
 What is next? 
 =============
