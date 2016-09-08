@@ -446,7 +446,7 @@ contract AnonymousVoting is owned {
   event RegistrationFinished();
   event ReconstructedKey(uint x, uint y, uint counter);
   event RegisterVote(address addr, bool res, uint counter);
-  event Tally(uint tally, uint counter);
+  /*event Tally(uint tally, uint counter);*/
 
   // Modulus for public keys
   uint constant pp = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F;
@@ -469,10 +469,6 @@ contract AnonymousVoting is owned {
   mapping (address => bool) public registered; // Address registered?
   mapping (address => bool) public votecast; // Address voted?
 
-// TODO: We can have a struct to represent a voters keys... but
-// will need to re-organise large parts of the code..
-// as users are currently represented as an int...
-// is it worth the work?
   struct Voter {
       address addr;
       uint[2] registeredkey;
@@ -699,7 +695,7 @@ contract AnonymousVoting is owned {
      if(registered[msg.sender] && !votecast[msg.sender]) {
 
        // Verify the ZKP for the vote being cast
-       if(verify1outof2ZKP(params, c, y, a1, b1, a2, b2)) {
+       if(verify1outof2ZKP(params, y, a1, b1, a2, b2)) {
          voters[c].vote[0] = y[0];
          voters[c].vote[1] = y[1];
 
@@ -750,7 +746,7 @@ contract AnonymousVoting is owned {
      if(temp[0] == 0) {
        finaltally[0] = 0;
        finaltally[1] = counter;
-       Tally(0,counter);
+       /*Tally(0,counter);*/
        return;
      } else {
 
@@ -769,7 +765,7 @@ contract AnonymousVoting is owned {
          if(temp[0] == tempG[0]) {
              finaltally[0] = i;
              finaltally[1] = counter;
-             Tally(i,counter);
+             /*Tally(i,counter);*/
              return;
          }
 
@@ -787,7 +783,7 @@ contract AnonymousVoting is owned {
        // TODO: Handle this better....
        finaltally[0] = 0;
        finaltally[1] = 0;
-       Tally(0,0);
+       /*Tally(0,0);*/
        return;
      }
   }
@@ -811,9 +807,8 @@ contract AnonymousVoting is owned {
 
      // Convert to Affine Co-ordinates
      ECCMath.toZ1(vG, pp);
-
      // Get c = H(g, g^{x}, g^{v});
-     bytes32 b_c = sha256(Gx, Gy, xG[0], xG[1], vG[0], vG[1]);
+     bytes32 b_c = sha256(msg.sender, Gx, Gy, xG, vG);
      uint c = uint(b_c);
 
      // Get 'r' the zkp
@@ -836,7 +831,7 @@ contract AnonymousVoting is owned {
      res[1] = vG[0];
      res[2] = vG[1];
      res[3] = vG[2];
-     return res;
+     return;
   }
 
   // a - b = c;
@@ -867,7 +862,7 @@ contract AnonymousVoting is owned {
     }
 
     // Get c = H(g, g^{x}, g^{v});
-    bytes32 b_c = sha256(Gx, Gy, xG, vG[0], vG[1]);
+    bytes32 b_c = sha256(msg.sender, Gx, Gy, xG, vG);
     uint c = uint(b_c);
 
     // Get g^{r}, and g^{xc}
@@ -890,8 +885,11 @@ contract AnonymousVoting is owned {
 
   // random 'w', 'r1', 'd1'
   // TODO: Make constant
-  function create1outof2ZKPYesVote(uint w, uint i, uint r1, uint d1, uint x) returns (uint[10] res, uint[4] res2){
+  function create1outof2ZKPYesVote(uint w, uint r1, uint d1, uint x) returns (uint[10] res, uint[4] res2){
     uint[2] memory temp;
+
+    // Voter Index
+    uint i = addressid[msg.sender];
 
     uint[2] memory yG = voters[i].reconstructedkey;
     uint[2] memory xG = voters[i].registeredkey;
@@ -934,8 +932,9 @@ contract AnonymousVoting is owned {
     res[8] = temp1[0];
     res[9] = temp1[1];
 
-    // Get c = H(i, x, y, a1, b1, a2, b2);
-    bytes32 b_c = sha256(i, xG[0], xG[1], res);
+    // Get c = H(id, xG, Y, a1, b1, a2, b2);
+    // id is H(round, voter_index, voter_address, contract_address)...
+    bytes32 b_c = sha256(msg.sender, xG, res);
     uint c = uint(b_c);
 
     // d2 = c - d1 mod q
@@ -967,10 +966,12 @@ contract AnonymousVoting is owned {
   }
 
   // random 'w', 'r1', 'd1'
-  function create1outof2ZKPNoVote(uint w, uint i, uint r2, uint d2, uint x) returns (uint[10] res, uint[4] res2){
+  function create1outof2ZKPNoVote(uint w, uint r2, uint d2, uint x) returns (uint[10] res, uint[4] res2){
       uint[2] memory temp_affine1;
       uint[2] memory temp_affine2;
 
+      // Voter Index
+      uint i = addressid[msg.sender];
       uint[2] memory yG = voters[i].reconstructedkey;
       uint[2] memory xG = voters[i].registeredkey;
 
@@ -1024,8 +1025,8 @@ contract AnonymousVoting is owned {
       res[8] = temp1[0];
       res[9] = temp1[1];
 
-      // Get c = H(i, x, y, a1, b1, a2, b2);
-      bytes32 b_c = sha256(i, xG[0], xG[1], res);
+      // Get c = H(i, xG, Y, a1, b1, a2, b2);
+      bytes32 b_c = sha256(msg.sender, xG, res);
       uint c = uint(b_c);
 
       // d1 = c - d2 mod q
@@ -1057,10 +1058,13 @@ contract AnonymousVoting is owned {
     }
 
   // We verify that the ZKP is of 0 or 1.
-  function verify1outof2ZKP(uint[4] params, uint i, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) returns (bool) {
+  function verify1outof2ZKP(uint[4] params, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) returns (bool) {
       uint[2] memory temp1;
       uint[3] memory temp2;
       uint[3] memory temp3;
+
+      // Voter Index
+      uint i = addressid[msg.sender];
 
       // We already have them stored...
       // TODO: Decide if this should be in SubmitVote or here...
@@ -1074,7 +1078,7 @@ contract AnonymousVoting is owned {
       }
 
       // Does c =? d1 + d2 (mod n)
-      if(uint(sha256(i, xG, y, a1, b1, a2, b2)) != addmod(params[0],params[1],nn)) {
+      if(uint(sha256(msg.sender, xG, y, a1, b1, a2, b2)) != addmod(params[0],params[1],nn)) {
         return false;
       }
 
