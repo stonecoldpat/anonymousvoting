@@ -4,10 +4,18 @@
 What is the Open Vote Network?
 =========================
 
-The Open Vote Network is an online voting protocol that ensures the privacy of each vote, and removes the need for a tally authority. 
 
-A description of the Anonymous Voting protocol can be found here:
-http://homepages.cs.ncl.ac.uk/feng.hao/files/OpenVote_IET.pdf
+The Open Vote Network (OV-net) is a 2-round decentralized voting protocol with the following attractive features
+
+* All communication is public - no secret channels between voters are required.
+* The system is self-tallying - no tallying authorities are required.
+* The voter's privacy protection is maximum - only a full collusion that involves all other voters in the election can uncover the voter's secret vote.
+* The system is dispute-free - everybody can check whether all voters act according to the protocol, hence ensuring the the result is publicly verifiable.
+
+A description of the protocol can be found here: http://homepages.cs.ncl.ac.uk/feng.hao/files/OpenVote_IET.pdf
+
+This program presents an efficient realization of this protocol over the Ethereum network.
+
 
 Why Ethereum? 
 ==============
@@ -141,6 +149,4 @@ Reset()
 What is next? 
 =============
 
-We are currently writing up about this protocol and how it works with Ethereum. 
-
-The code has been realised early as for us to test on Ethereum's real network will require our code to be made public regardless. 
+We are currently writing up about this protocol and how it works with Ethereum. It is all very exciting! 

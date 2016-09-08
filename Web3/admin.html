@@ -164,13 +164,23 @@ var anonymousvotingAddr = anonymousvoting.at("0x194796d4428cf2022a455d68e40cbcc4
 
 var selectbox = "<p>Address:</p><select id='addrs'>";
 
+var foundOwner = false;
 // Let user select one of their Ethereum addresses
 for(var i=0; i<web3.eth.accounts.length; i++) {
-  selectbox = selectbox + '<option value="' + i + '">' + web3.eth.accounts[i] + '</option>';
+
+  if(anonymousvotingAddr.owner() == web3.eth.accounts[i]) {
+    foundOwner = true;
+    selectbox = selectbox + '<option value="' + i + '">' + web3.eth.accounts[i] + '</option>';
+  }
 }
 
 selectbox = selectbox + "</select> <p>Password:</p> <input type='text' id='passwordf' value='ilikelittlepaddy' name='fname'><button onclick='unlock()'>Unlock</button>";
-document.getElementById('dropdown').innerHTML = selectbox;
+
+if(foundOwner) {
+  document.getElementById('dropdown').innerHTML = selectbox;
+} else {
+  document.getElementById('dropdown').innerHTML = "You do not have an Ethereum account that is the Election Authority for this vote.";
+}
 
 function unlock() {
   var _addr = $('#addrs').find(":selected").text();
