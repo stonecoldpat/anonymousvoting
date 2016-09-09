@@ -11,21 +11,44 @@
   <div class="header">
     <h3>Talking to Geth</h3>
   </div>
+  <div class="container">
+  <h2>Progress Table</h2>
+  <p>This table records our current progress in the test:</p>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>State</th>
+        <th>Eligible</th>
+        <th>Registered</th>
+        <th>Votes</th>
+        <th>Yes Votes</th>
+        <th>No Votes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="state"></td>
+        <td id="eligible">0</td>
+        <td id="registered">0</td>
+        <td id="votes">0</td>
+        <td id="yesvotes">0</td>
+        <td id="novotes">0</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
   <div>
      <input type='file' accept='text/plain' onchange='openFile(event)'>
-     <button onclick="setEligible()">Kick-start election!</button>
-     <button onclick="finishRegistrationPhase()">FinishRegistration</button>
+     <!-- <button onclick="finishRegistrationPhase()">FinishRegistration</button>
      <button onclick="computePublicKeys()">Continue Computing 1</button>
      <button onclick="submitVotes()">Submit Voices</button>
-     <button onclick="tally()">Tally</button>
+     <button onclick="tally()">Tally</button> -->
      <button onclick="topupEther()">Top up Ether</button>
-     <button onclick="estimateGas()">Estimate Gas for Operations</button>
-     <button onclick="drawOperationGasTable()">Draw table for operation estimates</button>
+     <button onclick="drawGasTable()">Draw Gas Table</button>
+     <!-- <button onclick="drawOperationGasTable()">Draw table for operation estimates</button> -->
      <button onclick="reset()">Reset</button>
   </div>
   <div id="tableresult">
-  </div>
-  <div id="tableresult_operations">
   </div>
   <div id="infodiv">
 
@@ -70,9 +93,9 @@ if (typeof web3 !== 'undefined') {
   web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 }
 
-var abi = [{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"eligible","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"vG","type":"uint256[3]"},{"name":"r","type":"uint256"}],"name":"register","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeTally","outputs":[{"name":"","type":"uint256[2]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"addressid","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"r1","type":"uint256"},{"name":"d1","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPYesVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"question","outputs":[{"name":"","type":"string"}],"type":"function"},{"constant":false,"inputs":[{"name":"addr","type":"address[]"}],"name":"setEligible","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"counter","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"finishRegistrationPhase","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"submitVote","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"r2","type":"uint256"},{"name":"d2","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPNoVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"votecast","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"timer","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"x","type":"uint256"},{"name":"v","type":"uint256"},{"name":"xG","type":"uint256[2]"}],"name":"createZKP","outputs":[{"name":"res","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeReconstructedPublicKeys","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"registered","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"name":"","type":"uint8"}],"type":"function"},{"constant":false,"inputs":[{"name":"time","type":"uint256"},{"name":"_question","type":"string"}],"name":"beginSignUp","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"finaltally","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"reset","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"addresses","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"}],"name":"Eligible","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"message","type":"string"},{"indexed":false,"name":"timestamp","type":"uint256"},{"indexed":false,"name":"current_timestamp","type":"uint256"}],"name":"StartTimer","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"},{"indexed":false,"name":"res","type":"bool"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"Registered","type":"event"},{"anonymous":false,"inputs":[],"name":"RegistrationFinished","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"x","type":"uint256"},{"indexed":false,"name":"y","type":"uint256"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"ReconstructedKey","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"addr","type":"address"},{"indexed":false,"name":"res","type":"bool"},{"indexed":false,"name":"counter","type":"uint256"}],"name":"RegisterVote","type":"event"}];
+var abi = [{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"eligible","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"vG","type":"uint256[3]"},{"name":"r","type":"uint256"}],"name":"register","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeTally","outputs":[{"name":"","type":"uint256[2]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"addressid","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"r1","type":"uint256"},{"name":"d1","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPYesVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"question","outputs":[{"name":"","type":"string"}],"type":"function"},{"constant":false,"inputs":[{"name":"addr","type":"address[]"}],"name":"setEligible","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"counter","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"finishRegistrationPhase","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"submitVote","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"r2","type":"uint256"},{"name":"d2","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPNoVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"votecast","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"timer","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"x","type":"uint256"},{"name":"v","type":"uint256"},{"name":"xG","type":"uint256[2]"}],"name":"createZKP","outputs":[{"name":"res","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeReconstructedPublicKeys","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"registered","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"name":"","type":"uint8"}],"type":"function"},{"constant":false,"inputs":[{"name":"time","type":"uint256"},{"name":"_question","type":"string"}],"name":"beginSignUp","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"finaltally","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"reset","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"addresses","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"}];
 var anonymousvoting = web3.eth.contract(abi);
-var anonymousvotingAddr = anonymousvoting.at("0xada0c629fc801552e71dc5367b26c2085259678d");
+var anonymousvotingAddr = anonymousvoting.at("0xa5a11cca1b0740a0b0221c7e059355ea572abb74");
 
 // These are counters to ensure that enough people have finished
 // the stage before moving on
@@ -109,266 +132,230 @@ function trackGas(record, gas) {
 
 // This was being used to track gas usage for each function...
 var eligibleGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
+var signupGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
+var finishGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
 var registerGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
 var computeGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
 var submitVoteGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
 var tallyGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
 
-var addMixedGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
-var mulGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
-var addMixedMGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
-var toAffineGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
-var addGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
-var isPubGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
-var isPubJGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
-var isTwoAdditionGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
-// var isThreeAdditionGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
 
 // Draw a table on the site to show us the cost for each stage.
 function drawGasTable() {
 
   var eligibleTable = "<tr><td>Eligible</td><td>" + eligibleGas[1].toFormat(0) + "</td><td>" + eligibleGas[2].toFormat(0) + "</td><td>" + eligibleGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + eligibleGas[0].toFormat(0) + "</td></tr>";
+  var signupTable = "<tr><td>Transition to SIGNUP</td><td>" + signupGas[1].toFormat(0) + "</td><td>" + signupGas[2].toFormat(0) + "</td><td> -1 </td><td>" + signupGas[0].toFormat(0) + "</td></tr>";
   var registerTable = "<tr><td>Register to Vote</td><td>" + registerGas[1].toFormat(0) + "</td><td>" + registerGas[2].toFormat(0) + "</td><td>" + registerGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + registerGas[0].toFormat(0) + "</td></tr>";
+  var finishTable = "<tr><td>Transition to COMPUTE</td><td>" + finishGas[1].toFormat(0) + "</td><td>" + finishGas[2].toFormat(0) + "</td><td> -1 </td><td>" + finishGas[0].toFormat(0) + "</td></tr>";
   var computeTable = "<tr><td>Compute Keys</td><td>" + computeGas[1].toFormat(0) + "</td><td>" + computeGas[2].toFormat(0) + "</td><td>" + computeGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + computeGas[0].toFormat(0) + "</td></tr>";
   var submitVoteTable = "<tr><td>Submit Vote</td><td>" + submitVoteGas[1].toFormat(0) + "</td><td>" + submitVoteGas[2].toFormat(0) + "</td><td>" + submitVoteGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + submitVoteGas[0].toFormat(0) + "</td></tr>";
-  var tallyTable = "<tr><td>Tally</td><td>" + tallyGas[1].toFormat(0) + "</td><td>" + tallyGas[2].toFormat(0) + "</td><td>" + tallyGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + tallyGas[0].toFormat(0) + "</td></tr>";
+  var tallyTable = "<tr><td>Tally</td><td>" + tallyGas[1].toFormat(0) + "</td><td>" + tallyGas[2].toFormat(0) + "</td><td>" + tallyGas[0].dividedBy(1).toFormat(0) + "</td><td>" + tallyGas[0].toFormat(0) + "</td></tr>";
   var table = "<table> <tr><th>Stage</th><th>Lowest Gas</th><th>Highest Gas</th><th>Average Gas</th><th>Total Gas</th></tr>" +
-              eligibleTable + registerTable + computeTable + submitVoteTable + tallyTable + "</table>";
+              eligibleTable + signupTable + registerTable + finishTable + computeTable + submitVoteTable + tallyTable + "</table>";
   document.getElementById('tableresult').innerHTML = table;
 }
 
-function drawOperationGasTable() {
-  var addMixedMRow = "<tr><td>Add Mixed M (Jacob, affine)</td><td>" + addMixedMGas[1].toFormat(0) + "</td><td>" + addMixedMGas[2].toFormat(0) + "</td><td>" + addMixedMGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + addMixedMGas[0].toFormat(0) + "</td><td>" + addMixedMGas[3] + "</td></tr>";
-  var addMixedRow = "<tr><td>Add Mixed (Jacob, affine)</td><td>" + addMixedGas[1].toFormat(0) + "</td><td>" + addMixedGas[2].toFormat(0) + "</td><td>" + addMixedGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + addMixedGas[0].toFormat(0) + "</td><td>" + addMixedGas[3] + "</td></tr>";
-  var addRow = "<tr><td>Add (Jacob)</td><td>" + addGas[1].toFormat(0) + "</td><td>" + addGas[2].toFormat(0) + "</td><td>" + addGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + addGas[0].toFormat(0) + "</td><td> " + addGas[3].toFormat(0) + "</td></tr>";
-  var add2Row = "<tr><td>Two Addition (Jacob)</td><td>" + isTwoAdditionGas[1].toFormat(0) + "</td><td>" + isTwoAdditionGas[2].toFormat(0) + "</td><td>" + isTwoAdditionGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + isTwoAdditionGas[0].toFormat(0) + "</td><td> " + isTwoAdditionGas[3]+ "</td></tr>";
-  // var add3Row = "<tr><td>Tree Addition (Jacob)</td><td>" + isThreeAdditionGas[1].toFormat(0) + "</td><td>" + isThreeAdditionGas[2].toFormat(0) + "</td><td>" + isThreeAdditionGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + isThreeAdditionGas[0].toFormat(0) + "</td><td> " + isThreeAdditionGas[3]+ "</td></tr>";
-  var mulRow = "<tr><td>Mul</td><td>" + mulGas[1].toFormat(0) + "</td><td>" + mulGas[2].toFormat(0) + "</td><td>" + mulGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + mulGas[0].toFormat(0) + "</td><td>" + mulGas[3] + "</td></tr>";
-  var toAffineRow = "<tr><td>Convert Jacob to Affine</td><td>" + toAffineGas[1].toFormat(0) + "</td><td>" + toAffineGas[2].toFormat(0) + "</td><td>" + toAffineGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + toAffineGas[0].toFormat(0) + "</td><td>" + toAffineGas[3] + "</td></tr>";
-  var isPubRow = "<tr><td>Check if Public Key (Affine)</td><td>" + isPubGas[1].toFormat(0) + "</td><td>" + isPubGas[2].toFormat(0) + "</td><td>" + isPubGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + isPubGas[0].toFormat(0) +  "</td><td>" + isPubGas[3] + "</td></tr>";
-  var isPubJRow = "<tr><td>Check if Public Key (Jacob)</td><td>" + isPubJGas[1].toFormat(0) + "</td><td>" + isPubJGas[2].toFormat(0) + "</td><td>" + isPubJGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + isPubJGas[0].toFormat(0) + "</td><td>" + isPubJGas[3] + "</td></tr>";
-  var table = "<table> <tr><th>Stage</th><th>Lowest Gas</th><th>Highest Gas</th><th>Average Gas</th><th>Total Gas</th><th>Counter</th></tr>" +
-              addRow + mulRow + addMixedRow + addMixedMRow + add2Row + toAffineRow + isPubRow + isPubJRow + "</table>";
-  document.getElementById('tableresult_operations').innerHTML = table;
-}
-// var printStrEvt = anonymousvotingAddr.TestEvent({}, '', function(error, result){
-//   if (!error){
-//     print_r("Response: " + result);
-//     append(result.event);
-//     append(result.args.message + "," + result.args.c);
-//   }
-// });
+// Make sure each event only happens once...
+var fileUploaded = false;
+var eligibleBool = false;
+var signupSentBool = false;
+var signupBool = false;
+var finishRegBool = false;
+var computeBool = false;
+var voteBool = false;
+var readyToTallyBool = false;
+var tallyBool = false;
 
-/*
- * Catch events in real-time and update the site with the voting progress..
- */
-var allevents = anonymousvotingAddr.allEvents({}, '', function(error, result){
-  if (!error){
+function currentState() {
 
-    // append("All - " + result.event);
+  state = anonymousvotingAddr.state();
 
-    if(result.event === "Eligible") {
-      var receipt = web3.eth.getTransactionReceipt(result.transactionHash);
-      append(result.event + "," + result.args.addr + "," + eligibleCounter + "," + people.length + ", Gas Cost: " + receipt.gasUsed);
-
-      eligibleCounter = eligibleCounter + 1;
-
-      if(eligibleCounter == people.length) {
-        trackGas(eligibleGas, receipt.gasUsed);
-        allowSignUp();
-      }
-    }
-
-    if(result.event === "ElectionAuthority") {
-      append(result.event + "," + result.args.addr);
-    }
-
-    if(result.event === "StartTimer") {
-
-       var date = new Date();
-       date.setTime(result.args.timestamp.toNumber() * 1000);
-       append(result.event + "," + result.args.message + "," + date.toUTCString());
-
-       register();
-    }
-
-    if(result.event === "RegistrationFinished") {
-      append(result.event);
-      computePublicKeys();
-    }
-
-    if(result.event === "Registered") {
-
-        // We need to know the index for each person...
-        // We can use this later on to store reconstructed keys
-        for(var i=0; i<people.length; i++) {
-              if(people[i][8] === result.args.addr) {
-                   people[i][9] = result.args.counter; // Persons index in this election
-                   var receipt = web3.eth.getTransactionReceipt(result.transactionHash);
-                   append(result.event + "," + result.args.addr + "," + result.args.res + "," + people[i][6] + " -> " + result.args.counter + ", Gas Cost: " + receipt.gasUsed);
-                  //  append(people[i][6] + " -> " + people[i][9]);
-
-                  trackGas(registerGas, receipt.gasUsed);
-               }
-         }
-
-         registeredCounter = registeredCounter + 1;
-
-         // Once everyone has registered, recompue public keys!
-         if(registeredCounter == people.length) {
-           finishRegistrationPhase();
-         }
-
-    }
-
-    if(result.event === "ReconstructedKey") {
-         var receipt = web3.eth.getTransactionReceipt(result.transactionHash);
-         append(result.event + "," + result.args.x.toString(10) + "," + result.args.y.toString(10) + "," + result.args.counter + ", Gas Cost: " + receipt.gasUsed);
-         reconstructedCounter = reconstructedCounter + 1;
-
-         for(var i=0; i<people.length; i++) {
-           if(people[i][9].equals(result.args.counter)) {
-             people[i][10] = [result.args.x,result.args.y];
-             append("Found " + people[i][6] + "," + result.args.counter + " reconstructed public key");
-           }
-         }
-
-         // Once we know everyones recomputed public key. We can submit votes.
-         if(reconstructedCounter == people.length) {
-              trackGas(computeGas, receipt.gasUsed);
-              submitVotes();
-         }
-    }
-
-    if(result.event === "RegisterVote") {
-
-         // For some reason; I get duplicate events
-         // This might be due to orphan blocks?
-         //
-         var f = false;
-         for(var i=0; i<submitedVoteLog.length; i++) {
-           if(submitedVoteLog[i] == result.args.addr) {
-             f = true;
-           }
-         }
-
-         if(!f) {
-           submitVoteCounter = submitVoteCounter + 1;
-           var receipt = web3.eth.getTransactionReceipt(result.transactionHash);
-           append(result.event + "," + result.args.addr + "," + result.args.res + "," + result.args.counter + ", Gas Cost: " + receipt.gasUsed);
-           submitedVoteLog.push(result.args.addr);
-           trackGas(submitVoteGas, receipt.gasUsed);
-         }
-
-         if(submitVoteCounter == people.length) {
-            tally();
-         }
-    }
-
-    // Final tally... tell us gas usage as well.
-    if(result.event === "Tally") {
-      var receipt = web3.eth.getTransactionReceipt(result.transactionHash);
-      append(result.event + " - Yes Votes: " + result.args.tally.toString(10) + " and Total Votes Counted: " + result.args.counter.toString(10) + ", Gas Cost: " + receipt.gasUsed);
-      trackGas(tallyGas, receipt.gasUsed);
-      drawGasTable();
-      // reset();
-    }
-
-    if(result.event === "Reset") {
-      append("Ready to start another election!");
-      setEligible();
-      // append(result.event + ",(" + result.args.x.toString(10) + "," + result.args.y.toString(10) + ")," + result.args.c);
-    }
-
-    if(result.event === "Debug") {
-
-        var receipt = web3.eth.getTransactionReceipt(result.transactionHash);
-
-        // Addition (mixed)
-        if(result.args.op == 0) {
-          trackGas(addMixedGas, result.args.gas);
-          append("Addition Mixed Gas: " + result.args.gas);
-        }
-
-        //Addition (Mixed, and store in variable)
-        if(result.args.op == 1) {
-          trackGas(addMixedMGas, result.args.gas);
-          append("Add Mixed (M) Gas: " + result.args.gas);
-        }
-
-        if(result.args.op == 2) {
-          trackGas(mulGas, result.args.gas);
-          append("Multiplication Gas: " + result.args.gas);
-          var G = [new BigNumber("0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798"), new BigNumber("0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8")];
-
-          web3.personal.unlockAccount(web3.eth.accounts[0],password);
-
-          // Lets take advantage of the Jacob points...
-          var num1 = [result.args.x, result.args.y, result.args.z];
-
-          append("Using the number.... " + "(" + num1[0] + "," + num1[1] + "," + num1[2] + ")");
-          anonymousvotingAddr.addition.sendTransaction(num1, G, {from:web3.eth.accounts[0], gas: 4200000});
-          anonymousvotingAddr.additionJacob.sendTransaction(num1, num1, {from:web3.eth.accounts[0], gas: 4200000});
-          anonymousvotingAddr.toAffine.sendTransaction(num1, {from:web3.eth.accounts[0], gas: 4200000});
-          anonymousvotingAddr.additionM.sendTransaction(num1, G, {from:web3.eth.accounts[0], gas: 4200000});
-          anonymousvotingAddr.ispubJ.sendTransaction(num1, {from:web3.eth.accounts[0], gas: 4200000});
-          anonymousvotingAddr.twoadditionJacob.sendTransaction(num1, num1, {from:web3.eth.accounts[0], gas: 4200000});
-          // anonymousvotingAddr.threeadditionJacob.sendTransaction(num1, num1, {from:web3.eth.accounts[0], gas: 4200000});
-        }
-
-        if(result.args.op == 3) {
-          trackGas(toAffineGas, result.args.gas);
-          append("To Affine Co-ordinates Gas: " + result.args.gas);
-
-          var num1 = [result.args.x, result.args.y];
-
-          anonymousvotingAddr.ispub.sendTransaction(num1, {from:web3.eth.accounts[0], gas: 4200000});
-        }
-
-        if(result.args.op == 4) {
-          trackGas(addGas, result.args.gas);
-          append("Addition of Jacob Points: " + result.args.gas);
-          append("Gas Before: " + result.args.y + " and Gas After: " + result.args.z);
-        }
-
-        if(result.args.op == 5) {
-          trackGas(isPubGas, result.args.gas);
-          append("Is Public Key (Affine) Gas: " + result.args.gas);
-        }
-
-        if(result.args.op == 6) {
-          trackGas(isPubJGas, result.args.gas);
-          append("Is Public Key (Jacob) Gas: " + result.args.gas);
-        }
-
-        if(result.args.op == 7) {
-          trackGas(isTwoAdditionGas, result.args.gas);
-          append("Two Addition Gas (Jacob): " + result.args.gas);
-          append("Gas Before: " + result.args.y + " and Gas After: " + result.args.z);
-        }
-
-        // if(result.args.op == 8) {
-        //   trackGas(isThreeAdditionGas, result.args.gas);
-        //   append("Three Addition Gas (Jacob): " + result.args.gas);
-        //   append("Gas Before: " + result.args.y + " and Gas After: " + result.args.z);
-        // }
-    }
+  // Make sure the test file has been uploaded
+  if(!fileUploaded) {
+     return;
   }
-});
+
+  // SETUP
+  if(state == 0) {
+
+     // Have we finished setting who is eligible?
+     if(!signupSentBool) {
+
+        // Set everyone as eligible..
+        if(!eligibleBool) {
+          document.getElementById('state').innerHTML = "SETUP";
+          eligibleBool = true;
+          setEligible();
+        } else {
+          // Make sure everyone has been set as eligible before moving on to SIGNUP Phase
+          var notEligibleBool = false;
+
+          var c = 0;
+
+          // Check if everyone is eligible..
+          for(var i=0; i<people.length; i++) {
+
+            var person = people[i];
+            // If someone is not eligible... record it...
+            var addr = person[8];
+            if(!anonymousvotingAddr.eligible(addr)) {
+              notEligibleBool = true;
+            } else {
+              c = c + 1;
+            }
+          }
+
+          document.getElementById('eligible').innerHTML = c;
+
+          // If we did not find anyone who was not eligible... then we can move onto the signup phase
+          if(!notEligibleBool) {
+             signupSentBool = true;
+             allowSignUp();
+          }
+         }
+      }
+  } else if(state == 1) { // SIGNUP
+
+    if(!finishRegBool) {
+        // Have we just finished signing people up?
+        if(!signupBool) {
+          document.getElementById('state').innerHTML = "SIGNUP";
+           signupBool = true;
+           register(); // People will start to register
+        } else {
+
+           // Make sure everyone is registered
+           var notRegisteredBool = false;
+           var c = 0;
+           for(var i=0; i<people.length; i++) {
+
+              if(!anonymousvotingAddr.registered(people[i][8])) {
+                 notRegisteredBool = true;
+              } else {
+                c = c + 1;
+              }
+           }
+
+           document.getElementById('registered').innerHTML = c;
+
+           if(!notRegisteredBool) {
+             finishRegBool = true;
+             finishRegistrationPhase();
+           }
+        }
+    }
+  } else if(state == 2) { // COMPUTE
+
+    // Have we told Ethereum to compute the voting keys yet?
+    if(!computeBool) {
+      document.getElementById('state').innerHTML = "COMPUTE";
+      computePublicKeys();
+      computeBool = true;
+    }
+  } else if(state == 3) { // VOTE
+
+    // Have we told Ethereum to perform the tally yet?
+    if(!readyToTallyBool) {
+        // Have we sent our votes to Ethereum?
+        if(!voteBool) {
+            document.getElementById('state').innerHTML = "VOTE";
+            submitVotes();
+            voteBool = true;
+        } else {
+
+            var notVotedBool = false;
+            var c = 0;
+
+            // Try to see if a vote has not yet been recorded.
+            for(var i=0; i<people.length; i++) {
+
+                if(!anonymousvotingAddr.votecast(people[i][8])) {
+                    notVotedBool = true;
+                } else {
+                  c = c + 1;
+                }
+            }
+
+            document.getElementById('votes').innerHTML = c;
+            // Have all votes been cast?
+            if(!notVotedBool) {
+                readyToTallyBool = true;
+                tally();
+            }
+         }
+    }
+
+  } else if(state == 4) { // TALLY
+
+      if(!tallyBool) {
+        var yes = anonymousvotingAddr.finaltally(0);
+        var total = anonymousvotingAddr.finaltally(1);
+        var no = total - yes;
+        document.getElementById('state').innerHTML = "TALLY";
+        document.getElementById('yesvotes').innerHTML = yes;
+        document.getElementById('novotes').innerHTML = no;
+        tallyBool = true;
+        dumpTxId();
+        drawGasTable();
+      }
+  }
+}
+
 
 // We submit our ZKP
 // We need to compute yG...
 // We submit yes or no votes
 // Finally tally
 var people = new Array();
-var patrick = new Array();
-var feng = new Array();
-var taha = new Array();
-var sia = new Array();
-var maryam = new Array();
-var ehsan = new Array();
+var eligibleTx = 0;
+var signuptx = 0;
+var registeredTx = new Array();
+var finishedregtx = 0;
+var computetx = 0;
+var voteTx = new Array();
+var tallytx = 0;
 
-// var EC = require('elliptic').ec;
+function dumpTxId() {
+    var txid = "";
+
+    append("Eligible TX: " + eligibleTx);
+
+    var receipt = web3.eth.getTransactionReceipt(eligibleTx);
+    trackGas(eligibleGas, receipt.gasUsed);
+
+    append("Signup TX: " + signuptx);
+    receipt = web3.eth.getTransactionReceipt(signuptx);
+    trackGas(signupGas, receipt.gasUsed)
+
+    for(var i=0; i<registeredTx.length; i++) {
+      receipt = web3.eth.getTransactionReceipt(registeredTx[i]);
+      trackGas(registerGas, receipt.gasUsed);
+      txid = txid + registeredTx[i] + ",";
+    }
+
+    append("Registered TX: " + txid);
+    txid = "";
+
+    append("Finish Registration TX: " + finishedregtx);
+    receipt = web3.eth.getTransactionReceipt(finishedregtx);
+    trackGas(finishGas, receipt.gasUsed);
+
+    append("Compute TX: " + computetx);
+    receipt = web3.eth.getTransactionReceipt(computetx);
+    trackGas(computeGas, receipt.gasUsed);
+
+    for(var i=0; i<voteTx.length; i++) {
+      receipt = web3.eth.getTransactionReceipt(voteTx[i]);
+      trackGas(submitVoteGas, receipt.gasUsed);
+      txid = txid + voteTx[i] + ",";
+    }
+
+    append("Vote TX: " + txid);
+
+    append("Tally TX: " + tallytx);
+    receipt = web3.eth.getTransactionReceipt(tallytx);
+    trackGas(tallyGas, receipt.gasUsed);
+}
 
 var openFile = function(event) {
   var input = event.target;
@@ -392,7 +379,6 @@ var openFile = function(event) {
       //[7] = vote yes or no
       //[8] = address id
       //[9] = counter;
-      //[10] = recomputed public key
       person[0] = new BigNumber(row[0]);
       person[1] = [new BigNumber(row[1]), new BigNumber(row[2])];
       person[2] = new BigNumber(row[3]);
@@ -403,7 +389,6 @@ var openFile = function(event) {
       person[7] = row[8];
       person[8] = web3.eth.accounts[i];
       person[9] = -1; // Index in the vote - given to us later
-      person[10] = -1; // We fetch this later using an event
 
       people.push(person);
 
@@ -417,23 +402,26 @@ var openFile = function(event) {
     }
   };
   reader.readAsText(input.files[0]);
-
-
+  fileUploaded = true;
 };
 
 function finishRegistrationPhase() {
   web3.personal.unlockAccount(web3.eth.accounts[0],password);
   var res = anonymousvotingAddr.finishRegistrationPhase.sendTransaction({from:web3.eth.accounts[0], gas: 4200000})
+  finishedregtx = res;
   append("Finished Registration sent from " + web3.eth.accounts[0]);
 
   append("Finished Registration TxID: " + res);
 }
 
 function topupEther() {
-  for(var i=1; i<web3.eth.accounts.length; i++) {
-    web3.personal.unlockAccount(web3.eth.accounts[0],password);
-    web3.eth.sendTransaction({from:web3.eth.coinbase, to:web3.eth.accounts[i], value: web3.toWei(1, "ether")});
-  }
+  // for(var i=1; i<web3.eth.accounts.length; i++) {
+  //   web3.personal.unlockAccount(web3.eth.accounts[0],password);
+  //   web3.eth.sendTransaction({from:web3.eth.coinbase, to:web3.eth.accounts[i], value: web3.toWei(0.2, "ether")});
+  // }
+
+  web3.personal.unlockAccount(web3.eth.accounts[0],password);
+  web3.eth.sendTransaction({from:web3.eth.accounts[0], to:web3.eth.accounts[4], value: web3.toWei(0.2, "ether")});
 }
 
 function setEligible() {
@@ -442,7 +430,8 @@ function setEligible() {
     append("====== Establish which voters are eligible ======");
     var addresses = new Array();
 
-    for(var i=0; i<web3.eth.accounts.length; i++) {
+    // First address is always the owner...
+    for(var i=1; i<web3.eth.accounts.length; i++) {
       var account = web3.eth.accounts[i];
       var balance = web3.eth.getBalance(web3.eth.accounts[i]);
       append("Key: " + web3.eth.accounts[i] + " Balance: " + balance.toString(10));
@@ -451,7 +440,7 @@ function setEligible() {
     }
 
     var res = anonymousvotingAddr.setEligible.sendTransaction(addresses, {from:web3.eth.accounts[0], gas: 4200000})
-
+    eligibleTx = res;
     append("Eligible whitelist sent from " + web3.eth.accounts[0]);
 
     append("Eligible TxID: " + res);
@@ -465,6 +454,7 @@ function setEligible() {
 function allowSignUp() {
   web3.personal.unlockAccount(web3.eth.accounts[0],password);
   var res = anonymousvotingAddr.beginSignUp.sendTransaction(3, "Should Satoshi Nakamoto reveal his real identity?", {from:web3.eth.accounts[0], gas: 4200000});
+  signuptx = res;
   append("Allow signup sent from " + web3.eth.accounts[0]);
 
   append("Allow Sign Up TxID: " + res);
@@ -480,7 +470,9 @@ function register() {
     var vG = [zkp[1], zkp[2], zkp[3]];
     // var res = anonymousvotingAddr.register.call(person[1], vG, zkp[0]);
     web3.personal.unlockAccount(person[8],password);
-    append("Registration for " + person[6] + " TxID: " + anonymousvotingAddr.register.sendTransaction(person[1], vG, zkp[0], {from:person[8], gas: 4200000}));
+    var res = anonymousvotingAddr.register.sendTransaction(person[1], vG, zkp[0], {from:person[8], gas: 4200000});
+    registeredTx.push(res);
+    append("Registration for " + person[6] + " TxID: " + res);
     // append("Can " + person[6] + " Register OK? " + res);
   }
 }
@@ -489,7 +481,7 @@ function computePublicKeys() {
   append("====== Compute Reconstructed Public Keys ======");
   web3.personal.unlockAccount(web3.eth.accounts[0],password);
   var res = anonymousvotingAddr.computeReconstructedPublicKeys.sendTransaction({from:web3.eth.accounts[0], gas: 4200000});
-
+  computetx = res;
   append("Compute public keys TxiD: " + res);
 }
 
@@ -532,6 +524,8 @@ function submitVotes() {
     result = anonymousvotingAddr.submitVote.sendTransaction(params, y, a1, b1, a2, b2, {from:person[8], gas: 4200000});
 
     append(person[6] + ": Submit vote... TxID is " + result);
+
+    voteTx.push(result);
   }
 }
 
@@ -540,7 +534,7 @@ function tally() {
 
   web3.personal.unlockAccount(web3.eth.accounts[0],password);
   result = anonymousvotingAddr.computeTally.sendTransaction({from:web3.eth.accounts[0], gas: 4200000});
-
+  tallytx = result;
   interval = setInterval("findTally()", 1000);
   append("TxID for tally: " + result);
 }
@@ -575,19 +569,13 @@ function reset() {
   submitVoteCounter = 0;
 }
 
-
-// These functions are to estimate the gas of individual functions
-function estimateGas() {
-
-
-  for(var i=0; i<people.length; i++) {
-    var person = people[i];
-    var G = [new BigNumber("0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798"), new BigNumber("0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8")];
-    web3.personal.unlockAccount(web3.eth.accounts[0],password);
-    anonymousvotingAddr.multiplication.sendTransaction(person[0], G, {from:web3.eth.accounts[0], gas: 4200000});
-
-  }
+for(var i=0; i<web3.eth.accounts.length; i++) {
+  var account = web3.eth.accounts[i];
+  var balance = web3.eth.getBalance(web3.eth.accounts[i]);
+  append("Key: " + web3.eth.accounts[i] + " Balance: " + balance.toString(10));
 }
+
+// setInterval("currentState()", 1000);
 
 </script>
 </html>
