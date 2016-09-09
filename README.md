@@ -61,7 +61,7 @@ You need to run 'Geth' in the background:
 m
 1. geth <OPTIONAL: --dev/testnet> --rpc --rpcapi="db,eth,net,web3,personal" --rpcport "8545" --rpcaddr "127.0.0.1" --rpccorsdomain "*" console 
 2. Compile the .SOL, and send it to the Ethereum Network. 
-3. Update vote.html and admin.html with the correct abi/contract address. 
+3. Update vote.html, admin.html livetally.html with the correct abi/contract address. 
 4. Voters open vote.html, and the Election Authority opens admin.html
 5. Each voter requires a voter.txt document that contains the following:
  * x - the private key for the voter's voting key,
@@ -80,6 +80,7 @@ This library is still requires peer-review. Anyone is welcome to use the impleme
 
 Some small tasks that remain:
 - Registration requires a deposit from voter which is refunded upon submitting a valid vote. 
+- Live feed of the voting process (for those watching the vote!). 
 - Voting and Admin pages require further work (i.e. 'Tally' button should only be usable when all votes have been cast). 
 - Extend protocol to allow more than 40 voters. 
 
@@ -134,6 +135,8 @@ VOTE
 
 * Voters submit their vote. All registered votes can call.
  * submitVote(uint[4] params, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) 
+
+TALLY 
 
 * Compute the final tally. Anyone can call. Transition from VOTE Phase to FINISH Phase. 
  * computeTally() 

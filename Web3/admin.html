@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <meta name="description" content="Admin Page for Voting on Ethereum">
+    <meta name="description" content="Open Vote Network on Ethereum">
     <meta name="author" content="Paddy">
     <title>Admin Page</title>
 
@@ -31,13 +31,13 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#">Anonymous Voting</a>
+          <a class="navbar-brand" href="#">Open Vote Network</a>
         </div>
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Home</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="#contact">Contact</a></li>
+            <li><a href="#">Vote</a></li>
+            <li class="active"><a href="admin.html">Admin</a></li>
+            <li><a href="livefeed.html" target="_blank">Live Feed</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -425,9 +425,9 @@ function currentState() {
   whatIsQuestion();
 
   if(state == 0) {
-    document.getElementById('state').innerHTML = "SETUP Phase - You need to whitelist each voter's address";
+    document.getElementById('state').innerHTML = "SETUP: You need to whitelist each voter's address";
   } else if(state == 1) {
-    document.getElementById('state').innerHTML = "SIGNUP Phase - Voters need to register their voting codes.";
+    document.getElementById('state').innerHTML = "SIGNUP: Voters need to register their voting codes.";
     document.getElementById("eligible").innerHTML = "Can no longer Registration new addresses";
     document.getElementById('beginRegistration').innerHTML = "Can no longer set question of vote";
     $('#datetimepicker').datetimepicker('destroy');
@@ -440,14 +440,14 @@ function currentState() {
       document.getElementById('currentRegistration').innerHTML = "Currently have " + c + " voters signed up.";
     }
   } else if(state == 2) {
-    document.getElementById('state').innerHTML = "COMPUTE Phase - You need to inform Ethereum to compute the voter's special keys";
+    document.getElementById('state').innerHTML = "COMPUTE: You need to inform Ethereum to compute the voter's special keys";
     document.getElementById("eligible").innerHTML = "Can no longer Registration new addresses";
     document.getElementById('beginRegistration').innerHTML = "Can no longer set question of vote";
     document.getElementById('beginRegistration').innerHTML = "Can no longer set question of vote";
     document.getElementById('finishRegistration').innerHTML = "Registration phase has already finshed";
     $('#datetimepicker').datetimepicker('destroy');
   } else if(state == 3) {
-    document.getElementById('state').innerHTML = "VOTE Phase - Voters need to cast their vote. ";
+    document.getElementById('state').innerHTML = "VOTE: Voters need to cast their vote. ";
     document.getElementById("eligible").innerHTML = "Can no longer Registration new addresses";
     document.getElementById('beginRegistration').innerHTML = "Can no longer set question of vote";
     document.getElementById('finishRegistration').innerHTML = "Registration phase has already finshed";
@@ -457,7 +457,7 @@ function currentState() {
     var yes = anonymousvotingAddr.finaltally(0);
     var total = anonymousvotingAddr.finaltally(1);
     var no = total - yes;
-    document.getElementById('state').innerHTML = "FINISH Phase: Yes - " + yes + " No - " + no;
+    document.getElementById('state').innerHTML = "TALLY: Yes - " + yes + " No - " + no;
     document.getElementById("eligible").innerHTML = "Can no longer Registration new addresses";
     document.getElementById('beginRegistration').innerHTML = "Can no longer set question of vote";
     document.getElementById('finishRegistration').innerHTML = "Registration phase has already finshed";
