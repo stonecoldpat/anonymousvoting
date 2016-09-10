@@ -438,6 +438,13 @@ contract owned {
     }
 }
 
+/*
+ * @title AnonymousVoting
+ *  Open Vote Network
+ *  A self-talling protocol that supports voter privacy.
+ *
+ *  Author: Patrick McCorry
+ */
 contract AnonymousVoting is owned {
 
   /*event Eligible(address addr);

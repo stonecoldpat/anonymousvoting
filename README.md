@@ -20,12 +20,15 @@ This program presents an efficient realization of this protocol over the Ethereu
 Why Ethereum? 
 ==============
 
-All communication must be public and authentication between the participants, and  a public bulletin board should be available to store the eligibility white list, voting keys and votes. 
+Ethereum is a platform for Smart Contracts that provides the following:
 
-Ethereum's underlying peer to peer network provides the public communication channel. All communication is authenticated as transactions are signed by Ethereum addresses. The blockchain provides an immutable public ledger to store the voting information. 
+Furthermore, Ethereum also provides the following: 
+* A public communication channel (i.e. its peer to peer network).
+* All communication is authenticated (i.e. transactions are signed by the voter's Ethereum addresss)
+* An immutable public ledger to store the voting information (i.e. eligibility white list, voting keys and votes). 
+* Economic majority must reach consensus on a program's execution. 
 
-Furthermore, Ethereum is a platform for 'Smart Contracts' that requires the peer to peer network, the economic majority, and the majority of miners to reach consensus on a program's execution. 
-This allows the Smart Contract that governs the Open Vote Network to self-enforce the execution of the protocol, and allow anyone to verify that the protocol has executed correctly. 
+The above allows anyone to verify the execution of the program, and that the protocol is executed correctly. 
 
 How does it work? 
 ================
@@ -58,17 +61,22 @@ How can I pick up this library and go?
 =====================================
 
 You need to run 'Geth' in the background:
-m
+
 1. geth <OPTIONAL: --dev/testnet> --rpc --rpcapi="db,eth,net,web3,personal" --rpcport "8545" --rpcaddr "127.0.0.1" --rpccorsdomain "*" console 
+
 2. Compile the .SOL, and send it to the Ethereum Network. 
+
 3. Update vote.html, admin.html livetally.html with the correct abi/contract address. 
+
 4. Voters open vote.html, and the Election Authority opens admin.html
+
 5. Each voter requires a voter.txt document that contains the following:
  * x - the private key for the voter's voting key,
  * xG - the voter's voting public key, 
  * v - the random nonce for a single ZKP,
  * w,r,d - the random nonces for the 1 out of 2 ZKP.
  * All values should be seperated by commas (i.e. ",") in a .txt document. 
+ 
 6. Voters can register and cast their vote.
 
 An example 'voter.txt' has been included, and a Java Program 'votingcodes.jar' is included that can compute these numbers for the voter. 
@@ -144,7 +152,7 @@ TALLY
 ANY Phase. 
 
 * Reset the entire election. Only Election Authority can call. 
- *Reset() 
+ * Reset() 
 
 What is next? 
 =============
