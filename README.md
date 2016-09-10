@@ -22,7 +22,6 @@ Why Ethereum?
 
 Ethereum is a platform for Smart Contracts that provides the following:
 
-Furthermore, Ethereum also provides the following: 
 * A public communication channel (i.e. its peer to peer network).
 * All communication is authenticated (i.e. transactions are signed by the voter's Ethereum addresss)
 * An immutable public ledger to store the voting information (i.e. eligibility white list, voting keys and votes). 
@@ -81,6 +80,10 @@ You need to run 'Geth' in the background:
 
 An example 'voter.txt' has been included, and a Java Program 'votingcodes.jar' is included that can compute these numbers for the voter. 
 
+Some photos of the voting system an be found here:
+
+http://homepages.cs.ncl.ac.uk/patrick.mc-corry/openvotenetwork/
+
 What remains to be implemented?
 ============================
 
@@ -88,7 +91,6 @@ This library is still requires peer-review. Anyone is welcome to use the impleme
 
 Some small tasks that remain:
 - Registration requires a deposit from voter which is refunded upon submitting a valid vote. 
-- Live feed of the voting process (for those watching the vote!). 
 - Voting and Admin pages require further work (i.e. 'Tally' button should only be usable when all votes have been cast). 
 - Extend protocol to allow more than 40 voters. 
 
