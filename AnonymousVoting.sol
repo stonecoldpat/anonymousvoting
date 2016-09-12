@@ -447,14 +447,6 @@ contract owned {
  */
 contract AnonymousVoting is owned {
 
-  /*event Eligible(address addr);
-  event StartTimer(string message, uint timestamp, uint current_timestamp);
-  event Registered(address addr, bool res, uint counter);*/
-  /*event RegistrationFinished();*/
-  /*event ReconstructedKey(uint x, uint y, uint counter);*/
-  /*event RegisterVote(address addr, bool res, uint counter);*/
-  /*event Tally(uint tally, uint counter);*/
-
   // Modulus for public keys
   uint constant pp = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F;
 
@@ -552,9 +544,7 @@ contract AnonymousVoting is owned {
 
       if(!eligible[addr[i]]) {
         eligible[addr[i]] = true;
-        addresses.push(addr[i]);
-        /*Eligible(addr[i]);*/
-      }
+        addresses.push(addr[i]);      }
     }
   }
 
@@ -566,8 +556,6 @@ contract AnonymousVoting is owned {
       state = State.SIGNUP;
       timer = time; // Should be in UNIX
       question = _question;
-
-      /*StartTimer("The sign up round has begun. Please submit your voting key.", timer, block.timestamp);*/
       return;
     }
 
@@ -583,7 +571,6 @@ contract AnonymousVoting is owned {
     if(eligible[msg.sender]) {
         if(verifyZKP(xG,r,vG) && !registered[msg.sender]) {
             uint[2] memory empty;
-            /*Registered(msg.sender, true, counter);*/
             addressid[msg.sender] = counter;
             voters[counter] = Voter({addr: msg.sender, registeredkey: xG, reconstructedkey: empty, vote: empty});
             registered[msg.sender] = true;
@@ -614,7 +601,6 @@ contract AnonymousVoting is owned {
      }
 
      state = State.COMPUTE;
-     /*RegistrationFinished();*/
   }
 
 
@@ -643,7 +629,6 @@ contract AnonymousVoting is owned {
      ECCMath.toZ1(afteri,pp);
      voters[0].reconstructedkey[0] = afteri[0];
      voters[0].reconstructedkey[1] = pp - afteri[1];
-     /*ReconstructedKey(voters[0].reconstructedkey[0], voters[0].reconstructedkey[1], 0);*/
 
      // Step 2 is to add to beforei, and subtract from afteri.
     for(i=1; i<counter; i++) {
@@ -685,8 +670,6 @@ contract AnonymousVoting is owned {
          voters[i].reconstructedkey[0] = yG[0];
          voters[i].reconstructedkey[1] = yG[1];
       }
-
-      /*ReconstructedKey(voters[i].reconstructedkey[0], voters[i].reconstructedkey[1], i);*/
     }
 
      // Finally we are reading to enter the voting state
@@ -707,13 +690,11 @@ contract AnonymousVoting is owned {
          voters[c].vote[1] = y[1];
 
          votecast[msg.sender] = true;
-         /*RegisterVote(msg.sender, votecast[msg.sender], c);*/
          return true;
        }
      }
 
      // Either vote has already been cast, or ZKP verification failed.
-     /*RegisterVote(msg.sender, false, c);*/
      return false;
   }
 
@@ -753,7 +734,6 @@ contract AnonymousVoting is owned {
      if(temp[0] == 0) {
        finaltally[0] = 0;
        finaltally[1] = counter;
-       /*Tally(0,counter);*/
        return;
      } else {
 
@@ -772,7 +752,6 @@ contract AnonymousVoting is owned {
          if(temp[0] == tempG[0]) {
              finaltally[0] = i;
              finaltally[1] = counter;
-             /*Tally(i,counter);*/
              return;
          }
 
@@ -790,7 +769,6 @@ contract AnonymousVoting is owned {
          // TODO: Handle this better....
          finaltally[0] = 0;
          finaltally[1] = 0;
-         /*Tally(0,0);*/
          return;
       }
   }
