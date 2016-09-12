@@ -571,6 +571,7 @@ contract AnonymousVoting is owned {
       return;
     }
 
+    // Not ready yet! 
     throw;
   }
 
@@ -814,25 +815,16 @@ contract AnonymousVoting is owned {
 
      // Convert to Affine Co-ordinates
      ECCMath.toZ1(vG, pp);
+
      // Get c = H(g, g^{x}, g^{v});
      bytes32 b_c = sha256(msg.sender, Gx, Gy, xG, vG);
      uint c = uint(b_c);
 
      // Get 'r' the zkp
      uint xc = mulmod(x,c,nn);
-     uint addv;
-
-     // We are working with unsigned integers... so lets not loop around
-     // TODO: Seek help so we do not need the if statement
-     // I am basically doing submod?
-     if(v>xc) {
-       addv = v;
-     } else {
-       addv = v+nn;
-     }
 
      // v - xc
-     uint r = addmod(addv - xc,0,nn);
+     uint r = submod(v,xc);
 
      res[0] = r;
      res[1] = vG[0];
@@ -865,7 +857,7 @@ contract AnonymousVoting is owned {
 
     // Check both keys are on the curve.
     if(!Secp256k1.isPubKey(xG) || !Secp256k1.isPubKey(vG)) {
-      throw; //Must be on the curve!
+      return false; //Must be on the curve!
     }
 
     // Get c = H(g, g^{x}, g^{v});
@@ -886,7 +878,7 @@ contract AnonymousVoting is owned {
     if(rGxcG[0] == vG[0] && rGxcG[1] == vG[1]) {
        return true;
     } else {
-      return false;
+       return false;
     }
   }
 
@@ -1081,7 +1073,7 @@ contract AnonymousVoting is owned {
       // Make sure we are only dealing with valid public keys!
       if(!Secp256k1.isPubKey(xG) || !Secp256k1.isPubKey(yG) || !Secp256k1.isPubKey(y) || !Secp256k1.isPubKey(a1) ||
          !Secp256k1.isPubKey(b1) || !Secp256k1.isPubKey(a2) || !Secp256k1.isPubKey(b2)) {
-         throw;
+         return false;
       }
 
       // Does c =? d1 + d2 (mod n)
