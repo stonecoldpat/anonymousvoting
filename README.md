@@ -34,25 +34,25 @@ How does it work?
 
 The protocol has six phases.
 
-SETUP Phase. 
+SETUP
 
 - Election Authority is responsible for sending Ethereum a white list of eligible voters.
 
-SIGNUP Phase.
+SIGNUP
 
 - Voters submit their voting key, and a zero knowledge prove to prove knowledge of the voting key's secret. 
 - Ethereum verifies the correctness of the zero knowledge proof, and stores the voting key. 
 
-COMPUTE Phase.
+COMPUTE
 
 - Ethereum computes each voter's special reconstructed voting key.
 
-VOTE Phase. 
+VOTE
 
 - Voters submit their vote, and a 1 out of 2 zero knowledge proof that the vote is either 1 or 0. (i.e. yes or no). 
 - Ethereum verifies the 1 out of 2 zero knowledge proof, and stores the vote.
 
-TALLY Phase.
+TALLY
 
 - Ethereum computes the tally once all votes have been cast. 
 
