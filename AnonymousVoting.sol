@@ -571,7 +571,7 @@ contract AnonymousVoting is owned {
       return;
     }
 
-    // Not ready yet! 
+    // Not ready yet!
     throw;
   }
 
@@ -626,72 +626,71 @@ contract AnonymousVoting is owned {
   // Debate: Should this be an onlyOwner function?
   function computeReconstructedPublicKeys() inState(State.COMPUTE) onlyOwner {
 
-    uint[2] memory temp;
-    uint[3] memory yG;
-    uint[3] memory beforei;
-    uint[3] memory afteri;
+     uint[2] memory temp;
+     uint[3] memory yG;
+     uint[3] memory beforei;
+     uint[3] memory afteri;
 
-    // Step 1 is to compute the index 1 reconstructed key
-    afteri[0] = voters[1].registeredkey[0];
-    afteri[1] = voters[1].registeredkey[1];
-    afteri[2] = 1;
+     // Step 1 is to compute the index 1 reconstructed key
+     afteri[0] = voters[1].registeredkey[0];
+     afteri[1] = voters[1].registeredkey[1];
+     afteri[2] = 1;
 
-    for(uint i=2; i<counter; i++) {
+     for(uint i=2; i<counter; i++) {
+        Secp256k1._addMixedM(afteri, voters[i].registeredkey);
+     }
 
-       Secp256k1._addMixedM(afteri, voters[i].registeredkey);
+     ECCMath.toZ1(afteri,pp);
+     voters[0].reconstructedkey[0] = afteri[0];
+     voters[0].reconstructedkey[1] = pp - afteri[1];
+     /*ReconstructedKey(voters[0].reconstructedkey[0], voters[0].reconstructedkey[1], 0);*/
+
+     // Step 2 is to add to beforei, and subtract from afteri.
+    for(i=1; i<counter; i++) {
+
+      if(i==1) {
+        beforei[0] = voters[0].registeredkey[0];
+        beforei[1] = voters[0].registeredkey[1];
+        beforei[2] = 1;
+      } else {
+        Secp256k1._addMixedM(beforei, voters[i-1].registeredkey);
+      }
+
+      // If we have reached the end... just store beforei
+      // Otherwise, we need to compute a key.
+      // Counting from 0 to n-1...
+      if(i==(counter-1)) {
+        ECCMath.toZ1(beforei,pp);
+        voters[i].reconstructedkey[0] = beforei[0];
+        voters[i].reconstructedkey[1] = beforei[1];
+
+      } else {
+
+         // Subtract 'i' from afteri
+         temp[0] = voters[i].registeredkey[0];
+         temp[1] = pp - voters[i].registeredkey[1];
+
+         // Grab negation of afteri (did not seem to work with Jacob co-ordinates)
+         Secp256k1._addMixedM(afteri,temp);
+         ECCMath.toZ1(afteri,pp);
+
+         temp[0] = afteri[0];
+         temp[1] = pp - afteri[1];
+
+         // Now we do beforei - afteri...
+         yG = Secp256k1._addMixed(beforei, temp);
+
+         ECCMath.toZ1(yG,pp);
+
+         voters[i].reconstructedkey[0] = yG[0];
+         voters[i].reconstructedkey[1] = yG[1];
+      }
+
+      /*ReconstructedKey(voters[i].reconstructedkey[0], voters[i].reconstructedkey[1], i);*/
     }
 
-    ECCMath.toZ1(afteri,pp);
-    voters[0].reconstructedkey[0] = afteri[0];
-    voters[0].reconstructedkey[1] = pp - afteri[1];
-    /*ReconstructedKey(voters[0].reconstructedkey[0], voters[0].reconstructedkey[1], 0);*/
-
-    // Step 2 is to add to beforei, and subtract from afteri.
-   for(i=1; i<counter; i++) {
-
-     if(i==1) {
-       beforei[0] = voters[0].registeredkey[0];
-       beforei[1] = voters[0].registeredkey[1];
-       beforei[2] = 1;
-     } else {
-       Secp256k1._addMixedM(beforei, voters[i-1].registeredkey);
-     }
-
-     // If we have reached the end... just store beforei
-     // Otherwise, we need to compute a key.
-     // Counting from 0 to n-1...
-     if(i==(counter-1)) {
-       ECCMath.toZ1(beforei,pp);
-       voters[i].reconstructedkey[0] = beforei[0];
-       voters[i].reconstructedkey[1] = beforei[1];
-
-     } else {
-
-        // Subtract 'i' from afteri
-        temp[0] = voters[i].registeredkey[0];
-        temp[1] = pp - voters[i].registeredkey[1];
-
-        // Grab negation of afteri (did not seem to work with Jacob co-ordinates)
-        Secp256k1._addMixedM(afteri,temp);
-        ECCMath.toZ1(afteri,pp);
-
-        temp[0] = afteri[0];
-        temp[1] = pp - afteri[1];
-
-        // Now we do beforei - afteri...
-        yG = Secp256k1._addMixed(beforei, temp);
-
-        ECCMath.toZ1(yG,pp);
-
-        voters[i].reconstructedkey[0] = yG[0];
-        voters[i].reconstructedkey[1] = yG[1];
-     }
-
-     /*ReconstructedKey(voters[i].reconstructedkey[0], voters[i].reconstructedkey[1], i);*/
-   }
-
-    // Finally we are reading to enter the voting state
-    state = State.VOTE;
+     // Finally we are reading to enter the voting state
+     state = State.VOTE;
   }
 
   //Given the 1 out of 2 ZKP - record the users vote!
@@ -782,18 +781,18 @@ contract AnonymousVoting is owned {
          // we have structured the for loop.
          // TODO: Does it need fixed?
          Secp256k1._addMixedM(tempG, G);
-         ECCMath.toZ1(tempG,pp);
-       }
+           ECCMath.toZ1(tempG,pp);
+         }
 
-       // Something bad happened. We should never get here....
-       // This represents an error message... best telling people
-       // As we cannot recover from it anyway.
-       // TODO: Handle this better....
-       finaltally[0] = 0;
-       finaltally[1] = 0;
-       /*Tally(0,0);*/
-       return;
-     }
+         // Something bad happened. We should never get here....
+         // This represents an error message... best telling people
+         // As we cannot recover from it anyway.
+         // TODO: Handle this better....
+         finaltally[0] = 0;
+         finaltally[1] = 0;
+         /*Tally(0,0);*/
+         return;
+      }
   }
 
   // vG (blinding value), xG (public key), x (what we are proving)
@@ -802,166 +801,166 @@ contract AnonymousVoting is owned {
   // return(r,vG)
   function createZKP(uint x, uint v, uint[2] xG) returns (uint[4] res) {
 
-     uint[2] memory G;
-     G[0] = Gx;
-     G[1] = Gy;
+      uint[2] memory G;
+      G[0] = Gx;
+      G[1] = Gy;
 
-     if(!Secp256k1.isPubKey(xG)) {
-       throw; //Must be on the curve!
-     }
+      if(!Secp256k1.isPubKey(xG)) {
+          throw; //Must be on the curve!
+      }
 
-     // Get g^{v}
-     uint[3] memory vG = Secp256k1._mul(v, G);
+      // Get g^{v}
+      uint[3] memory vG = Secp256k1._mul(v, G);
 
-     // Convert to Affine Co-ordinates
-     ECCMath.toZ1(vG, pp);
+      // Convert to Affine Co-ordinates
+      ECCMath.toZ1(vG, pp);
 
-     // Get c = H(g, g^{x}, g^{v});
-     bytes32 b_c = sha256(msg.sender, Gx, Gy, xG, vG);
-     uint c = uint(b_c);
+      // Get c = H(g, g^{x}, g^{v});
+      bytes32 b_c = sha256(msg.sender, Gx, Gy, xG, vG);
+      uint c = uint(b_c);
 
-     // Get 'r' the zkp
-     uint xc = mulmod(x,c,nn);
+      // Get 'r' the zkp
+      uint xc = mulmod(x,c,nn);
 
-     // v - xc
-     uint r = submod(v,xc);
+      // v - xc
+      uint r = submod(v,xc);
 
-     res[0] = r;
-     res[1] = vG[0];
-     res[2] = vG[1];
-     res[3] = vG[2];
-     return;
+      res[0] = r;
+      res[1] = vG[0];
+      res[2] = vG[1];
+      res[3] = vG[2];
+      return;
   }
 
   // a - b = c;
   function submod(uint a, uint b) returns (uint){
-    uint a_nn;
+      uint a_nn;
 
-    if(a>b) {
-      a_nn = a;
-    } else {
-      a_nn = a+nn;
-    }
+      if(a>b) {
+        a_nn = a;
+      } else {
+        a_nn = a+nn;
+      }
 
-    uint c = addmod(a_nn - b,0,nn);
+      uint c = addmod(a_nn - b,0,nn);
 
-    return c;
+      return c;
   }
 
   // Parameters xG, r where r = v - xc, and vG.
   // Verify that vG = rG + xcG!
   function verifyZKP(uint[2] xG, uint r, uint[3] vG) returns (bool){
-    uint[2] memory G;
-    G[0] = Gx;
-    G[1] = Gy;
+      uint[2] memory G;
+      G[0] = Gx;
+      G[1] = Gy;
 
-    // Check both keys are on the curve.
-    if(!Secp256k1.isPubKey(xG) || !Secp256k1.isPubKey(vG)) {
-      return false; //Must be on the curve!
-    }
+      // Check both keys are on the curve.
+      if(!Secp256k1.isPubKey(xG) || !Secp256k1.isPubKey(vG)) {
+        return false; //Must be on the curve!
+      }
 
-    // Get c = H(g, g^{x}, g^{v});
-    bytes32 b_c = sha256(msg.sender, Gx, Gy, xG, vG);
-    uint c = uint(b_c);
+      // Get c = H(g, g^{x}, g^{v});
+      bytes32 b_c = sha256(msg.sender, Gx, Gy, xG, vG);
+      uint c = uint(b_c);
 
-    // Get g^{r}, and g^{xc}
-    uint[3] memory rG = Secp256k1._mul(r, G);
-    uint[3] memory xcG = Secp256k1._mul(c, xG);
+      // Get g^{r}, and g^{xc}
+      uint[3] memory rG = Secp256k1._mul(r, G);
+      uint[3] memory xcG = Secp256k1._mul(c, xG);
 
-    // Add both points together
-    uint[3] memory rGxcG = Secp256k1._add(rG,xcG);
+      // Add both points together
+      uint[3] memory rGxcG = Secp256k1._add(rG,xcG);
 
-    // Convert to Affine Co-ordinates
-    ECCMath.toZ1(rGxcG, pp);
+      // Convert to Affine Co-ordinates
+      ECCMath.toZ1(rGxcG, pp);
 
-    // Verify. Do they match?
-    if(rGxcG[0] == vG[0] && rGxcG[1] == vG[1]) {
-       return true;
-    } else {
-       return false;
-    }
+      // Verify. Do they match?
+      if(rGxcG[0] == vG[0] && rGxcG[1] == vG[1]) {
+         return true;
+      } else {
+         return false;
+      }
   }
 
   // random 'w', 'r1', 'd1'
   // TODO: Make constant
   function create1outof2ZKPYesVote(uint w, uint r1, uint d1, uint x) returns (uint[10] res, uint[4] res2){
-    uint[2] memory temp;
+      uint[2] memory temp;
 
-    // Voter Index
-    uint i = addressid[msg.sender];
+      // Voter Index
+      uint i = addressid[msg.sender];
 
-    uint[2] memory yG = voters[i].reconstructedkey;
-    uint[2] memory xG = voters[i].registeredkey;
+      uint[2] memory yG = voters[i].reconstructedkey;
+      uint[2] memory xG = voters[i].registeredkey;
 
-    // y = h^{x} * g
-    uint[3] memory temp1 = Secp256k1._mul(x,yG);
-    Secp256k1._addMixedM(temp1,G);
-    ECCMath.toZ1(temp1, pp);
-    res[0] = temp1[0];
-    res[1] = temp1[1];
+      // y = h^{x} * g
+      uint[3] memory temp1 = Secp256k1._mul(x,yG);
+      Secp256k1._addMixedM(temp1,G);
+      ECCMath.toZ1(temp1, pp);
+      res[0] = temp1[0];
+      res[1] = temp1[1];
 
-    // a1 = g^{r1} * x^{d1}
-    temp1 = Secp256k1._mul(r1,G);
-    temp1 = Secp256k1._add(temp1, Secp256k1._mul(d1,xG));
-    ECCMath.toZ1(temp1, pp);
-    res[2] = temp1[0];
-    res[3] = temp1[1];
+      // a1 = g^{r1} * x^{d1}
+      temp1 = Secp256k1._mul(r1,G);
+      temp1 = Secp256k1._add(temp1, Secp256k1._mul(d1,xG));
+      ECCMath.toZ1(temp1, pp);
+      res[2] = temp1[0];
+      res[3] = temp1[1];
 
-    // b1 = h^{r1} * y^{d1} (temp = affine 'y')
-    temp1 = Secp256k1._mul(r1,yG);
+      // b1 = h^{r1} * y^{d1} (temp = affine 'y')
+      temp1 = Secp256k1._mul(r1,yG);
 
-    // Setting temp to 'y'
-    temp[0] = res[0];
-    temp[1] = res[1];
-    temp1= Secp256k1._add(temp1, Secp256k1._mul(d1, temp));
-    ECCMath.toZ1(temp1, pp);
-    res[4] = temp1[0];
-    res[5] = temp1[1];
+      // Setting temp to 'y'
+      temp[0] = res[0];
+      temp[1] = res[1];
+      temp1= Secp256k1._add(temp1, Secp256k1._mul(d1, temp));
+      ECCMath.toZ1(temp1, pp);
+      res[4] = temp1[0];
+      res[5] = temp1[1];
 
-    // a2 = g^{w}
-    temp1 = Secp256k1._mul(w,G);
-    ECCMath.toZ1(temp1, pp);
+      // a2 = g^{w}
+      temp1 = Secp256k1._mul(w,G);
+      ECCMath.toZ1(temp1, pp);
 
-    res[6] = temp1[0];
-    res[7] = temp1[1];
+      res[6] = temp1[0];
+      res[7] = temp1[1];
 
-    // b2 = h^{w} (where h = g^{y})
-    temp1 = Secp256k1._mul(w, yG);
-    ECCMath.toZ1(temp1, pp);
-    res[8] = temp1[0];
-    res[9] = temp1[1];
+      // b2 = h^{w} (where h = g^{y})
+      temp1 = Secp256k1._mul(w, yG);
+      ECCMath.toZ1(temp1, pp);
+      res[8] = temp1[0];
+      res[9] = temp1[1];
 
-    // Get c = H(id, xG, Y, a1, b1, a2, b2);
-    // id is H(round, voter_index, voter_address, contract_address)...
-    bytes32 b_c = sha256(msg.sender, xG, res);
-    uint c = uint(b_c);
+      // Get c = H(id, xG, Y, a1, b1, a2, b2);
+      // id is H(round, voter_index, voter_address, contract_address)...
+      bytes32 b_c = sha256(msg.sender, xG, res);
+      uint c = uint(b_c);
 
-    // d2 = c - d1 mod q
-    temp[0] = submod(c,d1);
+      // d2 = c - d1 mod q
+      temp[0] = submod(c,d1);
 
-    // r2 = w - (x * d2)
-    temp[1] = submod(w, mulmod(x,temp[0],nn));
+      // r2 = w - (x * d2)
+      temp[1] = submod(w, mulmod(x,temp[0],nn));
 
-    /* We return the following
-    * res[0] = y_x;
-    * res[1] = y_y;
-    * res[2] = a1_x;
-    * res[3] = a1_y;
-    * res[4] = b1_x;
-    * res[5] = b1_y;
-    * res[6] = a2_x;
-    * res[7] = a2_y;
-    * res[8] = b2_x;
-    * res[9] = b2_y;
-    * res[10] = d1;
-    * res[11] = d2;
-    * res[12] = r1;
-    * res[13] = r2;
-    */
-    res2[0] = d1;
-    res2[1] = temp[0];
-    res2[2] = r1;
-    res2[3] = temp[1];
+      /* We return the following
+      * res[0] = y_x;
+      * res[1] = y_y;
+      * res[2] = a1_x;
+      * res[3] = a1_y;
+      * res[4] = b1_x;
+      * res[5] = b1_y;
+      * res[6] = a2_x;
+      * res[7] = a2_y;
+      * res[8] = b2_x;
+      * res[9] = b2_y;
+      * res[10] = d1;
+      * res[11] = d2;
+      * res[12] = r1;
+      * res[13] = r2;
+      */
+      res2[0] = d1;
+      res2[1] = temp[0];
+      res2[2] = r1;
+      res2[3] = temp[1];
   }
 
   // random 'w', 'r1', 'd1'
@@ -1018,6 +1017,7 @@ contract AnonymousVoting is owned {
 
       // Now... it is h^{r2} + temp2..
       temp1 = Secp256k1._add(Secp256k1._mul(r2,yG),temp1);
+
       // Convert to Affine Co-ordinates
       ECCMath.toZ1(temp1, pp);
 
