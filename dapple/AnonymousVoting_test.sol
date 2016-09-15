@@ -95,27 +95,38 @@ contract AnonymousVotingTest is Test {
     }
 
     // All voters submit their voting key
-    function registerKeys() returns (bool[3]){
+    function registerKeys(bool voter1, bool voter2, bool voter3) returns (bool[3]){
 
         bool[3] memory res;
 
-        uint x = 100792359988221257522464744073694181557998811287873941943642234039631667801743;
-        uint[2] memory xG = [50011181273477635355105934748199911221235256089199741271573814847024879061899, 71802419974013591686591529237219896883303932349628173412957707346469215125624];
-        uint v = 114941333558360567695678851060848045245826375581561159846926673173053566932687;
+        uint x;
+        uint[2] memory xG;
+        uint v;
 
-        res[0] = A.register(x,v,xG);
+        // Should voter 1 register?
+        if(voter1) {
+            x = 100792359988221257522464744073694181557998811287873941943642234039631667801743;
+            xG = [50011181273477635355105934748199911221235256089199741271573814847024879061899, 71802419974013591686591529237219896883303932349628173412957707346469215125624];
+            v = 114941333558360567695678851060848045245826375581561159846926673173053566932687;
+            res[0] = A.register(x,v,xG);
+        }
 
-        x = 73684597056470802520640839675442817373247702535850643999083350831860052477001;
-        xG = [98038005178408974007512590727651089955354106077095278304532603697039577112780,1801119347122147381158502909947365828020117721497557484744596940174906898953];
-        v = 28201629513124344311667277080113205903076096953435080012961531044913135153251;
+        // Should voter 2 register?
+        if(voter2) {
+            x = 73684597056470802520640839675442817373247702535850643999083350831860052477001;
+            xG = [98038005178408974007512590727651089955354106077095278304532603697039577112780,1801119347122147381158502909947365828020117721497557484744596940174906898953];
+            v = 28201629513124344311667277080113205903076096953435080012961531044913135153251;
+            res[1] = B.register(x,v,xG);
+        }
 
-        res[1] = B.register(x,v,xG);
+        // Should voter 3 register?
+        if(voter3) {
+            x = 106554628258140934843991940734271727557510876833354296893443127816727132563840;
+            xG = [33836939586123110014913515630722089627445238026599436014853176202391948851936,112012169245950924685217915153942207169026199800060889564176846526381877678915];
+            v = 43299936944025232330163985825794231821139305521742829361426928502076888495802;
+            res[2] = C.register(x,v,xG);
+        }
 
-        x = 106554628258140934843991940734271727557510876833354296893443127816727132563840;
-        xG = [33836939586123110014913515630722089627445238026599436014853176202391948851936,112012169245950924685217915153942207169026199800060889564176846526381877678915];
-        v = 43299936944025232330163985825794231821139305521742829361426928502076888495802;
-
-        res[2] = C.register(x,v,xG);
         return res;
     }
 
@@ -165,11 +176,11 @@ contract AnonymousVotingTest is Test {
 
     // Make sure the coinbase account is the owner
     function testCreatorIsCreator() logs_gas {
-        assertEq( address(this), con.owner());
+        assertEq(address(this), con.owner());
     }
 
     // Set accounts A, B, C as eligible
-    function test1SetEligible() {
+    function test1SetEligible() logs_gas {
         setEligible();
 
         // Make sure the owner of the contract is not eligible by default...
@@ -192,17 +203,8 @@ contract AnonymousVotingTest is Test {
         beginSignUp();
 
         // Check timer is set correctly
-        if(con.timer() == 4) {
-          assertTrue(true);
-        } else {
-          assertTrue(false);
-        }
-
-        if(uint(con.state()) == 1) {
-          assertTrue(true);
-        } else {
-          assertTrue(false);
-        }
+        assertTrue(con.timer() == 4);
+        assertTrue(uint(con.state()) == 1);
 
         // TODO: Check question is set correctly.
     }
@@ -211,7 +213,7 @@ contract AnonymousVotingTest is Test {
     function test3SubmitKey() logs_gas {
         setEligible();
         beginSignUp();
-        bool[3] memory res = registerKeys();
+        bool[3] memory res = registerKeys(true, true, true);
 
         // Make sure all three voters submitted their key ok
         assertTrue(res[0]);
@@ -231,38 +233,30 @@ contract AnonymousVotingTest is Test {
     function test4FinishRegistration() logs_gas {
         setEligible();
         beginSignUp();
-        registerKeys();
+        registerKeys(true, true, true);
         finishRegistration();
 
         // We should now be in the 'COMPUTE' phase.
-        if(uint(con.state()) == 2) {
-            assertTrue(true);
-        } else {
-            assertFalse(true);
-        }
+        assertTrue(uint(con.state()) == 2);
     }
 
     // Test that the Election Authority can compute the special voting keys
     function test5ComputeKeys() logs_gas {
         setEligible();
         beginSignUp();
-        registerKeys();
+        registerKeys(true, true, true);
         finishRegistration();
         computeKeys();
 
         // We should now be in the 'VOTE' phase.
-        if(uint(con.state()) == 3) {
-            assertTrue(true);
-        } else {
-            assertFalse(true);
-        }
+        assertTrue(uint(con.state()) == 3);
     }
 
     // Submit votes to Ethereum
     function test6SubmitVotes() logs_gas {
         setEligible();
         beginSignUp();
-        registerKeys();
+        registerKeys(true, true, true);
         finishRegistration();
         computeKeys();
         bool[3] memory res = submitVotes();
@@ -282,7 +276,7 @@ contract AnonymousVotingTest is Test {
     function test7Tally() logs_gas {
         setEligible();
         beginSignUp();
-        registerKeys();
+        registerKeys(true, true, true);
         finishRegistration();
         computeKeys();
         submitVotes();
@@ -297,24 +291,80 @@ contract AnonymousVotingTest is Test {
         uint total = con.finaltally(1);
 
         // Check total number of votes counted...
-        if(yes == 2) {
-           assertTrue(true);
-        } else {
-           assertTrue(false);
-        }
+        assertTrue(yes == 2);
 
         // Check total number of votes counted...
-        if(total == 3) {
-            assertTrue(true);
-        } else {
-            assertTrue(false);
-        }
+        assertTrue(total == 3);
 
         // Make sure we are in the 'finished' state!
-        if(uint(con.state()) == 4) {
-            assertTrue(true);
-        } else {
-            assertTrue(false);
-        }
+        assertTrue(uint(con.state()) == 4);
     }
+
+    // Not all voters have cast their vote.. should throw
+    function testThrowCannotTally() logs_gas {
+        setEligible();
+        beginSignUp();
+        registerKeys(true, true, true);
+        finishRegistration();
+        computeKeys();
+
+        // Make sure vote has been registered as 'cast'
+        assertEq(con.votecast(address(A)), false);
+        assertEq(con.votecast(address(B)), false);
+        assertEq(con.votecast(address(C)), false);
+
+        Tally();
+    }
+
+    // Not all voters have cast their vote.. should throw
+    function testCannotSubmitFakeZKP() logs_gas {
+        setEligible();
+        beginSignUp();
+        registerKeys(true, true, true);
+
+        // Private key _x is not the correct 'x' for xG
+        uint _x = 10792359988221257522464744073694181557998811287873941943642234039631667801743;
+        uint[2] memory xG = [50011181273477635355105934748199911221235256089199741271573814847024879061899, 71802419974013591686591529237219896883303932349628173412957707346469215125624];
+        uint v = 114941333558360567695678851060848045245826375581561159846926673173053566932687;
+
+        // Vote should fail. Wrong private key used...
+        assertEq(false, A.register(_x,v,xG));
+    }
+
+    // Not all voters have cast their vote.. should throw
+    function testCannotFakeVote() logs_gas {
+        setEligible();
+        beginSignUp();
+        registerKeys(true, true, true);
+        finishRegistration();
+        computeKeys();
+
+        // Changed private key 'x'...
+        uint _x = 10792359988221257522464744073694181557998811287873941943642234039631667801743;
+        uint w = 25291153222690468941875333155056279849838848426097128907648274067789060660273;
+        uint r = 68245514418532339184005707392894217247971162351489303687284716936396921389966;
+        uint d = 79359315012171413053095778073649855770462866229159476171746022558873132690484;
+
+        // Vote should fail. Wrong private key used...
+        assertEq(false, A.yesvote(w, r, d, _x));
+    }
+
+    // Cannot finish registration phase unless three people have signed up.
+    function testCannotEndRegistration() logs_gas {
+        setEligible();
+        beginSignUp();
+        registerKeys(true, true, false);
+        finishRegistration();
+
+        // We should still be in the 'signup phase'.
+        // Only two people have registered.
+        assertTrue(uint(con.state()) == 1);
+
+        // Make sure it is only A and B signed up.
+        assertEq(true, con.registered(A));
+        assertEq(true, con.registered(B));
+        assertEq(false, con.registered(C));
+    }
+
+    // Need to test that only 40 people can be eligible
 }
