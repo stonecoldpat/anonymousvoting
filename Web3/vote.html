@@ -47,8 +47,8 @@
         <h2>Question:</h2>
         <p id="question"></p>
         <div id="vote">
-        <button onclick="vote(1)">Yes</button>
-        <button onclick="vote(0)">No</button>
+          <button onclick="vote(1)">Yes</button>
+          <button onclick="vote(0)">No</button>
         </div>
       </div>
 
@@ -64,15 +64,11 @@
         </div>
         <div class="col-md-4">
           <div class="thumbnail">
-          <h4> 2. Unlock your Ethereum address </h4>
-          <div id="dropdown">
+            <h4> 2. Unlock your Ethereum address </h4>
+            <div id="dropdown">
+              <p>Address:</p><select id='addrs'><option value='0'>None</option></select>
+            </div>
           </div>
-          <div id="eligible">
-          <p>Is the currently selected address eligible to vote? </p>
-          <button onclick="eligible()">Eligible</button>
-          <p id="iseligible"></p>
-          </div>
-        </div>
         </div>
         <div class="col-md-4">
           <div class="thumbnail">
@@ -96,7 +92,6 @@
       </div>
     </div><!-- /.container -->
 
-
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
@@ -107,6 +102,9 @@
 
     <script>
 
+    /*
+     * Web 3 credentials and connection
+     */
     var web3;
     var password = "ilikelittlepaddy";
     var accounts_index;
@@ -117,18 +115,75 @@
       web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
     }
 
-    var abi = [{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"eligible","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"vG","type":"uint256[3]"},{"name":"r","type":"uint256"}],"name":"register","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeTally","outputs":[{"name":"","type":"uint256[2]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"addressid","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"r1","type":"uint256"},{"name":"d1","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPYesVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"question","outputs":[{"name":"","type":"string"}],"type":"function"},{"constant":false,"inputs":[{"name":"addr","type":"address[]"}],"name":"setEligible","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"counter","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"finishRegistrationPhase","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"submitVote","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"r2","type":"uint256"},{"name":"d2","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPNoVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"votecast","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"timer","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"x","type":"uint256"},{"name":"v","type":"uint256"},{"name":"xG","type":"uint256[2]"}],"name":"createZKP","outputs":[{"name":"res","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeReconstructedPublicKeys","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"registered","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"name":"","type":"uint8"}],"type":"function"},{"constant":false,"inputs":[{"name":"time","type":"uint256"},{"name":"_question","type":"string"}],"name":"beginSignUp","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"finaltally","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"reset","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"addresses","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"}];
+    // Anonymous Voting Contract
+    var abi = [{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"eligible","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"vG","type":"uint256[3]"},{"name":"r","type":"uint256"}],"name":"register","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeTally","outputs":[{"name":"","type":"uint256[2]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"addressid","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"getVoter","outputs":[{"name":"_registeredkey","type":"uint256[2]"},{"name":"_reconstructedkey","type":"uint256[2]"},{"name":"_commitment","type":"bytes32"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"commitmentphase","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"question","outputs":[{"name":"","type":"string"}],"type":"function"},{"constant":false,"inputs":[{"name":"addr","type":"address[]"}],"name":"setEligible","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"h","type":"bytes32"}],"name":"submitCommitment","outputs":[],"type":"function"},{"constant":false,"inputs":[],"name":"finishRegistrationPhase","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"submitVote","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"votecast","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"timer","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"time","type":"uint256"},{"name":"_question","type":"string"},{"name":"enableCommitmentPhase","type":"bool"}],"name":"beginSignUp","outputs":[],"type":"function"},{"constant":false,"inputs":[],"name":"computeReconstructedPublicKeys","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"commitment","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"registered","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"name":"","type":"uint8"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"finaltally","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"totalregistered","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"reset","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"voters","outputs":[{"name":"addr","type":"address"},{"name":"commitment","type":"bytes32"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"addresses","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"}];
     var anonymousvoting = web3.eth.contract(abi);
-    var anonymousvotingAddr = anonymousvoting.at("0xa5a11cca1b0740a0b0221c7e059355ea572abb74");
-    var selectbox = "<p>Address:</p><select id='addrs'>";
+    var anonymousvotingAddr = anonymousvoting.at("0x3133a932799bfde8a818b1af686c3f99c2d7c746");
 
-    // Let user select one of their Ethereum addresses
-    for(var i=0; i<web3.eth.accounts.length; i++) {
-      selectbox = selectbox + '<option value="' + i + '">' + web3.eth.accounts[i] + '</option>';
+    // Local Crypto Contract
+    var abi_crypto = [{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"commitToVote","outputs":[{"name":"","type":"bytes32"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"},{"name":"w","type":"uint256"},{"name":"r2","type":"uint256"},{"name":"d2","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPNoVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"x","type":"uint256"},{"name":"v","type":"uint256"},{"name":"xG","type":"uint256[2]"}],"name":"createZKP","outputs":[{"name":"res","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"},{"name":"w","type":"uint256"},{"name":"r1","type":"uint256"},{"name":"d1","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPYesVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"}];
+    var crypto_contract = web3.eth.contract(abi_crypto);
+    var cryptoAddr = crypto_contract.at("0x8f3d59fe5e1854f1d276411fa95497c9f47ec7ab");
+
+    // Fetch all the Ethereum addresses...
+    function selectBox() {
+
+      // If someone has made a choice... lets not re-load list.
+      // TODO: Every time a new Ethereum account is listed as eligible,
+      // then we should notify the user... Until they have chosen one. 
+      // alert($('#addrs').children('option').length);
+      if($('#addrs').children('option').length == 1) {
+        // We want to continue in this stage.
+      } else if($('#addrs').find(":selected").val() != "0") {
+         return;
+      }
+
+      // Only run if user has not yet chosen an Ethereum address.
+      if(!addressChosen) {
+        var listEligible = "";
+        var foundEligible = false;
+        // Let user select one of their Ethereum addresses
+        for(var i=0; i<web3.eth.accounts.length; i++) {
+          var tempaddr = web3.eth.accounts[i];
+          if(anonymousvotingAddr.eligible(tempaddr)) {
+            foundEligible = true;
+            listEligible = listEligible + '<option value="' + i + '">' + tempaddr + '</option>';
+          }
+        }
+
+        // Only create a drop-down box if we have found an address that is eligible to vote!
+        if(foundEligible) {
+           var selectbox = "<p>Address:</p><select id='addrs'>" + listEligible + "</select> <p>Password:</p> <input type='password' id='passwordf' value='ilikelittlepaddy' name='fname'><button onclick='unlock()'>Unlock</button>";
+           document.getElementById('dropdown').innerHTML = selectbox + '<p>Only eligible addresses appear in the list.</p>';
+        } else {
+           document.getElementById('dropdown').innerHTML = "None of your Ethereum accounts are yet eligible to vote. Please contact Election Authority.";
+        }
+      }
     }
 
-    selectbox = selectbox + "</select> <p>Password:</p> <input type='password' id='passwordf' value='ilikelittlepaddy' name='fname'><button onclick='unlock()'>Unlock</button>";
-    document.getElementById('dropdown').innerHTML = selectbox;
+    // function test() {
+    //   var _x = new BigNumber("100792359988221257522464744073694181557998811287873941943642234039631667801743");
+    //   var _v = new BigNumber("114941333558360567695678851060848045245826375581561159846926673173053566932687");
+    //   var _xG = [new BigNumber("50011181273477635355105934748199911221235256089199741271573814847024879061899"),new BigNumber("71802419974013591686591529237219896883303932349628173412957707346469215125624")];
+    //
+    //   web3.personal.unlockAccount(web3.eth.coinbase,password);
+    //
+    //   var _zkp = cryptoAddr.createZKP.call(_x, _v, _xG, {from:web3.eth.coinbase});
+    //   var _vG = [_zkp[1], _zkp[2], _zkp[3]];
+    //
+    //   alert(_zkp[0].toString(10));
+    //   alert(_zkp[1].toString(10));
+    //   alert(_zkp[2].toString(10));
+    //   alert(_zkp[3].toString(10));
+    //
+    //   // Lets make sure the ZKP is valid!
+    //   var verifyres = cryptoAddr.verifyZKP.call(_xG, _zkp[0], _vG, {from:web3.eth.coinbase});
+    //
+    //   alert(_zkp[4].toString(10) + " and " + verifyres[1]);
+    //   alert(verifyres[0]);
+    // }
+    //
+    // test();
 
     function unlock() {
       var _addr = $('#addrs').find(":selected").text();
@@ -143,24 +198,6 @@
       }
 
       currentState();
-    }
-
-    // Check that the user is eligible to vote
-    function eligible() {
-      var tempaddr;
-
-      // User might not have chosen their address yet...
-      if(addressChosen) {
-        tempaddr = addr;
-      } else {
-        tempaddr = $('#addrs').find(":selected").text();
-      }
-
-      if(anonymousvotingAddr.eligible(tempaddr)) {
-        document.getElementById('iseligible').innerHTML = "Yes! This address is eligible to vote!";
-      } else {
-        alert("You are not yet eligible");
-      }
     }
 
     // Vote submits their voting key.
@@ -181,80 +218,126 @@
         return;
       }
 
+      if(!anonymousvotingAddr.eligible(addr)) {
+        alert("Your Ethereum Account is not eligible for this vote.");
+        return;
+      }
+
       // We prove knowledge of the voting key
-      var zkp = anonymousvotingAddr.createZKP.call(x, v, xG, {from:web3.eth.accounts[accounts_index]});
-      var vG = [zkp[1], zkp[2], zkp[3]];
+      var single_zkp = cryptoAddr.createZKP.call(x, v, xG, {from:web3.eth.accounts[accounts_index]});
+      var vG = [single_zkp[1], single_zkp[2], single_zkp[3]];
+
       web3.personal.unlockAccount(addr,password);
 
-      // Submit voting key to the network
+      // Lets make sure the ZKP is valid!
+      var verifyres = cryptoAddr.verifyZKP.call(xG, single_zkp[0], vG, {from:web3.eth.accounts[accounts_index]});
+      if(!verifyres) {
+        alert("Problem with voting codes.");
+        return;
+      }
 
-      if(anonymousvotingAddr.register.call(xG, vG, zkp[0], {from:web3.eth.accounts[accounts_index]})) {
-        var res = anonymousvotingAddr.register.sendTransaction(xG, vG, zkp[0], {from:web3.eth.accounts[accounts_index], gas: 4200000});
+      // Submit voting key to the network
+      if(anonymousvotingAddr.register.call(xG, vG, single_zkp[0], {from:web3.eth.accounts[accounts_index]})) {
+        var res = anonymousvotingAddr.register.sendTransaction(xG, vG, single_zkp[0], {from:web3.eth.accounts[accounts_index], gas: 4200000});
         document.getElementById('submitvotingkey').innerHTML = "Voting key submitted. Waiting on Ethereum to confirm.";
         txlist("Submit voting key: " + res);
       } else {
         alert("Registration failed. Problem could be your voting codes or that you have already registered.");
       }
-
-
     }
 
 
     // User votes yes or no!
     function vote(choice) {
 
-      if(!uploaded) {
-        alert("Please upload your voting codes.");
-        return;
-      }
+       if(!uploaded) {
+         alert("Please upload your voting codes.");
+         return;
+       }
 
-      if(!addressChosen) {
-        alert("Please unlock your Ethereum address.");
-        return;
-      }
+       if(!addressChosen) {
+         alert("Please unlock your Ethereum address.");
+         return;
+       }
 
-      if(state != 3) {
-        alert("You can vote during the VOTE phase.");
-        return;
-      }
+       // Lets make sure they are registered too...
+       if(!anonymousvotingAddr.registered(addr)) {
+         alert("You are not registered for this vote.");
+         return;
+       }
 
-      // Lets make sure they are registered too...
-      if(!anonymousvotingAddr.registered(addr)) {
-        alert("You are not registered for this vote.");
-        return;
-      }
+       if(state == 0 || state == 1 || state == 2 || state == 5) {
+         alert("You can only vote during the COMMITMENT or VOTE phase");
+         return;
+       }
 
-      var ind = anonymousvotingAddr.addressid(addr); // What is our index for the vote?
+       var choice_text;
 
-      // Create vote...
-      var choice_text;
-      if(choice == 1) {
-        choice_text = "YES";
-        result = anonymousvotingAddr.create1outof2ZKPYesVote.call(w,r,d,x, {from:web3.eth.accounts[accounts_index]});
-      } else {
-        choice_text = "NO";
-        result = anonymousvotingAddr.create1outof2ZKPNoVote.call(w,r,d,x, {from:web3.eth.accounts[accounts_index]});
-      }
+       // Get xG and yG (only way to get values from a Struct)
+       var voter = anonymousvotingAddr.getVoter.call({from:web3.eth.accounts[accounts_index]});
+       var xG = [voter[0][0], voter[0][1]];
+       var yG = [voter[1][0], voter[1][1]];
 
-      var y = [result[0][0], result[0][1]];
-      var a1 = [result[0][2], result[0][3]];
-      var b1 = [result[0][4], result[0][5]];
-      var a2 = [result[0][6], result[0][7]];
-      var b2 = [result[0][8], result[0][9]];
+       if(choice == 1) {
+         choice_text = "YES";
+         result = cryptoAddr.create1outof2ZKPYesVote.call(xG,yG,w,r,d,x, {from:web3.eth.accounts[accounts_index]});
+       } else {
+         choice_text = "NO";
+         result = cryptoAddr.create1outof2ZKPNoVote.call(xG,yG,w,r,d,x, {from:web3.eth.accounts[accounts_index]});
+       }
 
-      var params = [result[1][0], result[1][1], result[1][2], result[1][3]];
-      result = anonymousvotingAddr.verify1outof2ZKP.call(params, y, a1, b1, a2, b2, {from:web3.eth.accounts[accounts_index]});
-      // alert("Does the 1 out of 2 ZKP Verify: "  + result);
+       var y = [result[0][0], result[0][1]];
+       var a1 = [result[0][2], result[0][3]];
+       var b1 = [result[0][4], result[0][5]];
+       var a2 = [result[0][6], result[0][7]];
+       var b2 = [result[0][8], result[0][9]];
 
+       var params = [result[1][0], result[1][1], result[1][2], result[1][3]];
+       result = anonymousvotingAddr.verify1outof2ZKP.call(params, y, a1, b1, a2, b2, {from:web3.eth.accounts[accounts_index]});
 
-      if(result) {
+       // Let's make sure the zero knowledge proof checked out...
+       if(result) {
 
-        if(confirm("You are voting " + choice_text + ". Please confirm this choice.")) {
-          web3.personal.unlockAccount(addr,password);
-          result = anonymousvotingAddr.submitVote.sendTransaction(params, y, a1, b1, a2, b2, {from:web3.eth.accounts[accounts_index], gas: 4200000});
-          document.getElementById('vote').innerHTML = 'Vote has been submitted. Waiting for confirmation.';
-          txlist("Submit vote: " + result);
-        }
+          var castvote = false;
+
+          // We either send a commitment to the vote, or the vote itself!
+          if(state == 3) {
+
+            if(anonymousvotingAddr.commitmentphase()) {
+              castvote = true;
+            } else if(confirm("You are voting " + choice_text + ". You will not be able to change your vote.")) {
+              castvote = true;
+            }
+
+            if(castvote) {
+              web3.personal.unlockAccount(addr,password);
+
+              // Get us a hash commitment to the voter's zero knowledge proof
+              var h = cryptoAddr.commitToVote.call(params, xG, yG, y, a1, b1, a2, b2, {from:web3.eth.accounts[accounts_index]});
+
+              // Send commitment to Etherum!
+              result = anonymousvotingAddr.submitCommitment.sendTransaction(h, {from:web3.eth.accounts[accounts_index], gas: 4200000});
+              document.getElementById('vote').innerHTML = 'You have sent (but not revealed) your vote. Waiting for Ethereum to confirm.';
+              txlist("Submit commitment: " + result);
+            }
+
+          } else if(state == 4) {
+
+            // No need to ask the user to confirm if they have already committed to it...
+            if(anonymousvotingAddr.commitmentphase()) {
+              castvote = true;
+            } else if(confirm("You are voting " + choice_text + ". You will not be able to change your vote.")) {
+              castvote = true;
+            }
+
+            // Should we broadcast the vote?
+            if(castvote) {
+              web3.personal.unlockAccount(addr,password);
+              result = anonymousvotingAddr.submitVote.sendTransaction(params, y, a1, b1, a2, b2, {from:web3.eth.accounts[accounts_index], gas: 4200000});
+              document.getElementById('vote').innerHTML = 'Vote has been submitted. Waiting for confirmation.';
+              txlist("Submit vote: " + result);
+            }
+         }
       } else {
         alert("Vote was not computed successfully. Please check that you have uploaded the correct voting codes and unlocked the correct account.");
       }
@@ -286,10 +369,13 @@
     var d;
     var addr;
 
-    // Keep track of what user has done...
-    var addressChosen = false;
-    var uploaded = false;
-    var computedKey = false;
+    /*
+     * State Variables. Make sure we only do these things ONCE.
+     */
+    var addressChosen = false; // User has selected their Ethereum Address
+    var uploaded = false; // User has uploaded their voting codes
+    var computedKey = false; // Ethereum has computed the keys
+    var checkedCommit = false; // OPTIONAL: If user has commitment and in VOTE phase. Check if YES or NO.
 
     var openFile = function(event) {
       var input = event.target;
@@ -323,6 +409,9 @@
     function currentState() {
       state = anonymousvotingAddr.state();
 
+      whatIsQuestion();
+      selectBox();
+
       if(state == 0) {
         document.getElementById('state').innerHTML = "SETUP: Election Authority is organising the election. ";
       } else if(state == 1) {
@@ -337,102 +426,118 @@
       } else if(state == 2) {
         document.getElementById('state').innerHTML = "COMPUTE: Ethereum is about to compute all voters special keys. ";
       } else if(state == 3) {
-        document.getElementById('state').innerHTML = "VOTE: You can now cast your vote. ";
+        document.getElementById('state').innerHTML = "COMMIT: Choose your vote. It will not be revealed until the VOTE phase.";
       } else if(state == 4) {
+        document.getElementById('state').innerHTML = "VOTE: Cast your vote! ";
+
+        // If user has submited a commitment... then check if it is yes or no
+        // We can check this by re-computing the ZKP, and comparing the hashes.
+        // Need to make sure that address has been chosen, voting codes uploaded, and registered.
+        if(!checkedCommit && addressChosen && uploaded && anonymousvotingAddr.commitment(addr)) {
+
+          // Lets not repeat this function again...
+          checkedCommit = true;
+
+          // Get xG and yG (only way to get values from a Struct)
+          var voter = anonymousvotingAddr.getVoter.call({from:web3.eth.accounts[accounts_index]});
+          var xG = [voter[0][0], voter[0][1]];
+          var yG = [voter[1][0], voter[1][1]];
+          var h = voter[2];
+
+          // Compute the 'YES' Zero Knowledge Proof...
+          var result = cryptoAddr.create1outof2ZKPYesVote.call(xG, yG, w,r,d,x, {from:web3.eth.accounts[accounts_index]});
+
+          var y = [result[0][0], result[0][1]];
+          var a1 = [result[0][2], result[0][3]];
+          var b1 = [result[0][4], result[0][5]];
+          var a2 = [result[0][6], result[0][7]];
+          var b2 = [result[0][8], result[0][9]];
+          var params = [result[1][0], result[1][1], result[1][2], result[1][3]];
+
+          result = anonymousvotingAddr.verify1outof2ZKP.call(params, y, a1, b1, a2, b2, {from:web3.eth.accounts[accounts_index]});
+
+          // Make sure zkp is OK (indicates problem with voting codes)
+          if(result) {
+
+            // Get us a hash commitment to the voter's zero knowledge proof
+            var _h = cryptoAddr.commitToVote.call(params, xG, yG, y, a1, b1, a2, b2, {from:web3.eth.accounts[accounts_index]});
+
+            // Check hash for this ZKP, and the hash commitment stored in Ethereum for this voter...
+            if(h == _h) {
+              document.getElementById('vote').innerHTML = "<button onclick='vote(1)'>Reveal 'Yes' Vote</button>";
+              return;
+            }
+          } else {
+            alert("Something went wrong. Please check your voting codes.");
+            return;
+          }
+
+          result = cryptoAddr.create1outof2ZKPNoVote.call(xG, yG, w,r,d,x, {from:web3.eth.accounts[accounts_index]});
+          y = [result[0][0], result[0][1]];
+          a1 = [result[0][2], result[0][3]];
+          b1 = [result[0][4], result[0][5]];
+          a2 = [result[0][6], result[0][7]];
+          b2 = [result[0][8], result[0][9]];
+          params = [result[1][0], result[1][1], result[1][2], result[1][3]];
+
+          result = anonymousvotingAddr.verify1outof2ZKP.call(params, y, a1, b1, a2, b2, {from:web3.eth.accounts[accounts_index]});
+
+          // Did we find a no vote?
+          if(result) {
+            // Get us a hash commitment to the voter's zero knowledge proof
+            var _h = cryptoAddr.commitToVote.call(params, xG, yG, y, a1, b1, a2, b2, {from:web3.eth.accounts[accounts_index]});
+
+            if(h == _h) {
+              document.getElementById('vote').innerHTML = "<button onclick='vote(0)'>Reveal 'No' Vote</button>";
+              return;
+            }
+          } else {
+            alert("Something went wrong. Please check your voting codes.");
+            return;
+          }
+
+          document.getElementById('vote').innerHTML = "Possibly something wrong with the voting codes you uploaded. Try again.";
+        }
+
+      } else if(state == 5) {
         var yes = anonymousvotingAddr.finaltally(0);
         var total = anonymousvotingAddr.finaltally(1);
         var no = total - yes;
         document.getElementById('state').innerHTML = "TALLY: Yes - " + yes + " No - " + no;
+        checkVoteCast();
       } else {
         document.getElementById('state').innerHTML = "Undocumented Phase: Something went wrong. ";
       }
 
       // Are we eligible to vote?
       if(anonymousvotingAddr.eligible(addr)) {
-        document.getElementById('eligible').innerHTML = "You are eligible to vote";
-      }
-      // Check if key has been submitted
-      if(anonymousvotingAddr.registered(addr)) {
-         document.getElementById('submitvotingkey').innerHTML = "Voting key has been accepted by Ethereum";
-
-         //Check if vote has already been cast
-         if(anonymousvotingAddr.votecast(addr)) {
-           document.getElementById('vote').innerHTML = "Vote has been cast.";
-         }
+        document.getElementById('dropdown').innerHTML = "You are eligible to vote. Address is " + addr + ".";
       }
 
-      whatIsQuestion();
+      checkVoteCast();
 
-    }
-
-    /*
-    * Catch events in real-time and update the site with the voting progress..
-    */
-    var allevents = anonymousvotingAddr.allEvents({}, '', function(error, result){
-     if (!error){
-
-       // Tell the admin if the address became eligible...
-       if(result.event === "Eligible") {
-          var receipt = web3.eth.getTransactionReceipt(result.transactionHash);
-
-          if(result.args.addr == addr) {
-            append(result.event + "," + result.args.addr);
-          }
-       }
-
-       // Voting phase has begun!
-       if(result.event === "StartTimer") {
-         var date = new Date();
-         date.setTime(result.args.timestamp.toNumber() * 1000); // Ethereum is seconds. JS is milliseconds.
-         append(result.event + "," + result.args.message + "," + date);
-       }
-
-       // Voting key has been submitted.
-       if(result.event === "Registered") {
-         if(result.args.addr == addr) {
-           append(result.event + "," + result.args.addr + "," + result.args.res + "," + result.args.counter);
-         }
-       }
-
-       // Registration Phase has Finished!
-       if(result.event === "RegistrationFinished") {
-          append(result.event);
-       }
-
-       // Compute the reconstructed keys
-       if(result.event === "ReconstructedKey") {
-          if(anonymousvotingAddr.addressid(addr).equals(result.args.counter)) {
-            append(result.event + "," + result.args.x.toString(10) + "," + result.args.y.toString(10) + "," + result.args.counter);
-          }
-       }
-
-       // Vote has been cast.
-       if(result.event === "RegisterVote") {
-         if(result.args.addr == addr) {
-           append(result.event + "," + result.args.addr + "," + result.args.res + "," + result.args.counter);
-         }
-       }
-
-       // Final tally... tell us gas usage as well.
-       if(result.event === "Tally") {
-         append(result.event + " - Yes Votes: " + result.args.tally.toString(10) + " and Total Votes Counted: " + result.args.counter.toString(10));
-       }
-
-       // Always update current state.
-       currentState();
-     }
-    });
-
-    function append(extra) {
-        var div = document.getElementById('infodiv');
-        div.innerHTML = div.innerHTML + "<br>" + "<p>" + extra + "</p>";
     }
 
     function txlist(extra) {
         document.getElementById('txlist').innerHTML = document.getElementById('txlist').innerHTML + "<br>" + extra;
     }
 
-    setInterval("currentState()", 1000);
+    function checkVoteCast() {
+
+      // Check if key has been submitted
+      if(anonymousvotingAddr.registered(addr)) {
+         document.getElementById('submitvotingkey').innerHTML = "Voting key has been accepted by Ethereum";
+
+        //Check if vote has already been cast (or if a commitment has been accepted)
+        if(anonymousvotingAddr.votecast(addr)) {
+          document.getElementById('vote').innerHTML = "Vote has been cast.";
+        } else if(anonymousvotingAddr.commitment(addr) && state != 4) {
+          document.getElementById('vote').innerHTML = "You have comitted (but not revealed) your vote.";
+        }
+      }
+    }
+
+    setInterval("currentState()", 5000);
     currentState();
   </script>
   </body>

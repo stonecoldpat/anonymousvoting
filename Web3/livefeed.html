@@ -28,14 +28,19 @@
          <div class="panel-heading">Colour codes.</div>
          <ul class="list-group">
              <li class="list-group-item list-group-item-success">Voter has voted.</li>
+             <li class="list-group-item list-group-item-danger">Optional Phase: Voter has commited (and not revealed) their vote.</li>
              <li class="list-group-item list-group-item-info">Voter has registered to vote. </li>
              <li class="list-group-item">Voter is eligible to vote.</li>
          </ul>
       </div>
 
       <div class="panel panel-primary">
-         <div class="panel-heading">Vote cast. </div>
+         <div class="panel-heading">Vote Cast.  </div>
          <ul id="voted" class="list-group"></ul>
+      </div>
+      <div class="panel panel-primary" id="commitdiv">
+         <div class="panel-heading">Committed (and not revealed) their vote.</div>
+         <ul id="committed" class="list-group"></ul>
       </div>
       <div class="panel panel-primary">
          <div class="panel-heading">Registered to vote. </div>
@@ -67,9 +72,9 @@
       web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
     }
 
-    var abi = [{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"eligible","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"vG","type":"uint256[3]"},{"name":"r","type":"uint256"}],"name":"register","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeTally","outputs":[{"name":"","type":"uint256[2]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"addressid","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"r1","type":"uint256"},{"name":"d1","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPYesVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"question","outputs":[{"name":"","type":"string"}],"type":"function"},{"constant":false,"inputs":[{"name":"addr","type":"address[]"}],"name":"setEligible","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"counter","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"finishRegistrationPhase","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"submitVote","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"w","type":"uint256"},{"name":"r2","type":"uint256"},{"name":"d2","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPNoVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"votecast","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"timer","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"x","type":"uint256"},{"name":"v","type":"uint256"},{"name":"xG","type":"uint256[2]"}],"name":"createZKP","outputs":[{"name":"res","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeReconstructedPublicKeys","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"registered","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"name":"","type":"uint8"}],"type":"function"},{"constant":false,"inputs":[{"name":"time","type":"uint256"},{"name":"_question","type":"string"}],"name":"beginSignUp","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"finaltally","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"reset","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"addresses","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"}];
+    var abi = [{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"eligible","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"vG","type":"uint256[3]"},{"name":"r","type":"uint256"}],"name":"register","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeTally","outputs":[{"name":"","type":"uint256[2]"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"addressid","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"getVoter","outputs":[{"name":"_registeredkey","type":"uint256[2]"},{"name":"_reconstructedkey","type":"uint256[2]"},{"name":"_commitment","type":"bytes32"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"commitmentphase","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"question","outputs":[{"name":"","type":"string"}],"type":"function"},{"constant":false,"inputs":[{"name":"addr","type":"address[]"}],"name":"setEligible","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"h","type":"bytes32"}],"name":"submitCommitment","outputs":[],"type":"function"},{"constant":false,"inputs":[],"name":"finishRegistrationPhase","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"submitVote","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"votecast","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"timer","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"time","type":"uint256"},{"name":"_question","type":"string"},{"name":"enableCommitmentPhase","type":"bool"}],"name":"beginSignUp","outputs":[],"type":"function"},{"constant":false,"inputs":[],"name":"computeReconstructedPublicKeys","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"commitment","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"registered","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"name":"","type":"uint8"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"finaltally","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"totalregistered","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"reset","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"voters","outputs":[{"name":"addr","type":"address"},{"name":"commitment","type":"bytes32"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"addresses","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"}];
     var anonymousvoting = web3.eth.contract(abi);
-    var anonymousvotingAddr = anonymousvoting.at("0xa5a11cca1b0740a0b0221c7e059355ea572abb74");
+    var anonymousvotingAddr = anonymousvoting.at("0x3133a932799bfde8a818b1af686c3f99c2d7c746");
 
     //TODO: Our program only allows up to 40 addresses.
     // Might be worth making that '40' a public variable...
@@ -77,6 +82,7 @@
     var addresses = new Array();
     var eligible = {};
     var registered = {};
+    var committed = {};
     var voted = {};
     var uponPageLoad = true;
 
@@ -87,6 +93,13 @@
       if(uponPageLoad) {
           findEligible();
           findRegistered()
+
+          if(anonymousvotingAddr.commitmentphase()) {
+            $( "#commitdiv" ).show();
+            findCommitted();
+          } else {
+            $( "#commitdiv" ).hide();
+          }
           findVoteCast();
           uponPageLoad = false;
       }
@@ -103,7 +116,10 @@
       } else if(state == 2) {
           document.getElementById("state").innerHTML = "COMPUTE: Ethereum must compute each voter's special voting key. ";
       } else if(state == 3) {
-          document.getElementById("state").innerHTML = "VOTE: Voters must cast their vote. ";
+          document.getElementById("state").innerHTML = "COMMIT: Voters choose (and not reveal) their vote.";
+          findCommitted()
+      } else if(state == 4) {
+          document.getElementById("state").innerHTML = "VOTE: Voters must cast (and reveal) their vote. ";
           findVoteCast();
       } else {
           var yes = anonymousvotingAddr.finaltally(0);
@@ -113,6 +129,7 @@
       }
     }
 
+    // Which eligible voters have submitted their voting key?
     function findRegistered() {
       // Check which voters have submited their voting key!
       for(var i=0; i<addresses.length; i++) {
@@ -136,6 +153,8 @@
          }
       }
     }
+
+    // Find which users have cast (and revealed) their vote.
     function findVoteCast() {
       for(var i=0; i<addresses.length; i++) {
 
@@ -154,10 +173,40 @@
 
                 document.getElementById("eligible-" + addresses[i]).setAttribute("class", "list-group-item list-group-item-success");
                 document.getElementById("registered-" + addresses[i]).setAttribute("class", "list-group-item list-group-item-success");
+
+                if(anonymousvotingAddr.commitmentphase()) {
+                   document.getElementById("committed-" + addresses[i]).setAttribute("class", "list-group-item list-group-item-success");
+                }
               }
          }
       }
     }
+
+    // Find which users have committed, but not revealed their vote.
+    function findCommitted() {
+      for(var i=0; i<addresses.length; i++) {
+
+         // Only check if the voter has not already voted
+         if(!committed[addresses[i]]) {
+
+              //Have they voted since we last checked?
+              if(anonymousvotingAddr.commitment(addresses[i])) {
+                committed[addresses[i]] = true;
+                var ul = document.getElementById("committed");
+                var li = document.createElement("li");
+                li.innerHTML = addresses[i];
+                li.setAttribute("id", "committed-" + addresses[i]);
+                li.setAttribute("class", "list-group-item ");
+                ul.appendChild(li);
+
+                document.getElementById("eligible-" + addresses[i]).setAttribute("class", "list-group-item list-group-item-danger");
+                document.getElementById("registered-" + addresses[i]).setAttribute("class", "list-group-item list-group-item-danger");
+              }
+         }
+      }
+    }
+
+    // Find which addresses are now eligible to vote...
     function findEligible() {
 
         // Check if any new addresses have been set as eligible.
@@ -167,7 +216,7 @@
             // Lets make sure this is a real address...
             if(addr != '0x') {
 
-              // Have we seen this address before? (if so; it'll be recorded as eligible)
+              // Have we seen this address before? (if so; it will already be recorded as eligible)
               if(eligible[addr] === undefined) {
 
                 // Initialise our hashmaps, and store the address
@@ -190,25 +239,8 @@
         }
     }
 
-    setInterval("currentState()", 5000);
+    setInterval("currentState()", 2000);
     currentState();
-
-    /*
-     * Below code copied from http://stackoverflow.com/questions/3387427/remove-element-by-id
-     * Provides a .remove() to make above code more readable.
-     */
-    Element.prototype.remove = function() {
-       this.parentElement.removeChild(this);
-    }
-
-    NodeList.prototype.remove = HTMLCollection.prototype.remove = function() {
-        for(var i = this.length - 1; i >= 0; i--) {
-            if(this[i] && this[i].parentElement) {
-                this[i].parentElement.removeChild(this[i]);
-            }
-        }
-    }
-
   </script>
   </body>
 </html>

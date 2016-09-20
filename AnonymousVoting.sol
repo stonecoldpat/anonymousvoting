@@ -463,31 +463,43 @@ contract AnonymousVoting is owned {
   //This makes looping in the program easier.
   address[] public addresses;
   mapping (address => uint) public addressid; // Address to Counter
-  mapping (uint => Voter) voters;
+  mapping (uint => Voter) public voters;
   mapping (address => bool) public eligible; // White list of addresses allowed to vote
   mapping (address => bool) public registered; // Address registered?
   mapping (address => bool) public votecast; // Address voted?
+  mapping (address => bool) public commitment; // Have we received their commitment?
 
   struct Voter {
       address addr;
       uint[2] registeredkey;
       uint[2] reconstructedkey;
+      bytes32 commitment;
       uint[2] vote;
   }
 
-  uint public counter; //Total number of participants that have submited a voting key
+  // Work around function to fetch details about a voter
+  function getVoter() returns (uint[2] _registeredkey, uint[2] _reconstructedkey, bytes32 _commitment){
+      uint index = addressid[msg.sender];
+      _registeredkey = voters[index].registeredkey;
+      _reconstructedkey = voters[index].reconstructedkey;
+      _commitment = voters[index].commitment;
+  }
+
+  uint public totalregistered; //Total number of participants that have submited a voting key
+
   uint public timer; // Period of time until the voting phase can begin.
   string public question;
   uint[2] public finaltally; // Final tally
+  bool public commitmentphase; // OPTIONAL phase.
+  uint commitmentCounter; // Count how many commitments have been recorded.
 
-  enum State { SETUP, SIGNUP, COMPUTE, VOTE, FINISHED }
+  enum State { SETUP, SIGNUP, COMPUTE, COMMITMENT, VOTE, FINISHED }
   State public state;
 
   modifier inState(State s) {
     if(state != s) {
         throw;
     }
-
     _
   }
 
@@ -501,7 +513,6 @@ contract AnonymousVoting is owned {
   function AnonymousVoting() {
     G[0] = Gx;
     G[1] = Gy;
-    counter = 0;
     state = State.SETUP;
     question = "No question set";
   }
@@ -515,17 +526,20 @@ contract AnonymousVoting is owned {
        address addr = addresses[i];
        eligible[addr] = false; // No longer eligible
        registered[addr] = false; // Remove voting registration
-       voters[i] = Voter({addr: 0, registeredkey: empty, reconstructedkey: empty, vote: empty});
+       voters[i] = Voter({addr: 0, registeredkey: empty, reconstructedkey: empty, vote: empty, commitment: 0});
        addressid[addr] = 0; // Remove index
        votecast[addr] = false; // Remove that vote was cast
+       commitment[addr] = false;
     }
 
     delete addresses;
-    counter = 0;
+    totalregistered = 0;
     timer = 0;
     question = "No question set";
     finaltally[0] = 0;
     finaltally[1] = 0;
+    commitmentphase = false;
+    commitmentCounter = 0;
 
     // We are finished resetting.
     state = State.SETUP;
@@ -550,17 +564,17 @@ contract AnonymousVoting is owned {
 
   // Owner of contract declares that eligible addresses begin round 1 of the protocol
   // Time is the number of 'blocks' we must wait until we can move onto round 2.
-  function beginSignUp(uint time, string _question) inState(State.SETUP) onlyOwner {
+  function beginSignUp(uint time, string _question, bool enableCommitmentPhase) inState(State.SETUP) onlyOwner {
 
+    // Represented in UNIX time...
+    // TODO: Set to initial 1970 timestamp
     if(time > 1) {
       state = State.SIGNUP;
       timer = time; // Should be in UNIX
       question = _question;
+      commitmentphase = enableCommitmentPhase;
       return;
     }
-
-    // Not ready yet!
-    throw;
   }
 
   // Called by participants to register their voting public key
@@ -571,16 +585,15 @@ contract AnonymousVoting is owned {
     if(eligible[msg.sender]) {
         if(verifyZKP(xG,r,vG) && !registered[msg.sender]) {
             uint[2] memory empty;
-            addressid[msg.sender] = counter;
-            voters[counter] = Voter({addr: msg.sender, registeredkey: xG, reconstructedkey: empty, vote: empty});
+            addressid[msg.sender] = totalregistered;
+            voters[totalregistered] = Voter({addr: msg.sender, registeredkey: xG, reconstructedkey: empty, vote: empty, commitment: 0});
             registered[msg.sender] = true;
-            counter += 1;
+            totalregistered += 1;
 
             return true;
         }
     }
 
-    /*Registered(msg.sender, false, counter);*/
     return false;
   }
 
@@ -596,7 +609,7 @@ contract AnonymousVoting is owned {
      }
 
      // Make sure at least 3 people have signed up...
-     if(counter < 3) {
+     if(totalregistered < 3) {
        return;
      }
 
@@ -622,7 +635,7 @@ contract AnonymousVoting is owned {
      afteri[1] = voters[1].registeredkey[1];
      afteri[2] = 1;
 
-     for(uint i=2; i<counter; i++) {
+     for(uint i=2; i<totalregistered; i++) {
         Secp256k1._addMixedM(afteri, voters[i].registeredkey);
      }
 
@@ -631,7 +644,7 @@ contract AnonymousVoting is owned {
      voters[0].reconstructedkey[1] = pp - afteri[1];
 
      // Step 2 is to add to beforei, and subtract from afteri.
-    for(i=1; i<counter; i++) {
+    for(i=1; i<totalregistered; i++) {
 
       if(i==1) {
         beforei[0] = voters[0].registeredkey[0];
@@ -644,7 +657,7 @@ contract AnonymousVoting is owned {
       // If we have reached the end... just store beforei
       // Otherwise, we need to compute a key.
       // Counting from 0 to n-1...
-      if(i==(counter-1)) {
+      if(i==(totalregistered-1)) {
         ECCMath.toZ1(beforei,pp);
         voters[i].reconstructedkey[0] = beforei[0];
         voters[i].reconstructedkey[1] = beforei[1];
@@ -672,17 +685,62 @@ contract AnonymousVoting is owned {
       }
     }
 
-     // Finally we are reading to enter the voting state
-     state = State.VOTE;
+     // We have computed each voter's special voting key.
+     // Now we either enter the commitment phase (option) or voting phase.
+     if(commitmentphase) {
+       state = State.COMMITMENT;
+     } else {
+       state = State.VOTE;
+     }
   }
 
-  //Given the 1 out of 2 ZKP - record the users vote!
-  function submitVote(uint[4] params, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) inState(State.VOTE) returns (bool){
+  /*
+   * OPTIONAL STAGE: All voters submit the hash of their vote.
+   * Why? The final voter that submits their vote gets to see the tally result
+   * before anyone else. This provides the voter with an additional advantage
+   * compared to all other voters. To get around this issue; we can force all
+   * voters to commit to their vote in advance.... and votes are only revealed
+   * once all voters have committed. This way the final voter has no additional
+   * advantage as they cannot change their vote depending on the tally.
+   * However... we cannot enforce the pre-image to be a hash, and someone could
+   * a commitment that is not a vote. This will break the election, but you
+   * will be able to determine who did it (and possibly punish them!).
+   */
+  function submitCommitment(bytes32 h) inState(State.COMMITMENT) {
+
+    if(!commitment[msg.sender]) {
+        commitment[msg.sender] = true;
+        uint index = addressid[msg.sender];
+        voters[index].commitment = h;
+        commitmentCounter = commitmentCounter + 1;
+
+        // Once we have recorded all commitments... let voters vote!
+        if(commitmentCounter == totalregistered) {
+          state = State.VOTE;
+        }
+    }
+  }
+
+  // Given the 1 out of 2 ZKP - record the users vote!
+  function submitVote(uint[4] params, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) inState(State.VOTE) returns (bool) {
 
      uint c = addressid[msg.sender];
 
      // Make sure the sender can vote, and hasn't already voted.
      if(registered[msg.sender] && !votecast[msg.sender]) {
+
+       // OPTIONAL Phase: Voters need to commit to their vote in advance.
+       // Time to verify if this vote matches the voter's previous commitment.
+       if(commitmentphase) {
+
+         // Voter has previously committed to the entire zero knowledge proof...
+         bytes32 h = sha3(msg.sender, params, voters[c].registeredkey, voters[c].reconstructedkey, y, a1, b1, a2, b2);
+
+         // No point verifying the ZKP if it doesn't match the voter's commitment.
+         if(voters[c].commitment != h) {
+           return false;
+         }
+       }
 
        // Verify the ZKP for the vote being cast
        if(verify1outof2ZKP(params, y, a1, b1, a2, b2)) {
@@ -707,7 +765,7 @@ contract AnonymousVoting is owned {
      uint[2] memory vote;
 
      // Sum all votes
-     for(uint i=0; i<counter; i++) {
+     for(uint i=0; i<totalregistered; i++) {
 
          // Confirm all votes have been cast...
          if(!votecast[voters[i].addr]) {
@@ -733,7 +791,7 @@ contract AnonymousVoting is owned {
      // If there are no votes... then it is 0G = (0,0)...
      if(temp[0] == 0) {
        finaltally[0] = 0;
-       finaltally[1] = counter;
+       finaltally[1] = totalregistered;
        return;
      } else {
 
@@ -747,11 +805,11 @@ contract AnonymousVoting is owned {
        tempG[2] = 1;
 
        // Start adding 'G' and looking for a match
-       for(i=1; i<=counter; i++) {
+       for(i=1; i<=totalregistered; i++) {
 
          if(temp[0] == tempG[0]) {
              finaltally[0] = i;
-             finaltally[1] = counter;
+             finaltally[1] = totalregistered;
              return;
          }
 
@@ -771,43 +829,6 @@ contract AnonymousVoting is owned {
          finaltally[1] = 0;
          return;
       }
-  }
-
-  // vG (blinding value), xG (public key), x (what we are proving)
-  // c = H(g, g^{v}, g^{x});
-  // r = v - xz (mod p);
-  // return(r,vG)
-  function createZKP(uint x, uint v, uint[2] xG) returns (uint[4] res) {
-
-      uint[2] memory G;
-      G[0] = Gx;
-      G[1] = Gy;
-
-      if(!Secp256k1.isPubKey(xG)) {
-          throw; //Must be on the curve!
-      }
-
-      // Get g^{v}
-      uint[3] memory vG = Secp256k1._mul(v, G);
-
-      // Convert to Affine Co-ordinates
-      ECCMath.toZ1(vG, pp);
-
-      // Get c = H(g, g^{x}, g^{v});
-      bytes32 b_c = sha256(msg.sender, Gx, Gy, xG, vG);
-      uint c = uint(b_c);
-
-      // Get 'r' the zkp
-      uint xc = mulmod(x,c,nn);
-
-      // v - xc
-      uint r = submod(v,xc);
-
-      res[0] = r;
-      res[1] = vG[0];
-      res[2] = vG[1];
-      res[3] = vG[2];
-      return;
   }
 
   // a - b = c;
@@ -858,181 +879,6 @@ contract AnonymousVoting is owned {
          return false;
       }
   }
-
-  // random 'w', 'r1', 'd1'
-  // TODO: Make constant
-  function create1outof2ZKPYesVote(uint w, uint r1, uint d1, uint x) returns (uint[10] res, uint[4] res2){
-      uint[2] memory temp;
-
-      // Voter Index
-      uint i = addressid[msg.sender];
-
-      uint[2] memory yG = voters[i].reconstructedkey;
-      uint[2] memory xG = voters[i].registeredkey;
-
-      // y = h^{x} * g
-      uint[3] memory temp1 = Secp256k1._mul(x,yG);
-      Secp256k1._addMixedM(temp1,G);
-      ECCMath.toZ1(temp1, pp);
-      res[0] = temp1[0];
-      res[1] = temp1[1];
-
-      // a1 = g^{r1} * x^{d1}
-      temp1 = Secp256k1._mul(r1,G);
-      temp1 = Secp256k1._add(temp1, Secp256k1._mul(d1,xG));
-      ECCMath.toZ1(temp1, pp);
-      res[2] = temp1[0];
-      res[3] = temp1[1];
-
-      // b1 = h^{r1} * y^{d1} (temp = affine 'y')
-      temp1 = Secp256k1._mul(r1,yG);
-
-      // Setting temp to 'y'
-      temp[0] = res[0];
-      temp[1] = res[1];
-      temp1= Secp256k1._add(temp1, Secp256k1._mul(d1, temp));
-      ECCMath.toZ1(temp1, pp);
-      res[4] = temp1[0];
-      res[5] = temp1[1];
-
-      // a2 = g^{w}
-      temp1 = Secp256k1._mul(w,G);
-      ECCMath.toZ1(temp1, pp);
-
-      res[6] = temp1[0];
-      res[7] = temp1[1];
-
-      // b2 = h^{w} (where h = g^{y})
-      temp1 = Secp256k1._mul(w, yG);
-      ECCMath.toZ1(temp1, pp);
-      res[8] = temp1[0];
-      res[9] = temp1[1];
-
-      // Get c = H(id, xG, Y, a1, b1, a2, b2);
-      // id is H(round, voter_index, voter_address, contract_address)...
-      bytes32 b_c = sha256(msg.sender, xG, res);
-      uint c = uint(b_c);
-
-      // d2 = c - d1 mod q
-      temp[0] = submod(c,d1);
-
-      // r2 = w - (x * d2)
-      temp[1] = submod(w, mulmod(x,temp[0],nn));
-
-      /* We return the following
-      * res[0] = y_x;
-      * res[1] = y_y;
-      * res[2] = a1_x;
-      * res[3] = a1_y;
-      * res[4] = b1_x;
-      * res[5] = b1_y;
-      * res[6] = a2_x;
-      * res[7] = a2_y;
-      * res[8] = b2_x;
-      * res[9] = b2_y;
-      * res[10] = d1;
-      * res[11] = d2;
-      * res[12] = r1;
-      * res[13] = r2;
-      */
-      res2[0] = d1;
-      res2[1] = temp[0];
-      res2[2] = r1;
-      res2[3] = temp[1];
-  }
-
-  // random 'w', 'r1', 'd1'
-  function create1outof2ZKPNoVote(uint w, uint r2, uint d2, uint x) returns (uint[10] res, uint[4] res2){
-      uint[2] memory temp_affine1;
-      uint[2] memory temp_affine2;
-
-      // Voter Index
-      uint i = addressid[msg.sender];
-      uint[2] memory yG = voters[i].reconstructedkey;
-      uint[2] memory xG = voters[i].registeredkey;
-
-      // y = h^{x} * g
-      uint[3] memory temp1 = Secp256k1._mul(x,yG);
-      ECCMath.toZ1(temp1, pp);
-
-      // Store y_x and y_y
-      res[0] = temp1[0];
-      res[1] = temp1[1];
-
-      // a1 = g^{w}
-      temp1 = Secp256k1._mul(w,G);
-      ECCMath.toZ1(temp1, pp);
-
-      // Store a1_x and a1_y
-      res[2] = temp1[0];
-      res[3] = temp1[1];
-
-      // b1 = h^{w} (where h = g^{y})
-      temp1 = Secp256k1._mul(w, yG);
-      ECCMath.toZ1(temp1, pp);
-
-      res[4] = temp1[0];
-      res[5] = temp1[1];
-
-      // a2 = g^{r2} * x^{d2}
-      temp1 = Secp256k1._mul(r2,G);
-      temp1 = Secp256k1._add(temp1, Secp256k1._mul(d2,xG));
-      ECCMath.toZ1(temp1, pp);
-
-      res[6] = temp1[0];
-      res[7] = temp1[1];
-
-      // Negate the 'y' co-ordinate of G
-      temp_affine1[0] = G[0];
-      temp_affine1[1] = pp - G[1];
-
-      // We need the public key y in affine co-ordinates
-      temp_affine2[0] = res[0];
-      temp_affine2[1] = res[1];
-
-      // We should end up with y^{d2} + g^{d2} .... (but we have the negation of g.. so y-g).
-      temp1 = Secp256k1._add(Secp256k1._mul(d2,temp_affine2), Secp256k1._mul(d2,temp_affine1));
-
-      // Now... it is h^{r2} + temp2..
-      temp1 = Secp256k1._add(Secp256k1._mul(r2,yG),temp1);
-
-      // Convert to Affine Co-ordinates
-      ECCMath.toZ1(temp1, pp);
-
-      res[8] = temp1[0];
-      res[9] = temp1[1];
-
-      // Get c = H(i, xG, Y, a1, b1, a2, b2);
-      bytes32 b_c = sha256(msg.sender, xG, res);
-      uint c = uint(b_c);
-
-      // d1 = c - d2 mod q
-      temp1[0] = submod(c,d2);
-
-      // r1 = w - (x * d1)
-      temp1[1] = submod(w, mulmod(x,temp1[0],nn));
-
-      /* We return the following
-      * res[0] = y_x;
-      * res[1] = y_y;
-      * res[2] = a1_x;
-      * res[3] = a1_y;
-      * res[4] = b1_x;
-      * res[5] = b1_y;
-      * res[6] = a2_x;
-      * res[7] = a2_y;
-      * res[8] = b2_x;
-      * res[9] = b2_y;
-      * res[10] = d1;
-      * res[11] = d2;
-      * res[12] = r1;
-      * res[13] = r2;
-      */
-      res2[0] = temp1[0];
-      res2[1] = d2;
-      res2[2] = temp1[1];
-      res2[3] = r2;
-    }
 
   // We verify that the ZKP is of 0 or 1.
   function verify1outof2ZKP(uint[4] params, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) returns (bool) {

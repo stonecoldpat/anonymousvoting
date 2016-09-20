@@ -1,29 +1,49 @@
 import 'dapple/test.sol'; // virtual "dapple" package imported when `dapple test` is run
 import 'AnonymousVoting.sol';
+import 'LocalCrypto.sol';
 
 // Contract to test access from non-owner accounts.
 contract SecondAccount {
     AnonymousVoting con;
+    LocalCrypto crypto;
+    uint public x;
 
     // Second Person
-    function SecondAccount(AnonymousVoting _con) {
+    function SecondAccount(AnonymousVoting _con, LocalCrypto _crypto) {
         con = _con;
+        crypto = _crypto;
     }
 
     // Submit voting key to Ethereum
-    function register(uint x, uint v, uint[2] xG) returns (bool) {
-        uint[4] memory res = con.createZKP(x,v,xG);
-
+    function register(uint _x, uint v, uint[2] xG) returns (bool) {
+        uint[4] memory res = crypto.createZKP(_x,v,xG);
         uint[3] memory vG = [res[1], res[2], res[3]];
+        x = _x;
 
         return con.register(xG, vG, res[0]);
     }
 
+    // To get over stack issue... seperate creation of ZKP, and submission of vote.
+    function createYesZKP(uint[2] xG, uint[2] yG, uint w, uint r, uint d) returns (uint[10] res, uint[4] params){
+        (res, params) = crypto.create1outof2ZKPYesVote(xG, yG, w, r, d, x);
+    }
+
+    // Should break with new _x
+    function createYesZKP(uint[2] xG, uint[2] yG, uint w, uint r, uint d, uint _x) returns (uint[10] res, uint[4] params){
+        (res, params) = crypto.create1outof2ZKPYesVote(xG, yG, w, r, d, _x);
+    }
+
+
     // Create a YES vote ZKP (in real life this is done via a call.... not a transaction)
-    function yesvote(uint w, uint r, uint d, uint x) returns (bool) {
+    // Mostly here to get around call stack issue...
+    function yesvote(uint w, uint r, uint d) returns (bool) {
         uint[10] memory res;
-        uint[4] memory res2;
-        (res, res2) = con.create1outof2ZKPYesVote(w, r, d, x);
+        uint[4] memory params;
+        uint[2] memory xG;
+        uint[2] memory yG;
+
+        (xG, yG,) = con.getVoter();
+        (res, params) = createYesZKP(xG, yG, w,r,d);
 
         uint[2] memory y = [res[0], res[1]];
         uint[2] memory a1 = [res[2], res[3]];
@@ -31,15 +51,66 @@ contract SecondAccount {
         uint[2] memory a2 = [res[6], res[7]];
         uint[2] memory b2 = [res[8], res[9]];
 
-        return submitVote(res2, y, a1, b1, a2, b2);
+        return con.submitVote(params, y, a1, b1, a2, b2);
+    }
+
+    // Change private key... should fail
+    function yesvoteNewX(uint w, uint r, uint d) returns (bool) {
+        uint[10] memory res;
+        uint[4] memory params;
+        uint[2] memory xG;
+        uint[2] memory yG;
+
+        (xG, yG,) = con.getVoter();
+        (res, params) = createYesZKP(xG, yG, w,r,d, 10792359988221257522464744073694181557998811287873941943642234039631667801743);
+
+        uint[2] memory y = [res[0], res[1]];
+        uint[2] memory a1 = [res[2], res[3]];
+        uint[2] memory b1 = [res[4], res[5]];
+        uint[2] memory a2 = [res[6], res[7]];
+        uint[2] memory b2 = [res[8], res[9]];
+
+        return con.submitVote(params, y, a1, b1, a2, b2);
+    }
+
+    // Create a YES vote ZKP (in real life this is done via a call.... not a transaction)
+    // Mostly here to get around call stack issue...
+    function yesvotecommit(uint w, uint r, uint d) {
+        uint[10] memory res;
+        uint[4] memory params;
+        uint[2] memory xG;
+        uint[2] memory yG;
+
+        (xG, yG,) = con.getVoter();
+        (res, params) = createYesZKP(xG, yG, w,r,d);
+
+        uint[2] memory y = [res[0], res[1]];
+        uint[2] memory a1 = [res[2], res[3]];
+        uint[2] memory b1 = [res[4], res[5]];
+        uint[2] memory a2 = [res[6], res[7]];
+        uint[2] memory b2 = [res[8], res[9]];
+
+        bytes32 h = crypto.commitToVote(params, xG, yG, y, a1, b1, a2, b2);
+
+        con.submitCommitment(h);
+    }
+
+
+    // Generate the 1 out of 2 ZKP for 'no'.
+    // Mostly here to get around call stack issue...
+    function createNoZKP(uint[2] xG, uint[2] yG, uint w, uint r, uint d) returns (uint[10] res, uint[4] params) {
+        (res, params) = crypto.create1outof2ZKPNoVote(xG, yG, w, r, d, x);
     }
 
     // Create a NO vote ZKP (in real life this is done via a call.... not a transaction)
-    function novote(uint w, uint r, uint d, uint x) returns (bool) {
+    function novote(uint w, uint r, uint d) returns (bool) {
         uint[10] memory res;
-        uint[4] memory res2;
+        uint[4] memory params;
+        uint[2] memory xG;
+        uint[2] memory yG;
 
-        (res, res2) = con.create1outof2ZKPNoVote(w, r, d, x);
+        (xG, yG,) = con.getVoter();
+        (res,params) = createNoZKP(xG, yG, w,r,d);
 
         uint[2] memory y = [res[0], res[1]];
         uint[2] memory a1 = [res[2], res[3]];
@@ -47,7 +118,28 @@ contract SecondAccount {
         uint[2] memory a2 = [res[6], res[7]];
         uint[2] memory b2 = [res[8], res[9]];
 
-        return submitVote(res2, y, a1, b1, a2, b2);
+        return con.submitVote(params, y, a1, b1, a2, b2);
+    }
+
+    // Create a NO vote ZKP (in real life this is done via a call.... not a transaction)
+    function novotecommit(uint w, uint r, uint d) {
+        uint[10] memory res;
+        uint[4] memory params;
+        uint[2] memory xG;
+        uint[2] memory yG;
+
+        (xG, yG,) = con.getVoter();
+        (res,params) = createNoZKP(xG, yG, w,r,d);
+
+        uint[2] memory y = [res[0], res[1]];
+        uint[2] memory a1 = [res[2], res[3]];
+        uint[2] memory b1 = [res[4], res[5]];
+        uint[2] memory a2 = [res[6], res[7]];
+        uint[2] memory b2 = [res[8], res[9]];
+
+        bytes32 h = crypto.commitToVote(params, xG, yG, y, a1, b1, a2, b2);
+
+        con.submitCommitment(h);
     }
 
     // Submit vote to Ethereum
@@ -59,11 +151,15 @@ contract SecondAccount {
 // Deriving from `Test` marks the contract as a test and gives you access to various test helpers.
 contract AnonymousVotingTest is Test {
     AnonymousVoting con;
+    LocalCrypto crypto;
     Tester proxy_tester;
     SecondAccount A;
     SecondAccount B;
     SecondAccount C;
 
+    event Debug(bool eligible, bool registered, bool votecast);
+    event GetVoter(uint xG_x, uint xG_y, uint yG_x, uint yG_y);
+    event DebugInts(uint x, uint y, uint z);
 
     // The function called "setUp" with no arguments is
     // called on a fresh instance of this contract before
@@ -71,11 +167,12 @@ contract AnonymousVotingTest is Test {
     // setUp vs subclass constructor when writing Test subclasses
     function setUp() {
         con = new AnonymousVoting();
+        crypto = new LocalCrypto();
         proxy_tester = new Tester();
         proxy_tester._target(con);
-        A = new SecondAccount(con);
-        B = new SecondAccount(con);
-        C = new SecondAccount(con);
+        A = new SecondAccount(con, crypto);
+        B = new SecondAccount(con, crypto);
+        C = new SecondAccount(con, crypto);
     }
 
     // Election Authority updates the white list with our three voters.
@@ -89,16 +186,15 @@ contract AnonymousVotingTest is Test {
     }
 
     // Election Authority dictates that the sign up period has begun.
-    function beginSignUp() {
+    function beginSignUp(bool commitment) {
         string memory question = "Should Satoshi Nakamoto reveal his real identity?";
-        con.beginSignUp(4, question);
+        con.beginSignUp(4, question, commitment);
     }
 
     // All voters submit their voting key
     function registerKeys(bool voter1, bool voter2, bool voter3) returns (bool[3]){
 
         bool[3] memory res;
-
         uint x;
         uint[2] memory xG;
         uint v;
@@ -145,29 +241,51 @@ contract AnonymousVotingTest is Test {
         bool[3] memory res;
 
         // Secrets of ZKP
-        uint x = 100792359988221257522464744073694181557998811287873941943642234039631667801743;
         uint w = 25291153222690468941875333155056279849838848426097128907648274067789060660273;
         uint r = 68245514418532339184005707392894217247971162351489303687284716936396921389966;
         uint d = 69359315012171413053095778073649855770462866229159476171746022558873132690484;
 
         // A will vote 'yes'
-        res[0] = A.yesvote(w, r, d, x);
+        res[0] = A.yesvote(w, r, d);
 
-        x = 73684597056470802520640839675442817373247702535850643999083350831860052477001;
         w = 19931063034338608040397431389036375166444930113540469342178236240587103276978;
         r = 87107851681277429609192387607437427289427886314855879969256798426721441034774;
         d = 72164131658574279179250456277220223585855304300653523095781426974019205356799;
 
-        res[1] = B.yesvote(w, r, d, x);
+        res[1] = B.yesvote(w, r, d);
 
-        x = 106554628258140934843991940734271727557510876833354296893443127816727132563840;
         w = 115286148593094397817919321895481582202334666397686766739301438664537464210065;
         r = 815396253592732808824014303738871690433014125945487317500773529831657827334;
         d = 23176707862498098379332945567991301108469279788561094237174439014024723886337;
 
-        res[2] = C.novote(w, r, d, x);
+        res[2] = C.novote(w, r, d);
 
         return res;
+    }
+
+    // Each user submits their vote.
+    function submitCommitments() {
+        bool[3] memory res;
+
+        // Secrets of ZKP
+        uint w = 25291153222690468941875333155056279849838848426097128907648274067789060660273;
+        uint r = 68245514418532339184005707392894217247971162351489303687284716936396921389966;
+        uint d = 69359315012171413053095778073649855770462866229159476171746022558873132690484;
+
+        // A will vote 'yes'
+        A.yesvotecommit(w, r, d);
+
+        w = 19931063034338608040397431389036375166444930113540469342178236240587103276978;
+        r = 87107851681277429609192387607437427289427886314855879969256798426721441034774;
+        d = 72164131658574279179250456277220223585855304300653523095781426974019205356799;
+
+        B.yesvotecommit(w, r, d);
+
+        w = 115286148593094397817919321895481582202334666397686766739301438664537464210065;
+        r = 815396253592732808824014303738871690433014125945487317500773529831657827334;
+        d = 23176707862498098379332945567991301108469279788561094237174439014024723886337;
+
+        C.novotecommit(w, r, d);
     }
 
     function Tally() {
@@ -200,7 +318,7 @@ contract AnonymousVotingTest is Test {
     // Test that voters can sign up correctly
     function test2BeginSignUp() logs_gas {
         setEligible();
-        beginSignUp();
+        beginSignUp(false);
 
         // Check timer is set correctly
         assertTrue(con.timer() == 4);
@@ -212,7 +330,7 @@ contract AnonymousVotingTest is Test {
     // Test that voters can submit their key
     function test3SubmitKey() logs_gas {
         setEligible();
-        beginSignUp();
+        beginSignUp(false);
         bool[3] memory res = registerKeys(true, true, true);
 
         // Make sure all three voters submitted their key ok
@@ -232,7 +350,7 @@ contract AnonymousVotingTest is Test {
     // Test that the Election Authority can finish the registration phase
     function test4FinishRegistration() logs_gas {
         setEligible();
-        beginSignUp();
+        beginSignUp(false);
         registerKeys(true, true, true);
         finishRegistration();
 
@@ -243,7 +361,7 @@ contract AnonymousVotingTest is Test {
     // Test that the Election Authority can compute the special voting keys
     function test5ComputeKeys() logs_gas {
         setEligible();
-        beginSignUp();
+        beginSignUp(false);
         registerKeys(true, true, true);
         finishRegistration();
         computeKeys();
@@ -255,12 +373,13 @@ contract AnonymousVotingTest is Test {
     // Submit votes to Ethereum
     function test6SubmitVotes() logs_gas {
         setEligible();
-        beginSignUp();
+        beginSignUp(false);
         registerKeys(true, true, true);
         finishRegistration();
         computeKeys();
-        bool[3] memory res = submitVotes();
+        assertTrue(uint(con.state()) == 4);
 
+        bool[3] memory res = submitVotes();
         // Make sure votes were accepted...
         assertTrue(res[0]);
         assertTrue(res[1]);
@@ -272,10 +391,69 @@ contract AnonymousVotingTest is Test {
         assertEq(con.votecast(address(C)), true);
     }
 
+    // Submit votes to Ethereum
+    function test8SubmitCommitments() logs_gas {
+        setEligible();
+        beginSignUp(true);
+        registerKeys(true, true, true);
+        finishRegistration();
+        computeKeys();
+        assertTrue(uint(con.state()) == 3);
+        submitCommitments();
+        assertTrue(uint(con.state()) == 4);
+
+        // Verify that the commitments where accepted..
+        assertTrue(con.commitment(address(A)));
+        assertTrue(con.commitment(address(B)));
+        assertTrue(con.commitment(address(C)));
+    }
+
+    // Submit votes to Ethereum
+    function test8RevealCommitments() logs_gas {
+        setEligible();
+        beginSignUp(true);
+        registerKeys(true, true, true);
+        finishRegistration();
+        computeKeys();
+        assertTrue(uint(con.state()) == 3);
+        submitCommitments();
+        assertTrue(uint(con.state()) == 4);
+        submitVotes();
+        assertEq(con.votecast(address(A)), true);
+        assertEq(con.votecast(address(B)), true);
+        assertEq(con.votecast(address(C)), true);
+    }
+
+    // Submit votes to Ethereum
+    function test9CommitRevealTally() logs_gas {
+        setEligible();
+        beginSignUp(true);
+        registerKeys(true, true, true);
+        finishRegistration();
+        computeKeys();
+        assertTrue(uint(con.state()) == 3);
+        submitCommitments();
+        assertTrue(uint(con.state()) == 4);
+        submitVotes();
+        Tally();
+
+        uint yes = con.finaltally(0);
+        uint total = con.finaltally(1);
+
+        // Check total number of votes counted...
+        assertTrue(yes == 2);
+
+        // Check total number of votes counted...
+        assertTrue(total == 3);
+
+        // Make sure we are in the 'finished' state!
+        assertTrue(uint(con.state()) == 5);
+    }
+
     // Compute the final tally
     function test7Tally() logs_gas {
         setEligible();
-        beginSignUp();
+        beginSignUp(false);
         registerKeys(true, true, true);
         finishRegistration();
         computeKeys();
@@ -297,13 +475,13 @@ contract AnonymousVotingTest is Test {
         assertTrue(total == 3);
 
         // Make sure we are in the 'finished' state!
-        assertTrue(uint(con.state()) == 4);
+        assertTrue(uint(con.state()) == 5);
     }
 
     // Not all voters have cast their vote.. should throw
     function testThrowCannotTally() logs_gas {
         setEligible();
-        beginSignUp();
+        beginSignUp(false);
         registerKeys(true, true, true);
         finishRegistration();
         computeKeys();
@@ -319,7 +497,7 @@ contract AnonymousVotingTest is Test {
     // Not all voters have cast their vote.. should throw
     function testCannotSubmitFakeZKP() logs_gas {
         setEligible();
-        beginSignUp();
+        beginSignUp(false);
         registerKeys(true, true, true);
 
         // Private key _x is not the correct 'x' for xG
@@ -334,25 +512,24 @@ contract AnonymousVotingTest is Test {
     // Not all voters have cast their vote.. should throw
     function testCannotFakeVote() logs_gas {
         setEligible();
-        beginSignUp();
+        beginSignUp(false);
         registerKeys(true, true, true);
         finishRegistration();
         computeKeys();
 
         // Changed private key 'x'...
-        uint _x = 10792359988221257522464744073694181557998811287873941943642234039631667801743;
         uint w = 25291153222690468941875333155056279849838848426097128907648274067789060660273;
         uint r = 68245514418532339184005707392894217247971162351489303687284716936396921389966;
         uint d = 79359315012171413053095778073649855770462866229159476171746022558873132690484;
 
         // Vote should fail. Wrong private key used...
-        assertEq(false, A.yesvote(w, r, d, _x));
+        assertEq(false, A.yesvoteNewX(w, r, d));
     }
 
     // Cannot finish registration phase unless three people have signed up.
     function testCannotEndRegistration() logs_gas {
         setEligible();
-        beginSignUp();
+        beginSignUp(false);
         registerKeys(true, true, false);
         finishRegistration();
 
