@@ -1,0 +1,12 @@
+body {
+
+  font-family: montserrat, arial, verdana;
+  text-align: center;
+	background:
+		url('../img/background.png');
+}
+
+.jumbotron {
+
+  background-color: white;
+}

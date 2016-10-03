@@ -485,13 +485,22 @@ contract AnonymousVoting is owned {
       _commitment = voters[index].commitment;
   }
 
-  uint public totalregistered; //Total number of participants that have submited a voting key
+  // List of timers that each phase MUST end by an explicit time in UNIX timestamp.
+  // Ethereum works in SECONDS. Not milliseconds.
+  uint public finishSignupPhase = 0; // Election Authority to transition to next phase.
+  uint public endSignupPhase = 0; // Election Authority does not transition to next phase by this time.
+  uint public endComputationPhase = 0; // Election Authority does not finish computation phase by this time.
+  uint public endCommitmentPhase = 0; // Voters have not sent their commitments in by this time.
+  uint public endVotingPhase = 0; // Voters have not submitted their vote by this stage.
 
-  uint public timer; // Period of time until the voting phase can begin.
+  uint public totalregistered; //Total number of participants that have submited a voting key
+  uint public totaleligible;
+  uint public totalcommitted;
+  uint public totalvoted;
+
   string public question;
   uint[2] public finaltally; // Final tally
   bool public commitmentphase; // OPTIONAL phase.
-  uint commitmentCounter; // Count how many commitments have been recorded.
 
   enum State { SETUP, SIGNUP, COMPUTE, COMMITMENT, VOTE, FINISHED }
   State public state;
@@ -532,14 +541,26 @@ contract AnonymousVoting is owned {
        commitment[addr] = false;
     }
 
+    // Reset timers.
+    finishSignupPhase = 0;
+    endSignupPhase = 0;
+    endComputationPhase = 0;
+    endCommitmentPhase = 0;
+    endVotingPhase = 0;
+
     delete addresses;
+
+    // Keep track of voter activity
     totalregistered = 0;
-    timer = 0;
+    totaleligible = 0;
+    totalcommitted = 0;
+    totalvoted = 0;
+
     question = "No question set";
     finaltally[0] = 0;
     finaltally[1] = 0;
     commitmentphase = false;
-    commitmentCounter = 0;
+
 
     // We are finished resetting.
     state = State.SETUP;
@@ -549,7 +570,7 @@ contract AnonymousVoting is owned {
   function setEligible(address[] addr) onlyOwner {
 
     // We can only handle up to about 35-40 people at the moment.
-    if(addresses.length + addr.length > 40) {
+    if(totaleligible > 40) {
       throw;
     }
 
@@ -558,23 +579,70 @@ contract AnonymousVoting is owned {
 
       if(!eligible[addr[i]]) {
         eligible[addr[i]] = true;
-        addresses.push(addr[i]);      }
+        addresses.push(addr[i]);
+        totaleligible += 1;
+      }
     }
   }
 
   // Owner of contract declares that eligible addresses begin round 1 of the protocol
   // Time is the number of 'blocks' we must wait until we can move onto round 2.
-  function beginSignUp(uint time, string _question, bool enableCommitmentPhase) inState(State.SETUP) onlyOwner {
+  function beginSignUp(string _question, bool enableCommitmentPhase, uint _finishSignupPhase, uint _endSignupPhase, uint _endComputationPhase, uint _endCommitmentPhase, uint _endVotingPhase, uint gap) inState(State.SETUP) onlyOwner returns (bool){
 
     // Represented in UNIX time...
-    // TODO: Set to initial 1970 timestamp
-    if(time > 1) {
+    // TODO: Set to block timestamp...
+    // TODO: Enforce gap to be at least 1 hour.. may break unit testing
+    // Make sure 3 people are at least eligible to vote..
+    if(_finishSignupPhase > 1 && gap >= 1 && addresses.length > 3) {
+
+      // Ensure each time phase finishes in the future...
+      // Ensure there is a gap of '3 hours' between each phase.
+      if(_endSignupPhase-gap < _finishSignupPhase) {
+        return false;
+      }
+
+      // Make sure there is a gap between 'end of signup' and 'end of computation'
+      if(_endComputationPhase-gap < _endSignupPhase) {
+        return false;
+      }
+
+      // We need to check Commitment timestamps if phase is enabled.
+      if(enableCommitmentPhase) {
+
+        // Make sure there is a gap between 'end of computation' and 'end of commitment' phases.
+        if(_endCommitmentPhase-gap < _endComputationPhase) {
+          return false;
+        }
+
+        // Make sure there is a gap between 'end of commitment' and 'end of vote' phases.
+        if(_endVotingPhase-gap < _endCommitmentPhase) {
+          return false;
+        }
+
+      } else {
+        // We have no commitment phase.
+        // Make sure there is a gap between 'end of computation' and 'end of vote' phases.
+        if(_endVotingPhase-gap < _endComputationPhase) {
+          return false;
+        }
+      }
+
+      // All time stamps are reasonable.
+      // We can now begin the signup phase.
       state = State.SIGNUP;
-      timer = time; // Should be in UNIX
+
+      // All timestamps should be in UNIX..
+      finishSignupPhase = _finishSignupPhase;
+      endSignupPhase = _endSignupPhase;
+      endComputationPhase = _endComputationPhase;
+      endCommitmentPhase = _endCommitmentPhase;
+      endVotingPhase = _endVotingPhase;
       question = _question;
       commitmentphase = enableCommitmentPhase;
-      return;
+      return true;
     }
+
+    return false;
   }
 
   // Called by participants to register their voting public key
@@ -604,7 +672,7 @@ contract AnonymousVoting is owned {
      // We can only compute the public keys once participants
      // have been given an opportunity to regstier their
      // voting public key.
-     if(block.timestamp < timer) {
+     if(block.timestamp < finishSignupPhase) {
        return;
      }
 
@@ -712,10 +780,10 @@ contract AnonymousVoting is owned {
         commitment[msg.sender] = true;
         uint index = addressid[msg.sender];
         voters[index].commitment = h;
-        commitmentCounter = commitmentCounter + 1;
+        totalcommitted = totalcommitted + 1;
 
         // Once we have recorded all commitments... let voters vote!
-        if(commitmentCounter == totalregistered) {
+        if(totalcommitted == totalregistered) {
           state = State.VOTE;
         }
     }
@@ -748,6 +816,9 @@ contract AnonymousVoting is owned {
          voters[c].vote[1] = y[1];
 
          votecast[msg.sender] = true;
+
+         totalvoted += 1;
+
          return true;
        }
      }
@@ -759,7 +830,7 @@ contract AnonymousVoting is owned {
   // Assuming all votes have been submitted. We can leak the tally.
   // Anyone can close the election. No need for Election Authority to do it.
   // TODO: Allow someone to submit the tally and to verify it here. Would be cheaper!
-  function computeTally() inState(State.VOTE) returns (uint[2]){
+  function computeTally() inState(State.VOTE) {
 
      uint[3] memory temp;
      uint[2] memory vote;

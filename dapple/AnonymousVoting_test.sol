@@ -186,9 +186,33 @@ contract AnonymousVotingTest is Test {
     }
 
     // Election Authority dictates that the sign up period has begun.
-    function beginSignUp(bool commitment) {
+    function beginSignUp(bool commitment, uint finishSignup, uint endSignup, uint endComputation, uint endCommitment, uint endVoting, uint gap) {
         string memory question = "Should Satoshi Nakamoto reveal his real identity?";
-        con.beginSignUp(4, question, commitment);
+
+        con.beginSignUp(question, commitment, finishSignup, endSignup, endComputation, endCommitment, endVoting, gap);
+    }
+
+    // Easy function to begin election without commitment
+    function beginSignupWithoutCommitment() {
+        uint gap = 1;
+        uint finishSignup = 2;
+        uint endSignup = finishSignup + gap;
+        uint endComputation = endSignup + gap;
+        uint endVoting = endComputation + gap;
+        string memory question = "Should Satoshi Nakamoto reveal his real identity?";
+        con.beginSignUp(question, false, finishSignup, endSignup, endComputation, 0, endVoting, gap);
+    }
+
+    // Easy function to begin election with commitment
+    function beginSignupWithCommitment() {
+        uint gap = 1;
+        uint finishSignup = 2;
+        uint endSignup = finishSignup + gap;
+        uint endComputation = endSignup + gap;
+        uint endCommitment = endComputation + gap;
+        uint endVoting = endCommitment + gap;
+        string memory question = "Should Satoshi Nakamoto reveal his real identity?";
+        con.beginSignUp(question, true, finishSignup, endSignup, endComputation, endCommitment, endVoting, gap);
     }
 
     // All voters submit their voting key
@@ -292,13 +316,152 @@ contract AnonymousVotingTest is Test {
         con.computeTally();
     }
 
-    // Make sure the coinbase account is the owner
+    function testBeginSetUpBadBeginSignup() {
+      setEligible();
+
+      uint gap = 21600000;
+      uint finishSignup = 1916006400;
+      uint endSignup = finishSignup + gap - 1;
+      uint endComputation = endSignup + gap;
+      uint endCommitment = endComputation + gap;
+      uint endVoting = endCommitment + gap;
+      beginSignUp(true, finishSignup, endSignup, endComputation, endCommitment, endVoting, gap);
+
+      // We should not have changed state.
+      assertTrue(uint(con.state()) == 0);
+    }
+
+    function testBeginSetUpBadEndComputation() {
+      setEligible();
+
+      uint gap = 21600000;
+      uint finishSignup = 1916006400;
+      uint endSignup = finishSignup + gap;
+      uint endComputation = endSignup + gap - 1;
+      uint endCommitment = endComputation + gap;
+      uint endVoting = endCommitment + gap;
+      beginSignUp(true, finishSignup, endSignup, endComputation, endCommitment, endVoting, gap);
+
+      // We should not have changed state.
+      assertTrue(uint(con.state()) == 0);
+    }
+
+    function testBeginSetUpBadEndCommitment() {
+      setEligible();
+
+      uint gap = 21600000;
+      uint finishSignup = 1916006400;
+      uint endSignup = finishSignup + gap;
+      uint endComputation = endSignup + gap;
+      uint endCommitment = endComputation + gap - 1;
+      uint endVoting = endCommitment + gap;
+      beginSignUp(true, finishSignup, endSignup, endComputation, endCommitment, endVoting, gap);
+
+      // We should not have changed state.
+      assertTrue(uint(con.state()) == 0);
+    }
+
+    function testBeginSetUpBadEndVoting() {
+      setEligible();
+
+      uint gap = 21600000;
+      uint finishSignup = 1916006400;
+      uint endSignup = finishSignup + gap;
+      uint endComputation = endSignup + gap;
+      uint endCommitment = endComputation + gap;
+      uint endVoting = endCommitment + gap - 1;
+      beginSignUp(true, finishSignup, endSignup, endComputation, endCommitment, endVoting, gap);
+
+      // We should not have changed state.
+      assertTrue(uint(con.state()) == 0);
+    }
+
+    function testBeginSetUpBadEndVotingWithoutCommitmentPhase() {
+      setEligible();
+
+      uint gap = 21600000;
+      uint finishSignup = 1916006400;
+      uint endSignup = finishSignup + gap;
+      uint endComputation = endSignup + gap;
+      uint endCommitment = 0;
+      uint endVoting = endComputation + gap - 1;
+      beginSignUp(false, finishSignup, endSignup, endComputation, endCommitment, endVoting, gap);
+
+      // We should not have changed state.
+      assertTrue(uint(con.state()) == 0);
+    }
+
+    function testBeginSetUpWithCommitment() {
+        setEligible();
+        beginSignupWithCommitment();
+        assertTrue(uint(con.state()) == 1);
+        assertTrue(con.finishSignupPhase() == 2);
+        assertTrue(con.endSignupPhase() == 3);
+        assertTrue(con.endComputationPhase() == 4);
+        assertTrue(con.endCommitmentPhase() == 5);
+        assertTrue(con.endVotingPhase() == 6);
+    }
+
+    // Test that voters can sign up correctly
+    function testBeginSignUpWithoutCommitment() {
+        setEligible();
+        beginSignupWithoutCommitment();
+
+        // Check timer is set correctly
+        assertTrue(uint(con.state()) == 1);
+        assertTrue(con.finishSignupPhase() == 2);
+        assertTrue(con.endSignupPhase() == 3);
+        assertTrue(con.endComputationPhase() == 4);
+        assertTrue(con.endVotingPhase() == 5);
+    }
+
+    function testBeginSignUpWithoutCommitmentreaterThanGap() {
+      setEligible();
+
+      uint gap = 21600000;
+      uint gapIncrease = 1000;
+      uint finishSignup = 1916006400;
+      uint endSignup = finishSignup + gap + gapIncrease;
+      uint endComputation = endSignup + gap + gapIncrease;
+      uint endVoting = endComputation + gap + gapIncrease;
+      beginSignUp(false, finishSignup, endSignup, endComputation, 0, endVoting, gap);
+
+      // We should not have changed state.
+      assertTrue(uint(con.state()) == 1);
+      assertTrue(con.finishSignupPhase() == finishSignup);
+      assertTrue(con.endSignupPhase() == endSignup);
+      assertTrue(con.endComputationPhase() == endComputation);
+      assertTrue(con.endVotingPhase() == endVoting);
+    }
+
+    function testBeginSignUpWithCommitmentreaterThanGap() {
+      setEligible();
+
+      uint gap = 21600000;
+      uint gapIncrease = 1000;
+      uint finishSignup = 1916006400;
+      uint endSignup = finishSignup + gap + gapIncrease;
+      uint endComputation = endSignup + gap + gapIncrease;
+      uint endCommitment = endComputation + gap + gapIncrease;
+      uint endVoting = endCommitment + gap + gapIncrease;
+      beginSignUp(true, finishSignup, endSignup, endComputation, endCommitment, endVoting, gap);
+
+      // We should not have changed state.
+      assertTrue(uint(con.state()) == 1);
+      assertTrue(con.finishSignupPhase() == finishSignup);
+      assertTrue(con.endSignupPhase() == endSignup);
+      assertTrue(con.endComputationPhase() == endComputation);
+      assertTrue(con.endCommitmentPhase() == endCommitment);
+      assertTrue(con.endVotingPhase() == endVoting);
+    }
+
+    /*// Make sure the coinbase account is the owner
     function testCreatorIsCreator() logs_gas {
         assertEq(address(this), con.owner());
     }
 
     // Set accounts A, B, C as eligible
-    function test1SetEligible() logs_gas {
+    function testSetEligible() logs_gas {
         setEligible();
 
         // Make sure the owner of the contract is not eligible by default...
@@ -315,22 +478,10 @@ contract AnonymousVotingTest is Test {
         assertEq(true, res);
     }
 
-    // Test that voters can sign up correctly
-    function test2BeginSignUp() logs_gas {
-        setEligible();
-        beginSignUp(false);
-
-        // Check timer is set correctly
-        assertTrue(con.timer() == 4);
-        assertTrue(uint(con.state()) == 1);
-
-        // TODO: Check question is set correctly.
-    }
-
     // Test that voters can submit their key
-    function test3SubmitKey() logs_gas {
+    function testSubmitKey() logs_gas {
         setEligible();
-        beginSignUp(false);
+        beginSignupWithoutCommitment();
         bool[3] memory res = registerKeys(true, true, true);
 
         // Make sure all three voters submitted their key ok
@@ -348,9 +499,9 @@ contract AnonymousVotingTest is Test {
     }
 
     // Test that the Election Authority can finish the registration phase
-    function test4FinishRegistration() logs_gas {
+    function testFinishRegistration() logs_gas {
         setEligible();
-        beginSignUp(false);
+        beginSignupWithoutCommitment();
         registerKeys(true, true, true);
         finishRegistration();
 
@@ -359,9 +510,9 @@ contract AnonymousVotingTest is Test {
     }
 
     // Test that the Election Authority can compute the special voting keys
-    function test5ComputeKeys() logs_gas {
+    function testComputeKeys() logs_gas {
         setEligible();
-        beginSignUp(false);
+        beginSignupWithoutCommitment();
         registerKeys(true, true, true);
         finishRegistration();
         computeKeys();
@@ -371,9 +522,9 @@ contract AnonymousVotingTest is Test {
     }
 
     // Submit votes to Ethereum
-    function test6SubmitVotes() logs_gas {
+    function testSubmitVotes() logs_gas {
         setEligible();
-        beginSignUp(false);
+        beginSignupWithoutCommitment();
         registerKeys(true, true, true);
         finishRegistration();
         computeKeys();
@@ -392,9 +543,9 @@ contract AnonymousVotingTest is Test {
     }
 
     // Submit votes to Ethereum
-    function test8SubmitCommitments() logs_gas {
+    function testSubmitCommitments() logs_gas {
         setEligible();
-        beginSignUp(true);
+        beginSignupWithCommitment();
         registerKeys(true, true, true);
         finishRegistration();
         computeKeys();
@@ -409,9 +560,9 @@ contract AnonymousVotingTest is Test {
     }
 
     // Submit votes to Ethereum
-    function test8RevealCommitments() logs_gas {
+    function testRevealCommitments() logs_gas {
         setEligible();
-        beginSignUp(true);
+        beginSignupWithCommitment();
         registerKeys(true, true, true);
         finishRegistration();
         computeKeys();
@@ -425,9 +576,9 @@ contract AnonymousVotingTest is Test {
     }
 
     // Submit votes to Ethereum
-    function test9CommitRevealTally() logs_gas {
+    function testCommitRevealTally() logs_gas {
         setEligible();
-        beginSignUp(true);
+        beginSignupWithCommitment();
         registerKeys(true, true, true);
         finishRegistration();
         computeKeys();
@@ -451,9 +602,9 @@ contract AnonymousVotingTest is Test {
     }
 
     // Compute the final tally
-    function test7Tally() logs_gas {
+    function testTally() logs_gas {
         setEligible();
-        beginSignUp(false);
+        beginSignupWithCommitment();
         registerKeys(true, true, true);
         finishRegistration();
         computeKeys();
@@ -481,7 +632,7 @@ contract AnonymousVotingTest is Test {
     // Not all voters have cast their vote.. should throw
     function testThrowCannotTally() logs_gas {
         setEligible();
-        beginSignUp(false);
+        beginSignupWithoutCommitment();
         registerKeys(true, true, true);
         finishRegistration();
         computeKeys();
@@ -497,7 +648,7 @@ contract AnonymousVotingTest is Test {
     // Not all voters have cast their vote.. should throw
     function testCannotSubmitFakeZKP() logs_gas {
         setEligible();
-        beginSignUp(false);
+        beginSignupWithoutCommitment();
         registerKeys(true, true, true);
 
         // Private key _x is not the correct 'x' for xG
@@ -512,7 +663,7 @@ contract AnonymousVotingTest is Test {
     // Not all voters have cast their vote.. should throw
     function testCannotFakeVote() logs_gas {
         setEligible();
-        beginSignUp(false);
+        beginSignupWithoutCommitment();
         registerKeys(true, true, true);
         finishRegistration();
         computeKeys();
@@ -529,7 +680,7 @@ contract AnonymousVotingTest is Test {
     // Cannot finish registration phase unless three people have signed up.
     function testCannotEndRegistration() logs_gas {
         setEligible();
-        beginSignUp(false);
+        beginSignupWithoutCommitment();
         registerKeys(true, true, false);
         finishRegistration();
 
@@ -541,7 +692,7 @@ contract AnonymousVotingTest is Test {
         assertEq(true, con.registered(A));
         assertEq(true, con.registered(B));
         assertEq(false, con.registered(C));
-    }
+    }*/
 
     // Need to test that only 40 people can be eligible
 }
