@@ -31,7 +31,9 @@
         </ul>
         <!-- The Steps -->
         <fieldset id="uploadfs">
-            <p> Upload Voting Codes </p>
+            <h2> Upload Voting Codes </h2>
+            <br>
+            <p> Find your votingcodes.txt </p>
             <div id="dropdown1">
                 <input id="uploadTrigger" name="next" class="action-button" value="Upload" type="button">
                 <input id="done" class="hidden next" type="button">
@@ -50,20 +52,26 @@
         </fieldset>
         <fieldset id="registerfs">
             <div>
+                <h2 id="question3"></h2>
+                <br>
                 <p id="registerby"></p>
                 <br>
-                <p id="question3"></p>
+                <div hidden id="registerready">
+                <p id="asktoregister"> Would you like to register for this vote?</p>
+                <input id="registerbutton" class="action-button" type="button" value="Register" onclick="register();">
+                <p hidden id = "submitvotingkey">Waiting for Ethereum to confirm your voting key.</p>
                 <br>
-                <div id = "registrationprogress"></div>
-                <input disabled id="registerbutton" class="action-button" type="button" value="Register" onclick="register();">
+                <hr>
                 <br>
-                <div hidden id = "submitvotingkey">Waiting for Ethereum to confirm your voting key.</div>
-                <br>
+                <p id = "registrationprogress"></p>
+                </div>
             </div>
 
         </fieldset>
 
         <fieldset id="computefs">
+            <h2 id="question5"></h2>
+            <br>
             <div id="computediv">Waiting for Ethereum to compute all voter's special voting key.</div>
             <div>
           </div>
@@ -71,8 +79,7 @@
         </fieldset>
 
         <fieldset id="commitfs">
-          <h2>Commit</h2>
-            <p id="question2"></p>
+            <h2 id="question2"></h2>
             <br>
             <div id="vote">
                 <button onclick="vote(1)" class="action-button">Yes</button>
@@ -83,9 +90,7 @@
         </fieldset>
 
         <fieldset id="votefs">
-          <h2>Vote</h2>
-            <br>
-            <p id="question"></p>
+            <h2 id="question"></h2>
             <br>
             <div id="do_vote">
                 <button onclick="vote(1)" class="action-button">Yes</button>
@@ -96,9 +101,7 @@
         </fieldset>
 
         <fieldset id="tallyfs">
-          <h2>Tally</h2>
-          <br>
-            <p id="question4"></p>
+            <h2 id="question4"></h2>
             <br>
             <div id="result">
             </div>
@@ -138,12 +141,12 @@
     // Anonymous Voting Contract
     var abi = [{"constant":true,"inputs":[],"name":"endComputationPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"eligible","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"vG","type":"uint256[3]"},{"name":"r","type":"uint256"}],"name":"register","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeTally","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"addressid","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"totaleligible","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"getVoter","outputs":[{"name":"_registeredkey","type":"uint256[2]"},{"name":"_reconstructedkey","type":"uint256[2]"},{"name":"_commitment","type":"bytes32"}],"type":"function"},{"constant":true,"inputs":[],"name":"endSignupPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"commitmentphase","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"question","outputs":[{"name":"","type":"string"}],"type":"function"},{"constant":false,"inputs":[{"name":"addr","type":"address[]"}],"name":"setEligible","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"finishSignupPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"h","type":"bytes32"}],"name":"submitCommitment","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"endCommitmentPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"finishRegistrationPhase","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"submitVote","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"totalcommitted","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"votecast","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"totalvoted","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeReconstructedPublicKeys","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"endVotingPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"commitment","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"registered","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"_question","type":"string"},{"name":"enableCommitmentPhase","type":"bool"},{"name":"_finishSignupPhase","type":"uint256"},{"name":"_endSignupPhase","type":"uint256"},{"name":"_endComputationPhase","type":"uint256"},{"name":"_endCommitmentPhase","type":"uint256"},{"name":"_endVotingPhase","type":"uint256"},{"name":"gap","type":"uint256"}],"name":"beginSignUp","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"name":"","type":"uint8"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"finaltally","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"totalregistered","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"reset","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"voters","outputs":[{"name":"addr","type":"address"},{"name":"commitment","type":"bytes32"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"addresses","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"}];
     var anonymousvoting = web3.eth.contract(abi);
-    var anonymousvotingAddr = anonymousvoting.at("0xf70ce72acf09169c2610360e15862424ab2f43e0");
+    var anonymousvotingAddr = anonymousvoting.at("0x4537d53c60729171c708168d64b560e1658124d0");
 
     // Local Crypto Contract
     var abi_crypto = [{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"commitToVote","outputs":[{"name":"","type":"bytes32"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"},{"name":"w","type":"uint256"},{"name":"r2","type":"uint256"},{"name":"d2","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPNoVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"x","type":"uint256"},{"name":"v","type":"uint256"},{"name":"xG","type":"uint256[2]"}],"name":"createZKP","outputs":[{"name":"res","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"},{"name":"w","type":"uint256"},{"name":"r1","type":"uint256"},{"name":"d1","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPYesVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"}];
     var crypto_contract = web3.eth.contract(abi_crypto);
-    var cryptoAddr = crypto_contract.at("0x4e1969da1cd33afd3354e292a9ea009b7af4307a");
+    var cryptoAddr = crypto_contract.at("0xb3974fc8d9af21f13225d2aa58978b17f81f0a9b");
 
     // Fetch all the Ethereum addresses...
     function selectBox() {
@@ -163,8 +166,8 @@
 
             // Only create a drop-down box if we have found an address that is eligible to vote!
             if (foundEligible) {
-                var selectbox = "<p>Address:</p><select id='addrs' class='action-list'>" + listEligible + "</select> <p>Password:</p> <input type='password' id='passwordf' value='ilikelittlepaddy' name='fname' class='action-text'> <input id='done2' class='hidden next' type='button'> <input type='button' class='action-button'  value = 'Login' onclick='unlock();'>";
-                document.getElementById('dropdown').innerHTML = selectbox + '<p>Only eligible addresses appear in the list</p>';
+                var selectbox = "<h2>Eligible Ethereum Accounts</h2><br><p>Address:</p><select id='addrs' class='action-list'>" + listEligible + "</select> <br><br><p>Password:</p> <input type='password' id='passwordf' value='ilikelittlepaddy' name='fname' class='action-text'> <input id='done2' class='hidden next' type='button'> <input type='button' class='action-button'  value = 'Login' onclick='unlock();'>";
+                document.getElementById('dropdown').innerHTML = selectbox;
             }
 
 
@@ -223,6 +226,7 @@
         var verifyres = cryptoAddr.verifyZKP.call(xG, single_zkp[0], vG, {
             from: web3.eth.accounts[accounts_index]
         });
+
         if (!verifyres) {
             alert("Problem with voting codes");
             return;
@@ -281,6 +285,7 @@
         var voter = anonymousvotingAddr.getVoter.call({
             from: web3.eth.accounts[accounts_index]
         });
+
         var xG = [voter[0][0], voter[0][1]];
         var yG = [voter[1][0], voter[1][1]];
 
@@ -370,6 +375,7 @@
         document.getElementById('question2').innerHTML = anonymousvotingAddr.question();
         document.getElementById('question3').innerHTML = anonymousvotingAddr.question();
         document.getElementById('question4').innerHTML = anonymousvotingAddr.question();
+        document.getElementById('question5').innerHTML = anonymousvotingAddr.question();
     }
 
     whatIsQuestion();
@@ -455,15 +461,16 @@
             document.getElementById('registerby').innerHTML = "Please wait.... Registration will begin soon.";
 
         } else if (state == 1) {
-
+            document.getElementById('registerready').removeAttribute("hidden");
             // Have we submited the key yet?
             if(anonymousvotingAddr.registered(addr)) {
               document.getElementById('registerbutton').setAttribute("hidden",true);
+              document.getElementById('asktoregister').setAttribute("hidden",true);
               document.getElementById("registrationprogress").removeAttribute("hidden");
               document.getElementById("submitvotingkey").removeAttribute("hidden");
 
             } else {
-              document.getElementById('registerbutton').removeAttribute("disabled");
+              document.getElementById('asktoregister').removeAttribute("hidden");
             }
 
             var date = new Date();
@@ -614,7 +621,7 @@
             var yes = anonymousvotingAddr.finaltally(0);
             var total = anonymousvotingAddr.finaltally(1);
             var no = total - yes;
-            document.getElementById('result').innerHTML = "Yes - " + yes + " No - " + no;
+            document.getElementById('result').innerHTML = "Yes = " + yes + "<br> No = " + no;
             //document.getElementById('endby').innerHTML = "We are finished!";
             checkVoteCast();
 
@@ -647,9 +654,9 @@
       var committed = anonymousvotingAddr.totalcommitted();
       var voted = anonymousvotingAddr.totalvoted();
 
-      document.getElementById("registrationprogress").innerHTML = "Currently " + registered + "/" + eligible + " voters registered.";
-      document.getElementById("no_vote_waiting").innerHTML = "Currently " + committed + "/" + registered + " voters have sealed, but not revealed their encrypted vote.";
-      document.getElementById("vote_waiting").innerHTML = "Currently " + voted + "/" + registered + " votes have been cast.";
+      document.getElementById("registrationprogress").innerHTML = registered + "/" + eligible + " voters have registered.";
+      document.getElementById("no_vote_waiting").innerHTML = committed + "/" + registered + " voters have sealed, but not revealed their encrypted vote.";
+      document.getElementById("vote_waiting").innerHTML = voted + "/" + registered + " votes have been cast.";
     }
 
     function checkVoteCast() {

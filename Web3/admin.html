@@ -25,23 +25,32 @@
   <body>
 
     <div class="container">
+      <ul id="progressbar">
+          <li id="pb_unlock" class="active">Unlock Address</li>
+          <li id="pb_setup">Set up</li>
+          <li id="pb_register">Register</li>
+          <li id="pb_compute">Compute</li>
+          <li id="pb_commit">Commit</li>
+          <li id="pb_cast">Cast</li>
+          <li id="pb_tally">Tally</li>
+      </ul>
       <div class="jumbotron">
-        <h2 id="question"></h2>
-        <h2 id="title"></h2>
-        <p id="state"></p>
-        <p id="endby"></p>
+        <h2 id="title">Login to Ethereum</h2>
+        <p id="section_desc"></p>
+        <p id="question"></p>
         <div hidden id="login">
-           <h2>Unlock Ethereum Account</h2>
            <div id='dropdown'></div>
         </div>
         <div hidden id="eligible">
-          <p>There are currently <span id="totaleligible">0</span> eligible voters. </p>
-          <textarea id="addresses" name="list" cols="40" rows="5"></textarea> <br>
-          <p><button onclick="setEligible()" class="btn btn-secondary">Update eligibility list</button></p>
-		  <p><button onclick="finishEligible()" class="btn btn-primary">Next</button></p>
+          <p id="eligible_area">
+             <textarea id="addresses" name="list" cols="40" rows="5"></textarea>
+             <br>
+             <button onclick="setEligible()" class="btn btn-secondary">Update eligibility list</button>
+          </p>
+		      <p><button onclick="finishEligible()" class="btn btn-primary">Next</button></p>
         </div>
 
-        <div hidden id="beginRegistration">
+        <div hidden id="registrationSetTimes">
           <p hidden id="minimumgap"> Minimum amount of time before a round can end
             <select id="minimum">
               <!-- <option value="60">1 minute</option> -->
@@ -56,7 +65,7 @@
             </select>
           </p>
           <p id="datepairExample">
-              Voter Registration Finish Time:  <input id="datetimepickerfinishby" type="text">
+              Registration Finish Time:  <input id="datetimepickerfinishby" type="text">
           </p>
           <p hidden id="endSignup">
               Refund voters if registration does not end by...
@@ -74,7 +83,11 @@
               Refund voters if voting does not end by...
               <input id="datetimepickerendvote" type="text">
           </p>
-          <p>What is the question? <input type='text' id='questioninput' value='Dummy Question?'/> </p>
+          <p><button onclick="finishSetTimes()" class="btn btn-primary">Next</button></p>
+        </div>
+
+        <div hidden id="registrationSetQuestion">
+          <p>Question:  <input type='text' id='questioninput' value='Dummy Question?'/> </p>
           <p><input type="checkbox" id="commitmenttick" checked> Enable the 'Commitment' Phase?</p>
           <p id="beginRegistrationbutton"><button onclick="beginRegistration()" class="btn btn-primary">Begin Registration Phase</button></p>
         </div>
@@ -98,13 +111,15 @@
           <p id="tallybutton"><button onclick="tally()" class="btn btn-primary">Get Tally</button></p>
         </div>
         <div hidden id="tallydiv">
-			<button onclick="reset()" class="btn btn-success">Start a new vote</button>
+			      <button onclick="reset()" class="btn btn-success">Start a new vote</button>
         </div>
       </div>
     </div>
 
-    <hr hidden>
-
+    <hr>
+    <div>
+      <button onclick="reset()" class="btn btn-danger">Reset Election</button>
+    </div>
       <div hidden id="txlist">
         <p>Transaction List:</p>
       </div>
@@ -185,7 +200,7 @@ if (typeof web3 !== 'undefined') {
 // Anonymous Voting Contract
 var abi = [{"constant":true,"inputs":[],"name":"endComputationPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"eligible","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"vG","type":"uint256[3]"},{"name":"r","type":"uint256"}],"name":"register","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeTally","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"addressid","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"totaleligible","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"getVoter","outputs":[{"name":"_registeredkey","type":"uint256[2]"},{"name":"_reconstructedkey","type":"uint256[2]"},{"name":"_commitment","type":"bytes32"}],"type":"function"},{"constant":true,"inputs":[],"name":"endSignupPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"commitmentphase","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"question","outputs":[{"name":"","type":"string"}],"type":"function"},{"constant":false,"inputs":[{"name":"addr","type":"address[]"}],"name":"setEligible","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"finishSignupPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"h","type":"bytes32"}],"name":"submitCommitment","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"endCommitmentPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"finishRegistrationPhase","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"submitVote","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"totalcommitted","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"votecast","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"totalvoted","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeReconstructedPublicKeys","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"endVotingPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"commitment","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"registered","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"_question","type":"string"},{"name":"enableCommitmentPhase","type":"bool"},{"name":"_finishSignupPhase","type":"uint256"},{"name":"_endSignupPhase","type":"uint256"},{"name":"_endComputationPhase","type":"uint256"},{"name":"_endCommitmentPhase","type":"uint256"},{"name":"_endVotingPhase","type":"uint256"},{"name":"gap","type":"uint256"}],"name":"beginSignUp","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"name":"","type":"uint8"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"finaltally","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"totalregistered","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"reset","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"voters","outputs":[{"name":"addr","type":"address"},{"name":"commitment","type":"bytes32"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"addresses","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"}];
 var anonymousvoting = web3.eth.contract(abi);
-var anonymousvotingAddr = anonymousvoting.at("0xf70ce72acf09169c2610360e15862424ab2f43e0");
+var anonymousvotingAddr = anonymousvoting.at("0x4537d53c60729171c708168d64b560e1658124d0");
 
 // Check that the user is eligible to vote
 function setEligible() {
@@ -428,8 +443,11 @@ function reset() {
 
 // Update question set for vote.
 function whatIsQuestion() {
-  var q = anonymousvotingAddr.question();
-  document.getElementById('question').innerHTML = q;
+
+  if(anonymousvotingAddr.state() > 0) {
+    var q = anonymousvotingAddr.question();
+    document.getElementById('title').innerHTML = q;
+  }
 }
 
 // Keep a list of transaction hashes on the website. Might be useful...
@@ -447,7 +465,7 @@ function openLogin() {
   if(!openedLogIn) {
     openedLogIn = true;
     document.getElementById('login').removeAttribute("hidden");
-    var selectbox = "<p>Address:</p><select id='addrs'>";
+    var selectbox = "<p>Address: <select id='addrs'>";
 
     var foundOwner = false;
 
@@ -460,7 +478,8 @@ function openLogin() {
       }
     }
 
-    selectbox = selectbox + "</select> <p>Password:</p> <input type='password' id='passwordf' value='ilikelittlepaddy' name='fname'><button onclick='unlock()'>Unlock</button>";
+    selectbox = selectbox + "</select></p>";
+    selectbox = selectbox + "<p>Password: <input type='password' id='passwordf' value='ilikelittlepaddy' name='fname'> <button onclick='unlock()' class='btn btn-primary'>Unlock</button> </p>";
 
     if(foundOwner) {
       document.getElementById('dropdown').innerHTML = selectbox;
@@ -490,29 +509,49 @@ var eligibletextboxCreated = false;
 function createEligibleTextBox() {
 
   if(!eligibletextboxCreated) {
-     eligibletextboxCreated = true;
-     document.getElementById('title').innerHTML = "Who is eligible to vote? ";
-     document.getElementById('question').setAttribute("hidden", true);
-     document.getElementById('eligible').removeAttribute("hidden");
+    eligibletextboxCreated = true;
+    document.getElementById('title').innerHTML = "Election Configuration";
+    document.getElementById('question').setAttribute("hidden", true);
+    document.getElementById('eligible').removeAttribute("hidden");
 
-     // LAZY: Pre-fill the text box with my own addresses.
-     for(var i=0; i<web3.eth.accounts.length; i++) {
-        document.getElementById('addresses').value = document.getElementById('addresses').value + web3.eth.accounts[i] + ",";
-     }
+    // LAZY: Pre-fill the text box with my own addresses.
+    for(var i=1; i<41; i++) {
+       document.getElementById('addresses').value = document.getElementById('addresses').value + web3.eth.accounts[i] + ",";
+    }
   }
 
-  // Keep track of how many voters have been set as eligible.
-  document.getElementById('totaleligible').innerHTML = anonymousvotingAddr.totaleligible();
+  var res = anonymousvotingAddr.totaleligible().equals(new BigNumber("40"));
+  var isHidden = document.getElementById('eligible').hasAttribute('hidden');
+
+  if(!res && !isHidden) {
+    document.getElementById('section_desc').innerHTML = "There is currently <span id='totaleligible'>0</span> eligible voters. <br> Would you like to add more?";
+  } else if(!isHidden) {
+    document.getElementById('section_desc').innerHTML = "There is currently <span id='totaleligible'>0</span> eligible voters. <br> You cannot add any more voters.";
+    document.getElementById('eligible_area').setAttribute("hidden",true);
+  }
+
+   // Keep track of how many voters have been set as eligible.
+  document.getElementById('totaleligible').innerHTML = anonymousvotingAddr.totaleligible() + "/40";
 }
 
 function finishEligible() {
   if(anonymousvotingAddr.totaleligible() > 3) {
-    document.getElementById('title').innerHTML = "What is the finish time for each phase?";
+    document.getElementById('title').innerHTML = "Election Configuration";
+    document.getElementById('section_desc').innerHTML = "Please set a list of end times for each phase.";
     document.getElementById('eligible').setAttribute("hidden", true);
-    document.getElementById('beginRegistration').removeAttribute("hidden");
+    document.getElementById('registrationSetTimes').removeAttribute("hidden");
   } else {
     alert("A minimum number of 3 eligible voters is required before continuing.");
   }
+}
+
+var finishSettingTimes = false;
+
+function finishSetTimes() {
+  document.getElementById('title').innerHTML = "Election Configuration";
+  document.getElementById('section_desc').innerHTML = "";
+  document.getElementById('registrationSetTimes').setAttribute("hidden", true);
+  document.getElementById('registrationSetQuestion').removeAttribute("hidden");
 }
 
 // STEP 3: Admin must finish the registration phase
@@ -521,8 +560,9 @@ function createFinishRegistration() {
 
   if(!finishRegistrationCreated) {
      finishRegistrationCreated = true;
+    //  document.getElementById('title').innerHTML = "Voter Registration";
      document.getElementById('eligible').setAttribute("hidden", true);
-     document.getElementById('beginRegistration').setAttribute("hidden", true);
+     document.getElementById('registrationSetQuestion').setAttribute("hidden", true);
      document.getElementById('finishRegistration').removeAttribute("hidden");
      document.getElementById('question').removeAttribute("hidden");
 
@@ -531,7 +571,6 @@ function createFinishRegistration() {
      date.setTime(anonymousvotingAddr.endSignupPhase() * 1000);
   }
 
-  document.getElementById('title').innerHTML = "";
   document.getElementById('totalregistered').innerHTML = "" + anonymousvotingAddr.totalregistered() + "/" + anonymousvotingAddr.totaleligible() + " voters have registered their ballot.";
 
   // Statistics on number of registered voters, and when authority can transition to the next phase
@@ -539,7 +578,7 @@ function createFinishRegistration() {
   if(finishby != null) {
     var date = new Date();
     date.setTime(anonymousvotingAddr.finishSignupPhase() * 1000);
-    document.getElementById('finishby').innerHTML = "Registration phase finishes at " + clockformat(date);
+    document.getElementById('finishby').innerHTML = "You can finish registration after " + clockformat(date);
   }
 
 }
@@ -549,11 +588,9 @@ function createCompute() {
 
    if(!computeCreate) {
      computeCreate = true;
-     document.getElementById('question').removeAttribute("hidden");
-     document.getElementById('title').innerHTML = "";
+     document.getElementById('section_desc').innerHTML = "Notify Ethereum to compute the special voting keys";
      document.getElementById('finishRegistration').setAttribute("hidden", true);
      document.getElementById('computekeys').removeAttribute("hidden");
-     document.getElementById('state').innerHTML = "You need to inform Ethereum to compute each voters special voting keys";
    }
 }
 
@@ -562,10 +599,9 @@ function createCommit() {
 
   if(!commitCreate) {
     commitCreate = true;
-    document.getElementById('title').innerHTML = "";
     document.getElementById('computekeys').setAttribute("hidden", true);
     document.getElementById('commit').removeAttribute("hidden");
-    document.getElementById('state').innerHTML = "Waiting for voters to submit a commitment, but not reveal their encrypted vote to Etheruem. ";
+    document.getElementById('section_desc').innerHTML = "Waiting for voters to submit a commitment, but not reveal their encrypted vote to Etheruem. ";
   }
 
   // Keep track of how many voters have been set as eligible.
@@ -578,11 +614,10 @@ function createVote() {
 
   if(!voteCreate) {
     voteCreate = true;
-    document.getElementById('title').innerHTML = ""
     document.getElementById('computekeys').setAttribute("hidden", true);
     document.getElementById('commit').setAttribute("hidden", true);
     document.getElementById('votephase').removeAttribute("hidden");
-    document.getElementById('state').innerHTML = "";
+    controlTransition("#pb_cast");
   }
 
   document.getElementById('totalvoters').innerHTML = anonymousvotingAddr.totalvoted() + "/" + anonymousvotingAddr.totalregistered() + " voters have cast their vote.";
@@ -596,10 +631,10 @@ function createTally() {
     var yes = anonymousvotingAddr.finaltally(0);
     var total = anonymousvotingAddr.finaltally(1);
     var no = total - yes;
-    document.getElementById('title').innerHTML = "";
     document.getElementById('votephase').setAttribute("hidden", true);
 	  document.getElementById('tallydiv').removeAttribute("hidden");
-    document.getElementById("state").innerHTML = "Yes - " + yes + ", No - " + no;
+    controlTransition("#pb_tally");
+    document.getElementById("section_desc").innerHTML = "Yes = " + yes + "<br> No = " + no;
   }
 }
 
@@ -613,6 +648,7 @@ function clockformat(date) {
 }
 
 var alldone = false;
+
 // Responsible for updating the website's text depending on the election's current phase. (i.e. if we are in VOTE, no point enabling compute button).
 function currentState() {
 
@@ -631,30 +667,34 @@ function currentState() {
 
   if(state == 0) { // SETUP
     createEligibleTextBox();
+    controlTransition("#pb_setup")
   } else if(state == 1) { // SIGNUP
     createFinishRegistration();
+    controlTransition("#pb_register")
     // Ensure pickers are destroyed
     destorypickers();
 
   } else if(state == 2) { // COMPUTE
     createCompute();
+    controlTransition("#pb_compute")
     // Ensure pickers are destroyed
     destorypickers();
 
   } else if(state == 3) { // COMMITMENT
     createCommit();
+    controlTransition("#pb_commit")
     // Ensure pickers are destroyed
     destorypickers();
 
   } else if(state == 4) { // VOTE
     createVote();
-
+    controlTransition("#pb_cast")
     // Ensure pickers are destroyed
     destorypickers();
 
-
   } else if(state == 5) { // TALLY
     createTally();
+    controlTransition("#pb_tally")
     alldone = true;
     // Ensure pickers are destroyed
     destorypickers();
@@ -665,4 +705,53 @@ function currentState() {
 setInterval("currentState()", 10000);
 currentState();
 
+var current_fs = "";
+
+function controlTransition(nextfs) {
+
+  // Prevent weird loop
+  if(current_fs == nextfs) {
+    return;
+  }
+
+  // Nope.. jump to latest state.
+  var state = anonymousvotingAddr.state();
+  switch(state.toString("10")) {
+    case "0":
+       $("#pb_setup").addClass("active");
+       break;
+    case "1":
+       $("#pb_setup").addClass("active");
+       $("#pb_register").addClass("active");
+       break;
+    case "2":
+       $("#pb_setup").addClass("active");
+       $("#pb_register").addClass("active");
+       $("#pb_compute").addClass("active");
+       break;
+    case "3":
+       $("#pb_setup").addClass("active");
+       $("#pb_register").addClass("active");
+       $("#pb_compute").addClass("active");
+       $("#pb_commit").addClass("active");
+       break;
+    case "4":
+       $("#pb_setup").addClass("active");
+       $("#pb_register").addClass("active");
+       $("#pb_compute").addClass("active");
+       $("#pb_commit").addClass("active");
+       $("#pb_cast").addClass("active");
+       break;
+    case "5":
+       $("#pb_setup").addClass("active");
+       $("#pb_register").addClass("active");
+       $("#pb_compute").addClass("active");
+       $("#pb_commit").addClass("active");
+       $("#pb_cast").addClass("active");
+       $("#pb_tally").addClass("active");
+       break;
+    default:
+      break;
+  }
+}
 </script>
