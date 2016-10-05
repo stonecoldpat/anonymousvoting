@@ -52,18 +52,35 @@
         </fieldset>
         <fieldset id="registerfs">
             <div>
-                <h2 id="question3"></h2>
-                <br>
-                <p id="registerby"></p>
-                <br>
+                <p id="registerwait">Please wait.... Registration will begin soon.</p>
                 <div hidden id="registerready">
-                <p id="asktoregister"> Would you like to register for this vote?</p>
-                <input id="registerbutton" class="action-button" type="button" value="Register" onclick="register();">
-                <p hidden id = "submitvotingkey">Waiting for Ethereum to confirm your voting key.</p>
-                <br>
-                <hr>
-                <br>
-                <p id = "registrationprogress"></p>
+                   <h2 id="question3"></h2>
+                   <br>
+                   <p id="asktoregister"> Registration deposit is <span id="deposit"></span> ether.
+                   <br> You have <span id="balance"></span> ether.
+                   <br>
+                   <br>
+                   <p> Would you like to register for this vote?</p>
+                   <input id="registerbutton" class="action-button" type="button" value="Register" onclick="register();">
+                   <p hidden id = "submitvotingkey">Waiting for Ethereum to confirm your voting key.</p>
+                   <br>
+                   <p id="registerby"></p>
+                   <br>
+                   <p id="registerrefundby"></p>
+                   <br>
+                   <p id = "registrationprogress"></p>
+                </div>
+                <div hidden id="resetbutton" style="text-align: center">
+                  <p>The Election Authority should have finished registration before <span id="regclock"></span></p>
+                  <br>
+                  <p>Do you want to cancel the Election and get your deposit back?</p>
+                  <br>
+                  <div id="reset1">
+                    <input class="action-button" type="button" value="Yes" onclick="resetElection();"></button>
+                  </div>
+                  <div hidden id="reset1-msg">
+                    <p>Waiting for Ethereum to cancel the election.</p>
+                  </div>
                 </div>
             </div>
 
@@ -74,7 +91,21 @@
             <br>
             <div id="computediv">Waiting for Ethereum to compute all voter's special voting key.</div>
             <div>
-          </div>
+
+            <div hidden id="resetbutton2" style="text-align: center">
+              <p>The Election Authority should have finished the computation phase before <span id="regclock2"></span></p>
+              <br>
+              <p>Do you want to cancel the Election and get your deposit back?</p>
+              <br>
+              <div id="reset2">
+                <input class="action-button" type="button" value="Yes" onclick="resetElection();"></button>
+              </div>
+              <div hidden id="reset2-msg">
+                <p>Waiting for Ethereum to cancel the election.</p>
+              </div>
+            </div>
+            <br>
+            <p id="computeby"></p>
 
         </fieldset>
 
@@ -87,6 +118,21 @@
             </div>
             <br>
             <p id="no_vote_waiting"></p>
+
+            <div hidden id="resetbutton3" style="text-align: center">
+              <p>All commitments should have been cast before <span id="regclock3"></span></p>
+              <br>
+              <p>Do you want to cancel the Election and get your deposit back?</p>
+              <br>
+              <div id="reset3">
+                <input class="action-button" type="button" value="Yes" onclick="resetElection();"></button>
+              </div>
+              <div hidden id="reset3-msg">
+                <p>Waiting for Ethereum to cancel the election.</p>
+              </div>
+            </div>
+            <br>
+            <p id="commitby"></p>
         </fieldset>
 
         <fieldset id="votefs">
@@ -98,6 +144,22 @@
             </div>
             <br>
             <p id="vote_waiting"></p>
+
+            <div hidden id="resetbutton4" style="text-align: center">
+              <p>All votes should have been cast before <span id="regclock4"></span></p>
+              <br>
+              <p>Do you want to cancel the Election and get your deposit back?</p>
+              <br>
+              <div id="reset4">
+                <input class="action-button" type="button" value="Yes" onclick="resetElection();"></button>
+              </div>
+              <div hidden id="reset4-msg">
+                <p>Waiting for Ethereum to cancel the election.</p>
+              </div>
+            </div>
+            <br>
+            <p id="voteby"></p>
+
         </fieldset>
 
         <fieldset id="tallyfs">
@@ -105,9 +167,21 @@
             <br>
             <div id="result">
             </div>
+            <br>
+            <hr>
+            <br>
+            <div hidden id="refund-valid">
+              <p>Claim your deposit of <span id="refund"></span> ether before <span id="refundclock"></span></p>
+              <input id="claimrefundbutton" type="button" value="Refund" onclick="claimrefund();" class="action-button" />
+              <p hidden id="waitingforrefund">Waiting for Ethereum to confirm your refund</p>
+            </div>
+            <div hidden id="refund-notvalid">
+              <p>Refund already claimed, or not available. </p>
+           </div>
         </fieldset>
-
     </form>
+
+
     <!--<div id="infodiv1" class="notification rightTile">
     <h2>Events from Ethereum:</h2>
         <div class="insideArea">
@@ -139,9 +213,9 @@
     }
 
     // Anonymous Voting Contract
-    var abi = [{"constant":true,"inputs":[],"name":"endComputationPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"eligible","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"vG","type":"uint256[3]"},{"name":"r","type":"uint256"}],"name":"register","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeTally","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"addressid","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"totaleligible","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"getVoter","outputs":[{"name":"_registeredkey","type":"uint256[2]"},{"name":"_reconstructedkey","type":"uint256[2]"},{"name":"_commitment","type":"bytes32"}],"type":"function"},{"constant":true,"inputs":[],"name":"endSignupPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"commitmentphase","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"question","outputs":[{"name":"","type":"string"}],"type":"function"},{"constant":false,"inputs":[{"name":"addr","type":"address[]"}],"name":"setEligible","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"finishSignupPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"h","type":"bytes32"}],"name":"submitCommitment","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"endCommitmentPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"finishRegistrationPhase","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"submitVote","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"totalcommitted","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"votecast","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"totalvoted","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeReconstructedPublicKeys","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"endVotingPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"commitment","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"registered","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"_question","type":"string"},{"name":"enableCommitmentPhase","type":"bool"},{"name":"_finishSignupPhase","type":"uint256"},{"name":"_endSignupPhase","type":"uint256"},{"name":"_endComputationPhase","type":"uint256"},{"name":"_endCommitmentPhase","type":"uint256"},{"name":"_endVotingPhase","type":"uint256"},{"name":"gap","type":"uint256"}],"name":"beginSignUp","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"name":"","type":"uint8"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"finaltally","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"totalregistered","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"reset","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"voters","outputs":[{"name":"addr","type":"address"},{"name":"commitment","type":"bytes32"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"addresses","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"}];
+    var abi = [{"constant":true,"inputs":[],"name":"endComputationPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"eligible","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"vG","type":"uint256[3]"},{"name":"r","type":"uint256"}],"name":"register","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeTally","outputs":[],"type":"function"},{"constant":false,"inputs":[],"name":"withdrawRefund","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"addressid","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"totaleligible","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"getVoter","outputs":[{"name":"_registeredkey","type":"uint256[2]"},{"name":"_reconstructedkey","type":"uint256[2]"},{"name":"_commitment","type":"bytes32"}],"type":"function"},{"constant":true,"inputs":[],"name":"endSignupPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"commitmentphase","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"question","outputs":[{"name":"","type":"string"}],"type":"function"},{"constant":false,"inputs":[{"name":"addr","type":"address[]"}],"name":"setEligible","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"finishSignupPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"endRefundPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"h","type":"bytes32"}],"name":"submitCommitment","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"endCommitmentPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"refundgapmultiplier","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"finishRegistrationPhase","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"submitVote","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"gap","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"totalcommitted","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"votecast","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"totalvoted","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"_question","type":"string"},{"name":"enableCommitmentPhase","type":"bool"},{"name":"_finishSignupPhase","type":"uint256"},{"name":"_endSignupPhase","type":"uint256"},{"name":"_endComputationPhase","type":"uint256"},{"name":"_endCommitmentPhase","type":"uint256"},{"name":"_endVotingPhase","type":"uint256"},{"name":"_endRefundPhase","type":"uint256"},{"name":"_depositrequired","type":"uint256"}],"name":"beginSignUp","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":true,"inputs":[],"name":"charity","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeReconstructedPublicKeys","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"endVotingPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"commitment","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"registered","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"refunds","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"name":"","type":"uint8"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"finaltally","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"totalregistered","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"deadlineMissed","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"voters","outputs":[{"name":"addr","type":"address"},{"name":"commitment","type":"bytes32"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"addresses","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"depositrequired","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"}];
     var anonymousvoting = web3.eth.contract(abi);
-    var anonymousvotingAddr = anonymousvoting.at("0x4537d53c60729171c708168d64b560e1658124d0");
+    var anonymousvotingAddr = anonymousvoting.at("0x3e73cd689401c26a2e4bf6c1ba099775727e7801");
 
     // Local Crypto Contract
     var abi_crypto = [{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"commitToVote","outputs":[{"name":"","type":"bytes32"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"},{"name":"w","type":"uint256"},{"name":"r2","type":"uint256"},{"name":"d2","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPNoVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"x","type":"uint256"},{"name":"v","type":"uint256"},{"name":"xG","type":"uint256[2]"}],"name":"createZKP","outputs":[{"name":"res","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"},{"name":"w","type":"uint256"},{"name":"r1","type":"uint256"},{"name":"d1","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPYesVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"}];
@@ -174,9 +248,49 @@
         }
     }
 
-    function unlock() { //callback) {
+    function resetElection() {
+
+      web3.personal.unlockAccount(addr, password);
+      var res = anonymousvotingAddr.deadlineMissed.call({ from: web3.eth.accounts[accounts_index], gas: 4200000});
+
+      if(res) {
+        anonymousvotingAddr.deadlineMissed.sendTransaction({from: web3.eth.accounts[accounts_index],gas: 4200000});
+        document.getElementById('reset1').setAttribute("hidden", true);
+        document.getElementById("reset1-msg").removeAttribute("hidden");
+        document.getElementById('reset2').setAttribute("hidden", true);
+        document.getElementById("reset2-msg").removeAttribute("hidden");
+        document.getElementById('reset3').setAttribute("hidden", true);
+        document.getElementById("reset3-msg").removeAttribute("hidden");
+        document.getElementById('reset4').setAttribute("hidden", true);
+        document.getElementById('registerby').setAttribute("hidden", true);
+        document.getElementById('registerrefundby').setAttribute("hidden", true);
+        document.getElementById('computeby').setAttribute("hidden", true);
+        document.getElementById('commitby').setAttribute("hidden", true);
+        document.getElementById('voteby').setAttribute("hidden", true);
+        document.getElementById("reset4-msg").removeAttribute("hidden");
+      }
+
+      return false;
+    }
+
+    function claimrefund() {
+
+      web3.personal.unlockAccount(addr, password);
+      var res = anonymousvotingAddr.withdrawRefund.call({ from: web3.eth.accounts[accounts_index], gas: 4200000});
+
+      if(res) {
+        anonymousvotingAddr.withdrawRefund.sendTransaction({from: web3.eth.accounts[accounts_index],gas: 4200000});
+        document.getElementById('claimrefundbutton').setAttribute("hidden", true);
+        document.getElementById("waitingforrefund").removeAttribute("hidden");
+      }
+      // alert("test");
+      return false;
+    }
+
+    function unlock() {
         var _addr = $('#addrs').find(":selected").text();
         var _password = document.getElementById('passwordf').value;
+        document.getElementById('passwordf').value = "";
 
         if (web3.personal.unlockAccount(_addr, _password)) {
             addressChosen = true;
@@ -234,20 +348,19 @@
 
         // Submit voting key to the network
         if (anonymousvotingAddr.register.call(xG, vG, single_zkp[0], {
-                from: web3.eth.accounts[accounts_index]
+                from: web3.eth.accounts[accounts_index],
+                value: anonymousvotingAddr.depositrequired()
             })) {
             var res = anonymousvotingAddr.register.sendTransaction(xG, vG, single_zkp[0], {
                 from: web3.eth.accounts[accounts_index],
-                gas: 4200000
+                gas: 4200000,
+                value: anonymousvotingAddr.depositrequired()
             });
 
             //TODO: DUPLICATED CODE FROM CURRENTSTATE. Needs its own function.
             document.getElementById('registerbutton').setAttribute("hidden",true);
             document.getElementById("registrationprogress").removeAttribute("hidden");
             document.getElementById("submitvotingkey").removeAttribute("hidden");
-            txlist("Submit voting key: " + res);
-
-
 
         } else {
             alert("Registration failed... Problem could be your voting codes or that you have already registered");
@@ -342,7 +455,6 @@
                         gas: 4200000
                     });
                     document.getElementById('vote').innerHTML = 'You have sent (but not revealed) your vote... Waiting for Ethereum to confirm';
-                    txlist("Submit commitment: " + result);
                 }
 
             } else if (state == 4) {
@@ -362,7 +474,6 @@
                         gas: 4200000
                     });
                     document.getElementById('do_vote').innerHTML = 'Vote has been submitted... Waiting for confirmation';
-                    txlist("Submit vote: " + result);
                 }
             }
         } else {
@@ -441,10 +552,40 @@
         reader.readAsText(input.files[0]);
     };
 
+    var changedToRegistration = false;
     var changedToCompute = false;
     var changedToCommit = false;
     var changedToVote = false;
     var changedToTally = false;
+
+    // Create the 'Registration Screen'. Mostly here to tidy up code.
+    function createRegistrationField() {
+
+      if(!changedToRegistration) {
+        document.getElementById('registerready').removeAttribute("hidden");
+        document.getElementById('deposit').innerHTML = web3.fromWei(anonymousvotingAddr.depositrequired());
+        var date = new Date();
+        date.setTime(anonymousvotingAddr.finishSignupPhase() * 1000);
+        document.getElementById('registerby').innerHTML = "<hr><br>Register your ballot before " + clockformat(date);
+        date.setTime(anonymousvotingAddr.endSignupPhase() * 1000);
+        document.getElementById('registerrefundby').innerHTML = "All deposits are refunded after " + clockformat(date) + " if the sign up phase does not finish.";
+        changedToRegistration = true;
+      }
+
+      // Have we submited the key yet?
+      if(anonymousvotingAddr.registered(addr)) {
+        document.getElementById('registerbutton').setAttribute("hidden",true);
+        document.getElementById('asktoregister').setAttribute("hidden",true);
+        document.getElementById("registrationprogress").removeAttribute("hidden");
+        document.getElementById("submitvotingkey").removeAttribute("hidden");
+      } else {
+        document.getElementById('asktoregister').removeAttribute("hidden");
+      }
+
+      document.getElementById('balance').innerHTML = web3.fromWei(web3.eth.getBalance(web3.eth.accounts[accounts_index]));
+
+    }
+
     function currentState() {
 
         if(!addressChosen) {
@@ -455,48 +596,43 @@
         whatIsQuestion();
 
         if (state == 0) {
-            //document.getElementById('state').innerHTML = "SETUP: Election Authority is organising the election ";
-            //$("#progressbar li").eq(0).addClass("active");
-
-            document.getElementById('registerby').innerHTML = "Please wait.... Registration will begin soon.";
 
         } else if (state == 1) {
-            document.getElementById('registerready').removeAttribute("hidden");
-            // Have we submited the key yet?
-            if(anonymousvotingAddr.registered(addr)) {
-              document.getElementById('registerbutton').setAttribute("hidden",true);
-              document.getElementById('asktoregister').setAttribute("hidden",true);
-              document.getElementById("registrationprogress").removeAttribute("hidden");
-              document.getElementById("submitvotingkey").removeAttribute("hidden");
-
+            var time = anonymousvotingAddr.endSignupPhase() * 1000;
+            var currentTime = new Date().getTime();
+            document.getElementById('registerwait').setAttribute("hidden",true);
+            if(currentTime > time) {
+              document.getElementById("registerready").setAttribute("hidden", true);
+              document.getElementById("resetbutton").removeAttribute("hidden");
+              document.getElementById("regclock").innerHTML = clockformat(new Date(time));
+              if(!anonymousvotingAddr.registered(web3.eth.accounts[accounts_index])) {
+                document.getElementById("resetbutton").innerHTML = "You did not register to vote. <br> No deposit to return.";
+              }
+              document.getElementById('registerby').setAttribute("hidden", true);
+              document.getElementById('registerrefundby').setAttribute("hidden", true);
             } else {
-              document.getElementById('asktoregister').removeAttribute("hidden");
+              if(document.getElementById("resetbutton").hasAttribute("hidden")) {
+                createRegistrationField();
+              }
             }
 
-            var date = new Date();
-            date.setTime(anonymousvotingAddr.finishSignupPhase() * 1000);
-            document.getElementById('registerby').innerHTML = "Registration finishes at " + clockformat(date);
-            /*document.getElementById('state').innerHTML = "SIGNUP: You can now sign up to the election if you are eligible ";
-            var registerby = document.getElementById('registerby');
-            var date = new Date();
-            date.setTime(anonymousvotingAddr.endSignupPhase() * 1000);
-            document.getElementById('endby').innerHTML = "Registration must be finished by  " + date;
-
-            if (registerby != null) {
-                var date = new Date();
-                date.setTime(anonymousvotingAddr.finishSignupPhase() * 1000);
-                document.getElementById('registerby').innerHTML = "Please register by " + date;
-            }*/
-            //$("#progressbar li").eq(1).addClass("active");
         } else if (state == 2) {
             if(!changedToCompute) {
               changedToCompute = true;
               controlTransition(id_current_fs, "#computefs");
             }
-            /*document.getElementById('state').innerHTML = "COMPUTE: Ethereum is about to compute all voters special keys ";
-            var date = new Date();
-            date.setTime(anonymousvotingAddr.endComputationPhase() * 1000);
-            document.getElementById('endby').innerHTML = "Phase must be finished before " + date;*/
+
+            var time = anonymousvotingAddr.endComputationPhase() * 1000;
+            var currentTime = new Date().getTime();
+            var computebytimer = new Date(time);
+            document.getElementById('computeby').innerHTML = "<hr><br>Your deposit can be refunded after " + clockformat(computebytimer) + " if Ethereum does not compute the special voting keys.";
+
+            if(currentTime > time) {
+              document.getElementById("computediv").setAttribute("hidden", true);
+              document.getElementById("resetbutton2").removeAttribute("hidden");
+              document.getElementById("regclock2").innerHTML = clockformat(new Date(time));
+              document.getElementById('computeby').setAttribute("hidden", true);
+            }
 
         } else if (state == 3) {
 
@@ -505,11 +641,22 @@
             changedToCommit = true;
             controlTransition(id_current_fs, "#commitfs");
           }
-            /*document.getElementById('state').innerHTML = "COMMIT: Choose your vote... It will not be revealed until the VOTE phase";
-            var date = new Date();
-            date.setTime(anonymousvotingAddr.endCommitmentPhase() * 1000);
-            document.getElementById('endby').innerHTML = "Phase must be finished before " + date;*/
-            //$("#progressbar2 li").eq(3).addClass("active");
+
+          var time = anonymousvotingAddr.endCommitmentPhase() * 1000;
+          var currentTime = new Date().getTime();
+          var commitbytimer = new Date(time);
+          document.getElementById('commitby').innerHTML = "<hr><br>Your deposit can be refunded after " + clockformat(commitbytimer) + " if Ethereum has accepted your commitment.";
+          if(currentTime > time) {
+            document.getElementById("vote").setAttribute("hidden", true);
+            document.getElementById("no_vote_waiting").setAttribute("hidden", true);
+            document.getElementById("resetbutton3").removeAttribute("hidden");
+            document.getElementById("regclock3").innerHTML = clockformat(new Date(time));
+            document.getElementById('commitby').setAttribute("hidden", true);
+
+            if(!anonymousvotingAddr.commitment(web3.eth.accounts[accounts_index])) {
+              document.getElementById("resetbutton3").innerHTML = "You did not commit to your vote in time. <br> Your deposit will not be returned.";
+            }
+          }
 
         } else if (state == 4) {
 
@@ -518,16 +665,32 @@
             controlTransition(id_current_fs, "#votefs");
           }
 
-            //document.getElementById('state').innerHTML = "VOTE: Cast your vote! ";
-            var date = new Date();
-            date.setTime(anonymousvotingAddr.endVotingPhase() * 1000);
+          var time = anonymousvotingAddr.endVotingPhase() * 1000;
+          var currentTime = new Date().getTime();
+          var votebytimer = new Date(time);
+          document.getElementById('voteby').innerHTML = "<hr><br>Your deposit can be refunded after " + clockformat(votebytimer) + " if Ethereum has accepted your encrypted vote.";
 
-            if(anonymousvotingAddr.votecast(addr)) {
-              checkVoteCast();
-              checkStatistics();
-              return;
+          if(currentTime > time) {
+            document.getElementById("do_vote").setAttribute("hidden", true);
+            document.getElementById("vote_waiting").setAttribute("hidden", true);
+            document.getElementById("resetbutton4").removeAttribute("hidden");
+            document.getElementById("regclock4").innerHTML = clockformat(new Date(time));
+            document.getElementById('voteby').setAttribute("hidden", true);
+
+            if(!anonymousvotingAddr.votecast(web3.eth.accounts[accounts_index])) {
+              document.getElementById("resetbutton4").innerHTML = "You did not cast your encrypted vote in time. <br> Your deposit will not be returned.";
             }
-            //document.getElementById('endby').innerHTML = "Phase must be finished before " + date;
+            return;
+          }
+
+          var date = new Date();
+          date.setTime(time);
+
+          if(anonymousvotingAddr.votecast(addr)) {
+            checkVoteCast();
+            checkStatistics();
+            return;
+          }
 
             // If user has submited a commitment... then check if it is yes or no
             // We can check this by re-computing the ZKP, and comparing the hashes.
@@ -618,33 +781,36 @@
             changedToTally = true;;
             controlTransition(id_current_fs, "#tallyfs");
           }
-            var yes = anonymousvotingAddr.finaltally(0);
-            var total = anonymousvotingAddr.finaltally(1);
-            var no = total - yes;
-            document.getElementById('result').innerHTML = "Yes = " + yes + "<br> No = " + no;
-            //document.getElementById('endby').innerHTML = "We are finished!";
-            checkVoteCast();
 
+            // Did everyone vote? Did we have voters registered?
+            if((anonymousvotingAddr.totalvoted() == anonymousvotingAddr.totalregistered()) && anonymousvotingAddr.totalregistered() != 0) {
+              var yes = anonymousvotingAddr.finaltally(0);
+              var total = anonymousvotingAddr.finaltally(1);
+              var no = total - yes;
+              document.getElementById('result').innerHTML = "Yes = " + yes + "<br> No = " + no;
+            } else {
+              document.getElementById('result').innerHTML = "Voting has been cancelled.";
+            }
+
+            // Decide if refund button should be displayed or not...
+            if(anonymousvotingAddr.refunds(web3.eth.accounts[accounts_index]) > 0) {
+              document.getElementById("refund-notvalid").setAttribute("hidden", true);
+              document.getElementById("refund-valid").removeAttribute("hidden");
+              document.getElementById("refund").innerHTML = web3.fromWei(anonymousvotingAddr.depositrequired());
+              document.getElementById("refundclock").innerHTML = clockformat(new Date(anonymousvotingAddr.endRefundPhase() * 1000));
+            } else {
+              document.getElementById("refund-valid").setAttribute("hidden", true);
+              document.getElementById("refund-notvalid").removeAttribute("hidden");
+            }
         } else {
             //document.getElementById('state').innerHTML = "Undocumented Phase: Something went wrong... ";
             alert("Undocumented Phase: Something went wrong... ");
         }
 
-        // // Are we eligible to vote?
-        // if (anonymousvotingAddr.eligible(addr)) {
-        //     //document.getElementById('generalStatus').innerHTML += "You are eligible to vote... Address is " + addr;
-        //     console.log("You are eligible to vote... Address is " + addr);
-        // }
-
-
-
+        // checkDeadlines();
         checkVoteCast();
         checkStatistics();
 
-    }
-
-    function txlist(extra) {
-        //document.getElementById('txlist').innerHTML = document.getElementById('txlist').innerHTML + "<br>" + extra;
     }
 
     function checkStatistics() {
@@ -728,24 +894,26 @@
 
     // Easy to read clock time format.
     function clockformat(date) {
+       var mins = "";
 
-       var toString = date.getHours() + ":" + date.getMinutes() + ", "
+       if(date.getMinutes() < 10) {
+         mins = "0" + date.getMinutes();
+       } else {
+         mins = date.getMinutes();
+       }
+       var toString = date.getHours() + ":" + mins + ", ";
 
        toString = toString + (date.getMonth() + 1) + "/" + date.getDate() + "/" + date.getFullYear();
 
        return toString;
     }
-    </script>
 
-
-
-    <!-- This Scripts are for the theme! Added by Ehsan, 29/09/2016-->
-    <script>
     /* FOR THE FIELD SET STEPPING */
     var current_fs, next_fs; //fieldsets
     var id_current_fs;
     var left, opacity, scale; //fieldset properties which we will animate
     var animating; //flag to prevent quick multi-click glitches
+
     function nextSlide(current_id, next_id) {
         if (animating) return false;
         animating = true;

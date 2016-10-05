@@ -468,6 +468,7 @@ contract AnonymousVoting is owned {
   mapping (address => bool) public registered; // Address registered?
   mapping (address => bool) public votecast; // Address voted?
   mapping (address => bool) public commitment; // Have we received their commitment?
+  mapping (address => uint) public refunds; // Have we received their commitment?
 
   struct Voter {
       address addr;
@@ -492,6 +493,7 @@ contract AnonymousVoting is owned {
   uint public endComputationPhase = 0; // Election Authority does not finish computation phase by this time.
   uint public endCommitmentPhase = 0; // Voters have not sent their commitments in by this time.
   uint public endVotingPhase = 0; // Voters have not submitted their vote by this stage.
+  uint public endRefundPhase = 0; // Voters must claim their refund by this stage.
 
   uint public totalregistered; //Total number of participants that have submited a voting key
   uint public totaleligible;
@@ -501,6 +503,10 @@ contract AnonymousVoting is owned {
   string public question;
   uint[2] public finaltally; // Final tally
   bool public commitmentphase; // OPTIONAL phase.
+  uint public depositrequired;
+  uint public gap; // Minimum amount of time between time stamps.
+  uint public refundgapmultiplier; // Multiply gap by this amount for the refund phase.
+  uint public charity; // This money is dedicated to charity... TODO: Set an address
 
   enum State { SETUP, SIGNUP, COMPUTE, COMMITMENT, VOTE, FINISHED }
   State public state;
@@ -524,6 +530,8 @@ contract AnonymousVoting is owned {
     G[1] = Gy;
     state = State.SETUP;
     question = "No question set";
+    gap = 1;
+    refundgapmultiplier = 1;
   }
 
   // We need to clear all the variables we stored for this election
@@ -587,45 +595,67 @@ contract AnonymousVoting is owned {
 
   // Owner of contract declares that eligible addresses begin round 1 of the protocol
   // Time is the number of 'blocks' we must wait until we can move onto round 2.
-  function beginSignUp(string _question, bool enableCommitmentPhase, uint _finishSignupPhase, uint _endSignupPhase, uint _endComputationPhase, uint _endCommitmentPhase, uint _endVotingPhase, uint gap) inState(State.SETUP) onlyOwner returns (bool){
+  function beginSignUp(string _question, bool enableCommitmentPhase, uint _finishSignupPhase, uint _endSignupPhase, uint _endComputationPhase, uint _endCommitmentPhase, uint _endVotingPhase, uint _endRefundPhase, uint _depositrequired) inState(State.SETUP) onlyOwner returns (bool){
+
+    // We have lots of timers. let's explain each one
+    // _finishSignUpPhase - Voters should be signed up before this timer
+
+    // Voter is refunded if any of the timers expire:
+    // _endSignUpPhase - Election Authority never finished sign up phase
+    // _endComputationPhase - Election Authority never authorised the computation phase
+    // _endCommitmentPhase - One or more voters did not send their commitments in time
+    // _endVotingPhase - One or more voters did not send their votes in time
+    // _endRefundPhase - Provide time for voters to get their money back.
+    // Why is there no endTally? Because anyone can call it!
 
     // Represented in UNIX time...
     // TODO: Set to block timestamp...
     // TODO: Enforce gap to be at least 1 hour.. may break unit testing
     // Make sure 3 people are at least eligible to vote..
-    if(_finishSignupPhase > 1 && gap >= 1 && addresses.length > 3) {
+    // Deposit can be zero or more WEI
+    if(_finishSignupPhase > 1 && addresses.length > 3 && _depositrequired >= 0) {
 
-      // Ensure each time phase finishes in the future...
-      // Ensure there is a gap of '3 hours' between each phase.
-      if(_endSignupPhase-gap < _finishSignupPhase) {
-        return false;
-      }
-
-      // Make sure there is a gap between 'end of signup' and 'end of computation'
-      if(_endComputationPhase-gap < _endSignupPhase) {
-        return false;
-      }
-
-      // We need to check Commitment timestamps if phase is enabled.
-      if(enableCommitmentPhase) {
-
-        // Make sure there is a gap between 'end of computation' and 'end of commitment' phases.
-        if(_endCommitmentPhase-gap < _endComputationPhase) {
+        // Ensure each time phase finishes in the future...
+        // Ensure there is a gap of 'x time' between each phase.
+        if(_endSignupPhase-gap < _finishSignupPhase) {
           return false;
         }
 
-        // Make sure there is a gap between 'end of commitment' and 'end of vote' phases.
-        if(_endVotingPhase-gap < _endCommitmentPhase) {
+        // Make sure there is a gap between 'end of signup' and 'end of computation'
+        if(_endComputationPhase-gap < _endSignupPhase) {
           return false;
         }
 
-      } else {
-        // We have no commitment phase.
-        // Make sure there is a gap between 'end of computation' and 'end of vote' phases.
-        if(_endVotingPhase-gap < _endComputationPhase) {
+        // We need to check Commitment timestamps if phase is enabled.
+        if(enableCommitmentPhase) {
+
+          // Make sure there is a gap between 'end of computation' and 'end of commitment' phases.
+          if(_endCommitmentPhase-gap < _endComputationPhase) {
+            return false;
+          }
+
+          // Make sure there is a gap between 'end of commitment' and 'end of vote' phases.
+          if(_endVotingPhase-gap < _endCommitmentPhase) {
+            return false;
+          }
+
+        } else {
+
+          // We have no commitment phase.
+          // Make sure there is a gap between 'end of computation' and 'end of vote' phases.
+          if(_endVotingPhase-gap < _endComputationPhase) {
+            return false;
+          }
+        }
+
+        // Provide time for people to get a refund once the voting phase has ended.
+        // gap*4 is to ensure there is a sufficiently large gap... might take time for
+        // people to get their refunds!! So if the gap between each round is 30 minutes
+        // at a maximum and the refund multiplier is set to 4..
+        // then if the end of voting phase is at 2pm, then refunds are available until 4pm.
+        if(_endRefundPhase-(gap*refundgapmultiplier) < _endVotingPhase) {
           return false;
         }
-      }
 
       // All time stamps are reasonable.
       // We can now begin the signup phase.
@@ -637,21 +667,136 @@ contract AnonymousVoting is owned {
       endComputationPhase = _endComputationPhase;
       endCommitmentPhase = _endCommitmentPhase;
       endVotingPhase = _endVotingPhase;
+      endRefundPhase = _endRefundPhase;
       question = _question;
       commitmentphase = enableCommitmentPhase;
+      depositrequired = _depositrequired; // Deposit required from all voters
       return true;
     }
 
     return false;
   }
 
+  // This function determines if one of the deadlines have been missed
+  // If a deadline has been missed - then we finish the election,
+  // and allocate refunds to the correct people depending on the situation.
+  function deadlineMissed() returns (bool){
+
+      // Has the Election Authority missed the signup deadline?
+      if(state == State.SIGNUP && block.timestamp > endSignupPhase) {
+
+         // Nothing to do. All voters are refunded.
+         state = State.FINISHED;
+         return true;
+      }
+
+      // Has the Election Authority missed the computation deadline?
+      if(state == State.COMPUTE && block.timestamp > endComputationPhase) {
+
+         // Nothing to do. All voters are refunded.
+         state = State.FINISHED;
+         return true;
+      }
+
+      // Has a voter failed to send their commitment?
+      if(state == State.COMMITMENT && block.timestamp > endCommitmentPhase) {
+
+         // Check which voters have not sent their commitment
+         for(uint i=0; i<totalregistered; i++) {
+
+            // Has this voter sent a commitment?
+            if(!commitment[voters[i].addr]) {
+               charity = charity + refunds[voters[i].addr];
+               refunds[voters[i].addr] = 0;
+            }
+         }
+
+         state = State.FINISHED;
+         return true;
+      }
+
+      // Has a voter failed to send in their vote?
+      if(state == State.VOTE && block.timestamp > endVotingPhase) {
+
+         // Check which voters have not cast their vote
+         for(i=0; i<totalregistered; i++) {
+
+            // Has this voter sent their vote?
+            if(!votecast[voters[i].addr]) {
+               charity = charity + refunds[voters[i].addr];
+               refunds[voters[i].addr] = 0;
+            }
+         }
+
+         state = State.FINISHED;
+         return true;
+      }
+
+      // Has the deadline passed for voters to claim their refund?
+      if(state == State.FINISHED && block.timestamp > endRefundPhase) {
+
+         // All refunds go to charity!
+         for(i=0; i<totalregistered; i++) {
+           charity = charity + refunds[voters[i].addr];
+           refunds[voters[i].addr] = 0;
+         }
+
+         uint[2] memory empty;
+
+         for(i=0; i<addresses.length; i++) {
+            address addr = addresses[i];
+            eligible[addr] = false; // No longer eligible
+            registered[addr] = false; // Remove voting registration
+            voters[i] = Voter({addr: 0, registeredkey: empty, reconstructedkey: empty, vote: empty, commitment: 0});
+            addressid[addr] = 0; // Remove index
+            votecast[addr] = false; // Remove that vote was cast
+            commitment[addr] = false;
+         }
+
+         // Reset timers.
+         finishSignupPhase = 0;
+         endSignupPhase = 0;
+         endComputationPhase = 0;
+         endCommitmentPhase = 0;
+         endVotingPhase = 0;
+
+         delete addresses;
+
+         // Keep track of voter activity
+         totalregistered = 0;
+         totaleligible = 0;
+         totalcommitted = 0;
+         totalvoted = 0;
+
+         // General values that need reset
+         question = "No question set";
+         finaltally[0] = 0;
+         finaltally[1] = 0;
+         commitmentphase = false;
+         depositrequired = 0;
+
+         state = State.SETUP;
+         return true;
+      }
+  }
+
   // Called by participants to register their voting public key
   // Participant mut be eligible, and can only register the first key sent key.
   function register(uint[2] xG, uint[3] vG, uint r) inState(State.SIGNUP) returns (bool) {
 
+    // Make sure the ether being deposited matches what we expect.
+    if(msg.value != depositrequired) {
+      return false;
+    }
+
     // Only white-listed addresses can vote
     if(eligible[msg.sender]) {
         if(verifyZKP(xG,r,vG) && !registered[msg.sender]) {
+
+            // Store deposit
+            refunds[msg.sender] = msg.value;
+
+            // Update voter's registration
             uint[2] memory empty;
             addressid[msg.sender] = totalregistered;
             voters[totalregistered] = Voter({addr: msg.sender, registeredkey: xG, reconstructedkey: empty, vote: empty, commitment: 0});
@@ -900,6 +1045,22 @@ contract AnonymousVoting is owned {
          finaltally[1] = 0;
          return;
       }
+  }
+
+  // There are two reasons why we might be in a finished state
+  // 1. The tally has been computed
+  // 2. A deadline has been missed.
+  // In the former; everyone gets a refund. In the latter; only active participants get a refund
+  // We can assume if the deadline has been missed - then refunds has ALREADY been updated to
+  // take that into account. (a transaction is required to indicate a deadline has been missed
+  // and in that transaction - we can penalise the non-active participants. lazy sods!)
+  function withdrawRefund() inState(State.FINISHED){
+    uint refund = refunds[msg.sender];
+    refunds[msg.sender] = 0;
+
+    if (!msg.sender.send(refund)) {
+       refunds[msg.sender] = refund;
+    }
   }
 
   // a - b = c;

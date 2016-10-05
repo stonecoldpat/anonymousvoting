@@ -463,12 +463,12 @@ function finishRegistrationPhase() {
 function topupEther() {
   // var w = new BigNumber("500000000000000000");
 
-  for(var i=1; web3.eth.accounts.length; i++) {
+  for(var i=1; i<5; i++) {
 
      var balance = web3.eth.getBalance(web3.eth.accounts[i]);
     //  if(balance.gt(w)) {
        web3.personal.unlockAccount(web3.eth.accounts[0],password);
-       web3.eth.sendTransaction({from:web3.eth.accounts[0], to:web3.eth.accounts[i], value: web3.toWei(0.5, "ether")});
+       web3.eth.sendTransaction({from:web3.eth.accounts[0], to:web3.eth.accounts[i], value: web3.toWei(4, "ether")});
      }
   // }
 }
