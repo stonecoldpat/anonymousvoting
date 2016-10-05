@@ -186,33 +186,38 @@ contract AnonymousVotingTest is Test {
     }
 
     // Election Authority dictates that the sign up period has begun.
-    function beginSignUp(bool commitment, uint finishSignup, uint endSignup, uint endComputation, uint endCommitment, uint endVoting, uint gap) {
+    function beginSignUp(bool commitment, uint finishSignup, uint endSignup, uint endComputation, uint endCommitment, uint endVoting, uint endRefund, uint deposit) {
         string memory question = "Should Satoshi Nakamoto reveal his real identity?";
 
-        con.beginSignUp(question, commitment, finishSignup, endSignup, endComputation, endCommitment, endVoting, gap);
+        setEligible();
+        con.beginSignUp(question, commitment, finishSignup, endSignup, endComputation, endCommitment, endVoting, endRefund, deposit);
     }
 
     // Easy function to begin election without commitment
     function beginSignupWithoutCommitment() {
-        uint gap = 1;
+        uint gap = con.gap();
+        uint multiplier = con.refundgapmultiplier();
         uint finishSignup = 2;
         uint endSignup = finishSignup + gap;
         uint endComputation = endSignup + gap;
         uint endVoting = endComputation + gap;
+        uint endRefund = endVoting + (gap*multiplier);
         string memory question = "Should Satoshi Nakamoto reveal his real identity?";
-        con.beginSignUp(question, false, finishSignup, endSignup, endComputation, 0, endVoting, gap);
+        con.beginSignUp(question, false, finishSignup, endSignup, endComputation, 0, endVoting, endRefund, 0);
     }
 
     // Easy function to begin election with commitment
     function beginSignupWithCommitment() {
-        uint gap = 1;
+        uint gap = con.gap();
+        uint multiplier = con.refundgapmultiplier();
         uint finishSignup = 2;
         uint endSignup = finishSignup + gap;
         uint endComputation = endSignup + gap;
         uint endCommitment = endComputation + gap;
         uint endVoting = endCommitment + gap;
+        uint endRefund = endVoting + (gap*multiplier);
         string memory question = "Should Satoshi Nakamoto reveal his real identity?";
-        con.beginSignUp(question, true, finishSignup, endSignup, endComputation, endCommitment, endVoting, gap);
+        con.beginSignUp(question, true, finishSignup, endSignup, endComputation, endCommitment, endVoting, endRefund, 0);
     }
 
     // All voters submit their voting key
@@ -319,13 +324,15 @@ contract AnonymousVotingTest is Test {
     function testBeginSetUpBadBeginSignup() {
       setEligible();
 
-      uint gap = 21600000;
+      uint gap = con.gap();
       uint finishSignup = 1916006400;
       uint endSignup = finishSignup + gap - 1;
       uint endComputation = endSignup + gap;
       uint endCommitment = endComputation + gap;
       uint endVoting = endCommitment + gap;
-      beginSignUp(true, finishSignup, endSignup, endComputation, endCommitment, endVoting, gap);
+      uint endRefund = endVoting + gap;
+
+      beginSignUp(true, finishSignup, endSignup, endComputation, endCommitment, endVoting, endRefund, 0);
 
       // We should not have changed state.
       assertTrue(uint(con.state()) == 0);
@@ -334,13 +341,14 @@ contract AnonymousVotingTest is Test {
     function testBeginSetUpBadEndComputation() {
       setEligible();
 
-      uint gap = 21600000;
+      uint gap = con.gap();
       uint finishSignup = 1916006400;
       uint endSignup = finishSignup + gap;
       uint endComputation = endSignup + gap - 1;
       uint endCommitment = endComputation + gap;
       uint endVoting = endCommitment + gap;
-      beginSignUp(true, finishSignup, endSignup, endComputation, endCommitment, endVoting, gap);
+      uint endRefund = endVoting + gap;
+      beginSignUp(true, finishSignup, endSignup, endComputation, endCommitment, endVoting, endRefund, 0);
 
       // We should not have changed state.
       assertTrue(uint(con.state()) == 0);
@@ -349,13 +357,14 @@ contract AnonymousVotingTest is Test {
     function testBeginSetUpBadEndCommitment() {
       setEligible();
 
-      uint gap = 21600000;
+      uint gap = con.gap();
       uint finishSignup = 1916006400;
       uint endSignup = finishSignup + gap;
       uint endComputation = endSignup + gap;
       uint endCommitment = endComputation + gap - 1;
       uint endVoting = endCommitment + gap;
-      beginSignUp(true, finishSignup, endSignup, endComputation, endCommitment, endVoting, gap);
+      uint endRefund = endVoting + gap;
+      beginSignUp(true, finishSignup, endSignup, endComputation, endCommitment, endVoting, endRefund, 0);
 
       // We should not have changed state.
       assertTrue(uint(con.state()) == 0);
@@ -364,13 +373,14 @@ contract AnonymousVotingTest is Test {
     function testBeginSetUpBadEndVoting() {
       setEligible();
 
-      uint gap = 21600000;
+      uint gap = con.gap();
       uint finishSignup = 1916006400;
       uint endSignup = finishSignup + gap;
       uint endComputation = endSignup + gap;
       uint endCommitment = endComputation + gap;
       uint endVoting = endCommitment + gap - 1;
-      beginSignUp(true, finishSignup, endSignup, endComputation, endCommitment, endVoting, gap);
+      uint endRefund = endVoting + gap;
+      beginSignUp(true, finishSignup, endSignup, endComputation, endCommitment, endVoting, endRefund, 0);
 
       // We should not have changed state.
       assertTrue(uint(con.state()) == 0);
@@ -379,13 +389,14 @@ contract AnonymousVotingTest is Test {
     function testBeginSetUpBadEndVotingWithoutCommitmentPhase() {
       setEligible();
 
-      uint gap = 21600000;
+      uint gap = con.gap();
       uint finishSignup = 1916006400;
       uint endSignup = finishSignup + gap;
       uint endComputation = endSignup + gap;
       uint endCommitment = 0;
       uint endVoting = endComputation + gap - 1;
-      beginSignUp(false, finishSignup, endSignup, endComputation, endCommitment, endVoting, gap);
+      uint endRefund = endVoting + gap;
+      beginSignUp(false, finishSignup, endSignup, endComputation, endCommitment, endVoting, endRefund, 0);
 
       // We should not have changed state.
       assertTrue(uint(con.state()) == 0);
@@ -400,31 +411,33 @@ contract AnonymousVotingTest is Test {
         assertTrue(con.endComputationPhase() == 4);
         assertTrue(con.endCommitmentPhase() == 5);
         assertTrue(con.endVotingPhase() == 6);
+        assertTrue(con.endRefundPhase() == 7);
     }
 
     // Test that voters can sign up correctly
     function testBeginSignUpWithoutCommitment() {
         setEligible();
         beginSignupWithoutCommitment();
-
-        // Check timer is set correctly
         assertTrue(uint(con.state()) == 1);
         assertTrue(con.finishSignupPhase() == 2);
         assertTrue(con.endSignupPhase() == 3);
         assertTrue(con.endComputationPhase() == 4);
         assertTrue(con.endVotingPhase() == 5);
+        assertTrue(con.endRefundPhase() == 6);
     }
+
 
     function testBeginSignUpWithoutCommitmentreaterThanGap() {
       setEligible();
 
-      uint gap = 21600000;
+      uint gap = con.gap();
       uint gapIncrease = 1000;
       uint finishSignup = 1916006400;
       uint endSignup = finishSignup + gap + gapIncrease;
       uint endComputation = endSignup + gap + gapIncrease;
       uint endVoting = endComputation + gap + gapIncrease;
-      beginSignUp(false, finishSignup, endSignup, endComputation, 0, endVoting, gap);
+      uint endRefund = endVoting + gap + gapIncrease;
+      beginSignUp(false, finishSignup, endSignup, endComputation, 0, endVoting, endRefund, 0);
 
       // We should not have changed state.
       assertTrue(uint(con.state()) == 1);
@@ -432,19 +445,21 @@ contract AnonymousVotingTest is Test {
       assertTrue(con.endSignupPhase() == endSignup);
       assertTrue(con.endComputationPhase() == endComputation);
       assertTrue(con.endVotingPhase() == endVoting);
+      assertTrue(con.endRefundPhase() == endRefund);
     }
 
     function testBeginSignUpWithCommitmentreaterThanGap() {
       setEligible();
 
-      uint gap = 21600000;
+      uint gap = con.gap();
       uint gapIncrease = 1000;
       uint finishSignup = 1916006400;
       uint endSignup = finishSignup + gap + gapIncrease;
       uint endComputation = endSignup + gap + gapIncrease;
       uint endCommitment = endComputation + gap + gapIncrease;
       uint endVoting = endCommitment + gap + gapIncrease;
-      beginSignUp(true, finishSignup, endSignup, endComputation, endCommitment, endVoting, gap);
+      uint endRefund = endVoting + gap + gapIncrease;
+      beginSignUp(true, finishSignup, endSignup, endComputation, endCommitment, endVoting, endRefund, 0);
 
       // We should not have changed state.
       assertTrue(uint(con.state()) == 1);
@@ -453,9 +468,10 @@ contract AnonymousVotingTest is Test {
       assertTrue(con.endComputationPhase() == endComputation);
       assertTrue(con.endCommitmentPhase() == endCommitment);
       assertTrue(con.endVotingPhase() == endVoting);
+      assertTrue(con.endRefundPhase() == endRefund);
     }
 
-    /*// Make sure the coinbase account is the owner
+    // Make sure the coinbase account is the owner
     function testCreatorIsCreator() logs_gas {
         assertEq(address(this), con.owner());
     }
@@ -518,7 +534,7 @@ contract AnonymousVotingTest is Test {
         computeKeys();
 
         // We should now be in the 'VOTE' phase.
-        assertTrue(uint(con.state()) == 3);
+        assertTrue(uint(con.state()) == 4);
     }
 
     // Submit votes to Ethereum
@@ -604,7 +620,7 @@ contract AnonymousVotingTest is Test {
     // Compute the final tally
     function testTally() logs_gas {
         setEligible();
-        beginSignupWithCommitment();
+        beginSignupWithoutCommitment();
         registerKeys(true, true, true);
         finishRegistration();
         computeKeys();
@@ -692,7 +708,5 @@ contract AnonymousVotingTest is Test {
         assertEq(true, con.registered(A));
         assertEq(true, con.registered(B));
         assertEq(false, con.registered(C));
-    }*/
-
-    // Need to test that only 40 people can be eligible
+    }
 }
