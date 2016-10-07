@@ -150,7 +150,7 @@
 
 // Relevant code that talks to Ethereum
 var web3;
-var password = "ilikelittlepaddy";
+var password = "";
 var addressChosen = false;
 var addr = 0;
 var state = 0;
@@ -575,7 +575,7 @@ function openLogin() {
     }
 
     selectbox = selectbox + "</select></p>";
-    selectbox = selectbox + "<p>Password: <input type='password' id='passwordf' value='ilikelittlepaddy' name='fname'> <button onclick='unlock()' class='btn btn-primary'>Unlock</button> </p>";
+    selectbox = selectbox + "<p>Password: <input type='password' id='passwordf' value='' name='fname'> <button onclick='unlock()' class='btn btn-primary'>Unlock</button> </p>";
 
     if(foundOwner) {
       document.getElementById('dropdown').innerHTML = selectbox;
