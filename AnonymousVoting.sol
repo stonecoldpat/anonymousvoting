@@ -488,17 +488,19 @@ contract AnonymousVoting is owned {
 
   // List of timers that each phase MUST end by an explicit time in UNIX timestamp.
   // Ethereum works in SECONDS. Not milliseconds.
-  uint public finishSignupPhase = 0; // Election Authority to transition to next phase.
-  uint public endSignupPhase = 0; // Election Authority does not transition to next phase by this time.
-  uint public endComputationPhase = 0; // Election Authority does not finish computation phase by this time.
-  uint public endCommitmentPhase = 0; // Voters have not sent their commitments in by this time.
-  uint public endVotingPhase = 0; // Voters have not submitted their vote by this stage.
-  uint public endRefundPhase = 0; // Voters must claim their refund by this stage.
+  uint public finishSignupPhase; // Election Authority to transition to next phase.
+  uint public endSignupPhase; // Election Authority does not transition to next phase by this time.
+  uint public endComputationPhase; // Election Authority does not finish computation phase by this time.
+  uint public endCommitmentPhase; // Voters have not sent their commitments in by this time.
+  uint public endVotingPhase; // Voters have not submitted their vote by this stage.
+  uint public endRefundPhase; // Voters must claim their refund by this stage.
 
   uint public totalregistered; //Total number of participants that have submited a voting key
   uint public totaleligible;
   uint public totalcommitted;
   uint public totalvoted;
+  uint public totalrefunded;
+  uint public totaltorefund;
 
   string public question;
   uint[2] public finaltally; // Final tally
@@ -506,7 +508,9 @@ contract AnonymousVoting is owned {
   uint public depositrequired;
   uint public gap; // Minimum amount of time between time stamps.
   uint public refundgapmultiplier; // Multiply gap by this amount for the refund phase.
-  uint public charity; // This money is dedicated to charity... TODO: Set an address
+
+  // TODO: Why cant election authority receive the spoils?
+  uint public lostdeposit; // This money is collected from non active voters...
 
   enum State { SETUP, SIGNUP, COMPUTE, COMMITMENT, VOTE, FINISHED }
   State public state;
@@ -525,53 +529,13 @@ contract AnonymousVoting is owned {
   // finish their entire workload in 1 transaction, then
   // it does the maximum. This way we can chain transactions
   // to complete the job...
-  function AnonymousVoting() {
+  function AnonymousVoting(uint _gap, uint _refund) {
     G[0] = Gx;
     G[1] = Gy;
     state = State.SETUP;
     question = "No question set";
-    gap = 1;
-    refundgapmultiplier = 1;
-  }
-
-  // We need to clear all the variables we stored for this election
-  // Can be run at ANY time... esp if someone refuses to submit their vote.
-  function reset() onlyOwner {
-    uint[2] memory empty;
-
-    for(uint i=0; i<addresses.length; i++) {
-       address addr = addresses[i];
-       eligible[addr] = false; // No longer eligible
-       registered[addr] = false; // Remove voting registration
-       voters[i] = Voter({addr: 0, registeredkey: empty, reconstructedkey: empty, vote: empty, commitment: 0});
-       addressid[addr] = 0; // Remove index
-       votecast[addr] = false; // Remove that vote was cast
-       commitment[addr] = false;
-    }
-
-    // Reset timers.
-    finishSignupPhase = 0;
-    endSignupPhase = 0;
-    endComputationPhase = 0;
-    endCommitmentPhase = 0;
-    endVotingPhase = 0;
-
-    delete addresses;
-
-    // Keep track of voter activity
-    totalregistered = 0;
-    totaleligible = 0;
-    totalcommitted = 0;
-    totalvoted = 0;
-
-    question = "No question set";
-    finaltally[0] = 0;
-    finaltally[1] = 0;
-    commitmentphase = false;
-
-
-    // We are finished resetting.
-    state = State.SETUP;
+    gap = _gap;
+    refundgapmultiplier = _refund;
   }
 
   // Owner of contract sets a whitelist of addresses that are eligible to vote.
@@ -613,7 +577,7 @@ contract AnonymousVoting is owned {
     // TODO: Enforce gap to be at least 1 hour.. may break unit testing
     // Make sure 3 people are at least eligible to vote..
     // Deposit can be zero or more WEI
-    if(_finishSignupPhase > 1 && addresses.length > 3 && _depositrequired >= 0) {
+    if(_finishSignupPhase > block.timestamp && addresses.length >= 3 && _depositrequired >= 0) {
 
         // Ensure each time phase finishes in the future...
         // Ensure there is a gap of 'x time' between each phase.
@@ -687,6 +651,7 @@ contract AnonymousVoting is owned {
 
          // Nothing to do. All voters are refunded.
          state = State.FINISHED;
+         totaltorefund = totalregistered;
          return true;
       }
 
@@ -695,6 +660,7 @@ contract AnonymousVoting is owned {
 
          // Nothing to do. All voters are refunded.
          state = State.FINISHED;
+         totaltorefund = totalregistered;
          return true;
       }
 
@@ -706,8 +672,12 @@ contract AnonymousVoting is owned {
 
             // Has this voter sent a commitment?
             if(!commitment[voters[i].addr]) {
-               charity = charity + refunds[voters[i].addr];
+               lostdeposit = lostdeposit + refunds[voters[i].addr];
                refunds[voters[i].addr] = 0;
+            } else {
+
+              // We will need to refund this person.
+              totaltorefund = totaltorefund + 1;
             }
          }
 
@@ -723,8 +693,12 @@ contract AnonymousVoting is owned {
 
             // Has this voter sent their vote?
             if(!votecast[voters[i].addr]) {
-               charity = charity + refunds[voters[i].addr];
+               lostdeposit = lostdeposit + refunds[voters[i].addr];
                refunds[voters[i].addr] = 0;
+            } else {
+
+              // We will need to refund this person.
+              totaltorefund = totaltorefund + 1;
             }
          }
 
@@ -733,11 +707,12 @@ contract AnonymousVoting is owned {
       }
 
       // Has the deadline passed for voters to claim their refund?
-      if(state == State.FINISHED && block.timestamp > endRefundPhase) {
+      // TODO: Either the time has finished, or all refunds have been issued.
+      if(state == State.FINISHED && block.timestamp > endRefundPhase && msg.sender == owner) {
 
-         // All refunds go to charity!
+         // All unclaimed deposits goes to election authority
          for(i=0; i<totalregistered; i++) {
-           charity = charity + refunds[voters[i].addr];
+           lostdeposit = lostdeposit + refunds[voters[i].addr];
            refunds[voters[i].addr] = 0;
          }
 
@@ -774,6 +749,8 @@ contract AnonymousVoting is owned {
          finaltally[1] = 0;
          commitmentphase = false;
          depositrequired = 0;
+         totalrefunded = 0;
+         totaltorefund = 0;
 
          state = State.SETUP;
          return true;
@@ -783,6 +760,12 @@ contract AnonymousVoting is owned {
   // Called by participants to register their voting public key
   // Participant mut be eligible, and can only register the first key sent key.
   function register(uint[2] xG, uint[3] vG, uint r) inState(State.SIGNUP) returns (bool) {
+
+     // HARD DEADLINE
+     // Should this be endSignupPhase or finishSignupPhase? Should we let people sign up late?
+     if(block.timestamp > endSignupPhase) {
+       throw; // throw returns the voter's ether, but exhausts their gas.
+     }
 
     // Make sure the ether being deposited matches what we expect.
     if(msg.value != depositrequired) {
@@ -812,12 +795,17 @@ contract AnonymousVoting is owned {
 
 
   // Timer has expired - we want to start computing the reconstructed keys
-  function finishRegistrationPhase() inState(State.SIGNUP) onlyOwner {
+  function finishRegistrationPhase() inState(State.SIGNUP) onlyOwner returns(bool) {
 
      // We can only compute the public keys once participants
      // have been given an opportunity to regstier their
      // voting public key.
      if(block.timestamp < finishSignupPhase) {
+       return;
+     }
+
+     // HARD DEADLINE
+     if(block.timestamp > endSignupPhase) {
        return;
      }
 
@@ -837,6 +825,11 @@ contract AnonymousVoting is owned {
   // leaks the tally!
   // Debate: Should this be an onlyOwner function?
   function computeReconstructedPublicKeys() inState(State.COMPUTE) onlyOwner {
+
+    // HARD DEADLINE
+     if(block.timestamp > endComputationPhase) {
+       return;
+     }
 
      uint[2] memory temp;
      uint[3] memory yG;
@@ -921,6 +914,11 @@ contract AnonymousVoting is owned {
    */
   function submitCommitment(bytes32 h) inState(State.COMMITMENT) {
 
+    // HARD DEADLINE
+     if(block.timestamp > endCommitmentPhase) {
+       return;
+     }
+
     if(!commitment[msg.sender]) {
         commitment[msg.sender] = true;
         uint index = addressid[msg.sender];
@@ -936,6 +934,11 @@ contract AnonymousVoting is owned {
 
   // Given the 1 out of 2 ZKP - record the users vote!
   function submitVote(uint[4] params, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) inState(State.VOTE) returns (bool) {
+
+    // HARD DEADLINE
+     if(block.timestamp > endVotingPhase) {
+       return;
+     }
 
      uint c = addressid[msg.sender];
 
@@ -1003,6 +1006,9 @@ contract AnonymousVoting is owned {
      // Get tally, and change state to 'Finished'
      state = State.FINISHED;
 
+     // All voters should be refunded.
+     totaltorefund = totalregistered;
+
      // Each vote is represented by a G.
      // If there are no votes... then it is 0G = (0,0)...
      if(temp[0] == 0) {
@@ -1055,27 +1061,32 @@ contract AnonymousVoting is owned {
   // take that into account. (a transaction is required to indicate a deadline has been missed
   // and in that transaction - we can penalise the non-active participants. lazy sods!)
   function withdrawRefund() inState(State.FINISHED){
+
     uint refund = refunds[msg.sender];
     refunds[msg.sender] = 0;
 
     if (!msg.sender.send(refund)) {
        refunds[msg.sender] = refund;
+    } else {
+
+      // Tell everyone we have issued the refund.
+      totalrefunded = totalrefunded + 1;
     }
   }
 
-  // a - b = c;
-  function submod(uint a, uint b) returns (uint){
-      uint a_nn;
+  // Send lost deposits to the owner
+  function collectLostDeposits() onlyOwner{
 
-      if(a>b) {
-        a_nn = a;
-      } else {
-        a_nn = a+nn;
-      }
+    // Only send this money to the owner
+    uint profit = lostdeposit;
+    lostdeposit = 0;
 
-      uint c = addmod(a_nn - b,0,nn);
+    // Try to send money
+    if(!msg.sender.send(profit)) {
 
-      return c;
+      // We failed to send the money. Record it again.
+      lostdeposit = profit;
+    }
   }
 
   // Parameters xG, r where r = v - xc, and vG.

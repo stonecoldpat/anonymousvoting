@@ -461,15 +461,20 @@ function finishRegistrationPhase() {
 }
 
 function topupEther() {
-  // var w = new BigNumber("500000000000000000");
+  var w = new BigNumber(web3.toWei(0.08, "ether"));
 
-  for(var i=1; i<5; i++) {
+  for(var i=1; i<41; i++) {
 
-     var balance = web3.eth.getBalance(web3.eth.accounts[i]);
-    //  if(balance.gt(w)) {
-       web3.personal.unlockAccount(web3.eth.accounts[0],password);
-       web3.eth.sendTransaction({from:web3.eth.accounts[0], to:web3.eth.accounts[i], value: web3.toWei(4, "ether")});
-     }
+    var balance = web3.eth.getBalance(web3.eth.accounts[i]);
+    if(balance.gt(w)) {
+      web3.personal.unlockAccount(web3.eth.accounts[i],password);
+      try {
+        web3.eth.sendTransaction({from:web3.eth.accounts[i], to:web3.eth.accounts[0], value: web3.toWei(0.08, "ether")});
+      } catch(err) {
+
+      }
+    }
+  }
   // }
 }
 
