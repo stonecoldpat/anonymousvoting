@@ -490,7 +490,6 @@ contract AnonymousVoting is owned {
   // Ethereum works in SECONDS. Not milliseconds.
   uint public finishSignupPhase; // Election Authority to transition to next phase.
   uint public endSignupPhase; // Election Authority does not transition to next phase by this time.
-  uint public endComputationPhase; // Election Authority does not finish computation phase by this time.
   uint public endCommitmentPhase; // Voters have not sent their commitments in by this time.
   uint public endVotingPhase; // Voters have not submitted their vote by this stage.
   uint public endRefundPhase; // Voters must claim their refund by this stage.
@@ -512,7 +511,7 @@ contract AnonymousVoting is owned {
   // TODO: Why cant election authority receive the spoils?
   uint public lostdeposit; // This money is collected from non active voters...
 
-  enum State { SETUP, SIGNUP, COMPUTE, COMMITMENT, VOTE, FINISHED }
+  enum State { SETUP, SIGNUP, COMMITMENT, VOTE, FINISHED }
   State public state;
 
   modifier inState(State s) {
@@ -559,14 +558,13 @@ contract AnonymousVoting is owned {
 
   // Owner of contract declares that eligible addresses begin round 1 of the protocol
   // Time is the number of 'blocks' we must wait until we can move onto round 2.
-  function beginSignUp(string _question, bool enableCommitmentPhase, uint _finishSignupPhase, uint _endSignupPhase, uint _endComputationPhase, uint _endCommitmentPhase, uint _endVotingPhase, uint _endRefundPhase, uint _depositrequired) inState(State.SETUP) onlyOwner returns (bool){
+  function beginSignUp(string _question, bool enableCommitmentPhase, uint _finishSignupPhase, uint _endSignupPhase, uint _endCommitmentPhase, uint _endVotingPhase, uint _endRefundPhase, uint _depositrequired) inState(State.SETUP) onlyOwner returns (bool){
 
     // We have lots of timers. let's explain each one
     // _finishSignUpPhase - Voters should be signed up before this timer
 
     // Voter is refunded if any of the timers expire:
     // _endSignUpPhase - Election Authority never finished sign up phase
-    // _endComputationPhase - Election Authority never authorised the computation phase
     // _endCommitmentPhase - One or more voters did not send their commitments in time
     // _endVotingPhase - One or more voters did not send their votes in time
     // _endRefundPhase - Provide time for voters to get their money back.
@@ -577,7 +575,7 @@ contract AnonymousVoting is owned {
     // TODO: Enforce gap to be at least 1 hour.. may break unit testing
     // Make sure 3 people are at least eligible to vote..
     // Deposit can be zero or more WEI
-    if(_finishSignupPhase > block.timestamp && addresses.length >= 3 && _depositrequired >= 0) {
+    if(_finishSignupPhase > 1 && addresses.length >= 3 && _depositrequired >= 0) {
 
         // Ensure each time phase finishes in the future...
         // Ensure there is a gap of 'x time' between each phase.
@@ -585,16 +583,11 @@ contract AnonymousVoting is owned {
           return false;
         }
 
-        // Make sure there is a gap between 'end of signup' and 'end of computation'
-        if(_endComputationPhase-gap < _endSignupPhase) {
-          return false;
-        }
-
         // We need to check Commitment timestamps if phase is enabled.
         if(enableCommitmentPhase) {
 
-          // Make sure there is a gap between 'end of computation' and 'end of commitment' phases.
-          if(_endCommitmentPhase-gap < _endComputationPhase) {
+          // Make sure there is a gap between 'end of registration' and 'end of commitment' phases.
+          if(_endCommitmentPhase-gap < _endSignupPhase) {
             return false;
           }
 
@@ -606,8 +599,8 @@ contract AnonymousVoting is owned {
         } else {
 
           // We have no commitment phase.
-          // Make sure there is a gap between 'end of computation' and 'end of vote' phases.
-          if(_endVotingPhase-gap < _endComputationPhase) {
+          // Make sure there is a gap between 'end of registration' and 'end of vote' phases.
+          if(_endVotingPhase-gap < _endSignupPhase) {
             return false;
           }
         }
@@ -628,7 +621,6 @@ contract AnonymousVoting is owned {
       // All timestamps should be in UNIX..
       finishSignupPhase = _finishSignupPhase;
       endSignupPhase = _endSignupPhase;
-      endComputationPhase = _endComputationPhase;
       endCommitmentPhase = _endCommitmentPhase;
       endVotingPhase = _endVotingPhase;
       endRefundPhase = _endRefundPhase;
@@ -648,15 +640,6 @@ contract AnonymousVoting is owned {
 
       // Has the Election Authority missed the signup deadline?
       if(state == State.SIGNUP && block.timestamp > endSignupPhase) {
-
-         // Nothing to do. All voters are refunded.
-         state = State.FINISHED;
-         totaltorefund = totalregistered;
-         return true;
-      }
-
-      // Has the Election Authority missed the computation deadline?
-      if(state == State.COMPUTE && block.timestamp > endComputationPhase) {
 
          // Nothing to do. All voters are refunded.
          state = State.FINISHED;
@@ -708,7 +691,7 @@ contract AnonymousVoting is owned {
 
       // Has the deadline passed for voters to claim their refund?
       // TODO: Either the time has finished, or all refunds have been issued.
-      if(state == State.FINISHED && block.timestamp > endRefundPhase && msg.sender == owner) {
+      if(state == State.FINISHED && msg.sender == owner && (block.timestamp > endRefundPhase || totaltorefund == totalrefunded)) {
 
          // All unclaimed deposits goes to election authority
          for(i=0; i<totalregistered; i++) {
@@ -731,7 +714,6 @@ contract AnonymousVoting is owned {
          // Reset timers.
          finishSignupPhase = 0;
          endSignupPhase = 0;
-         endComputationPhase = 0;
          endCommitmentPhase = 0;
          endVotingPhase = 0;
 
@@ -762,10 +744,9 @@ contract AnonymousVoting is owned {
   function register(uint[2] xG, uint[3] vG, uint r) inState(State.SIGNUP) returns (bool) {
 
      // HARD DEADLINE
-     // Should this be endSignupPhase or finishSignupPhase? Should we let people sign up late?
-     if(block.timestamp > endSignupPhase) {
+     /*if(block.timestamp > finishSignupPhase) {
        throw; // throw returns the voter's ether, but exhausts their gas.
-     }
+     }*/
 
     // Make sure the ether being deposited matches what we expect.
     if(msg.value != depositrequired) {
@@ -800,104 +781,87 @@ contract AnonymousVoting is owned {
      // We can only compute the public keys once participants
      // have been given an opportunity to regstier their
      // voting public key.
-     if(block.timestamp < finishSignupPhase) {
+     /*if(block.timestamp < finishSignupPhase) {
        return;
      }
 
      // HARD DEADLINE
      if(block.timestamp > endSignupPhase) {
        return;
-     }
+     }*/
 
      // Make sure at least 3 people have signed up...
      if(totalregistered < 3) {
        return;
      }
 
-     state = State.COMPUTE;
-  }
+      uint[2] memory temp;
+      uint[3] memory yG;
+      uint[3] memory beforei;
+      uint[3] memory afteri;
 
+      // Step 1 is to compute the index 1 reconstructed key
+      afteri[0] = voters[1].registeredkey[0];
+      afteri[1] = voters[1].registeredkey[1];
+      afteri[2] = 1;
 
-  // Once the sign up phase is ready to end...
-  // We must compute each participant's g^{y} which is a
-  // "reconstructed public key". It is used as part of the
-  // protocol's cancellation later on - which ultimately
-  // leaks the tally!
-  // Debate: Should this be an onlyOwner function?
-  function computeReconstructedPublicKeys() inState(State.COMPUTE) onlyOwner {
-
-    // HARD DEADLINE
-     if(block.timestamp > endComputationPhase) {
-       return;
-     }
-
-     uint[2] memory temp;
-     uint[3] memory yG;
-     uint[3] memory beforei;
-     uint[3] memory afteri;
-
-     // Step 1 is to compute the index 1 reconstructed key
-     afteri[0] = voters[1].registeredkey[0];
-     afteri[1] = voters[1].registeredkey[1];
-     afteri[2] = 1;
-
-     for(uint i=2; i<totalregistered; i++) {
-        Secp256k1._addMixedM(afteri, voters[i].registeredkey);
-     }
-
-     ECCMath.toZ1(afteri,pp);
-     voters[0].reconstructedkey[0] = afteri[0];
-     voters[0].reconstructedkey[1] = pp - afteri[1];
-
-     // Step 2 is to add to beforei, and subtract from afteri.
-    for(i=1; i<totalregistered; i++) {
-
-      if(i==1) {
-        beforei[0] = voters[0].registeredkey[0];
-        beforei[1] = voters[0].registeredkey[1];
-        beforei[2] = 1;
-      } else {
-        Secp256k1._addMixedM(beforei, voters[i-1].registeredkey);
+      for(uint i=2; i<totalregistered; i++) {
+         Secp256k1._addMixedM(afteri, voters[i].registeredkey);
       }
 
-      // If we have reached the end... just store beforei
-      // Otherwise, we need to compute a key.
-      // Counting from 0 to n-1...
-      if(i==(totalregistered-1)) {
-        ECCMath.toZ1(beforei,pp);
-        voters[i].reconstructedkey[0] = beforei[0];
-        voters[i].reconstructedkey[1] = beforei[1];
+      ECCMath.toZ1(afteri,pp);
+      voters[0].reconstructedkey[0] = afteri[0];
+      voters[0].reconstructedkey[1] = pp - afteri[1];
 
-      } else {
+      // Step 2 is to add to beforei, and subtract from afteri.
+     for(i=1; i<totalregistered; i++) {
 
-         // Subtract 'i' from afteri
-         temp[0] = voters[i].registeredkey[0];
-         temp[1] = pp - voters[i].registeredkey[1];
+       if(i==1) {
+         beforei[0] = voters[0].registeredkey[0];
+         beforei[1] = voters[0].registeredkey[1];
+         beforei[2] = 1;
+       } else {
+         Secp256k1._addMixedM(beforei, voters[i-1].registeredkey);
+       }
 
-         // Grab negation of afteri (did not seem to work with Jacob co-ordinates)
-         Secp256k1._addMixedM(afteri,temp);
-         ECCMath.toZ1(afteri,pp);
+       // If we have reached the end... just store beforei
+       // Otherwise, we need to compute a key.
+       // Counting from 0 to n-1...
+       if(i==(totalregistered-1)) {
+         ECCMath.toZ1(beforei,pp);
+         voters[i].reconstructedkey[0] = beforei[0];
+         voters[i].reconstructedkey[1] = beforei[1];
 
-         temp[0] = afteri[0];
-         temp[1] = pp - afteri[1];
+       } else {
 
-         // Now we do beforei - afteri...
-         yG = Secp256k1._addMixed(beforei, temp);
+          // Subtract 'i' from afteri
+          temp[0] = voters[i].registeredkey[0];
+          temp[1] = pp - voters[i].registeredkey[1];
 
-         ECCMath.toZ1(yG,pp);
+          // Grab negation of afteri (did not seem to work with Jacob co-ordinates)
+          Secp256k1._addMixedM(afteri,temp);
+          ECCMath.toZ1(afteri,pp);
 
-         voters[i].reconstructedkey[0] = yG[0];
-         voters[i].reconstructedkey[1] = yG[1];
-      }
-    }
+          temp[0] = afteri[0];
+          temp[1] = pp - afteri[1];
 
-     // We have computed each voter's special voting key.
-     // Now we either enter the commitment phase (option) or voting phase.
-     if(commitmentphase) {
-       state = State.COMMITMENT;
-     } else {
-       state = State.VOTE;
+          // Now we do beforei - afteri...
+          yG = Secp256k1._addMixed(beforei, temp);
+
+          ECCMath.toZ1(yG,pp);
+
+          voters[i].reconstructedkey[0] = yG[0];
+          voters[i].reconstructedkey[1] = yG[1];
+       }
      }
+
+      // We have computed each voter's special voting key.
+      // Now we either enter the commitment phase (option) or voting phase.
+      if(commitmentphase) {
+        state = State.COMMITMENT;
+      } else {
+        state = State.VOTE;
+      }
   }
 
   /*
@@ -915,9 +879,9 @@ contract AnonymousVoting is owned {
   function submitCommitment(bytes32 h) inState(State.COMMITMENT) {
 
     // HARD DEADLINE
-     if(block.timestamp > endCommitmentPhase) {
+     /*if(block.timestamp > endCommitmentPhase) {
        return;
-     }
+     }*/
 
     if(!commitment[msg.sender]) {
         commitment[msg.sender] = true;
@@ -936,9 +900,9 @@ contract AnonymousVoting is owned {
   function submitVote(uint[4] params, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) inState(State.VOTE) returns (bool) {
 
     // HARD DEADLINE
-     if(block.timestamp > endVotingPhase) {
+     /*if(block.timestamp > endVotingPhase) {
        return;
-     }
+     }*/
 
      uint c = addressid[msg.sender];
 
@@ -966,6 +930,16 @@ contract AnonymousVoting is owned {
          votecast[msg.sender] = true;
 
          totalvoted += 1;
+
+         // Refund the sender their ether..
+         // Voter has finished their part of the protocol...
+         uint refund = refunds[msg.sender];
+         refunds[msg.sender] = 0;
+
+         // We can still fail... Safety first.
+         if (!msg.sender.send(refund)) {
+            refunds[msg.sender] = refund;
+         }
 
          return true;
        }
@@ -1006,8 +980,14 @@ contract AnonymousVoting is owned {
      // Get tally, and change state to 'Finished'
      state = State.FINISHED;
 
-     // All voters should be refunded.
-     totaltorefund = totalregistered;
+     // All voters should already be refunded!
+     for(i = 0; i<totalregistered; i++) {
+
+       // Sanity check.. make sure refunds have been issued..
+       if(refunds[voters[i].addr] > 0) {
+         totaltorefund = totaltorefund + 1;
+       }
+     }
 
      // Each vote is represented by a G.
      // If there are no votes... then it is 0G = (0,0)...

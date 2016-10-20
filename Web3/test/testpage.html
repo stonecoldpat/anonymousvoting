@@ -41,10 +41,10 @@
 </div>
   <div>
      <input type='file' accept='text/plain' onchange='openFile(event)'>
-     <!-- <button onclick="finishRegistrationPhase()">FinishRegistration</button>
-     <button onclick="computePublicKeys()">Continue Computing 1</button>
+     <button onclick="finishRegistrationPhase()">FinishRegistration</button>
+     <!-- <button onclick="computePublicKeys()">Continue Computing 1</button> -->
      <button onclick="submitVotes()">Submit Voices</button>
-     <button onclick="tally()">Tally</button> -->
+     <button onclick="tally()">Tally</button>
      <button onclick="topupEther()">Top up Ether</button>
      <button onclick="drawGasTable()">Draw Gas Table</button>
      <!-- <button onclick="drawOperationGasTable()">Draw table for operation estimates</button> -->
@@ -60,7 +60,7 @@
 
 <script src="../web3.min.js"></script>
 <script src="../bignumber.min.js"></script>
-<script src ="https://code.jquery.com/jquery-3.1.0.slim.min.js"></script>
+<script src ="../js/jquery.min.js"></script>
 <script type="text/javascript">
 
 // borrowed from http://stackoverflow.com/questions/14895287/how-to-print-object-array-in-javascript
@@ -96,14 +96,14 @@ if (typeof web3 !== 'undefined') {
 }
 
 // Anonymous Voting Contract
-var abi = [{"constant":true,"inputs":[],"name":"endComputationPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"eligible","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"vG","type":"uint256[3]"},{"name":"r","type":"uint256"}],"name":"register","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeTally","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"addressid","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"totaleligible","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"getVoter","outputs":[{"name":"_registeredkey","type":"uint256[2]"},{"name":"_reconstructedkey","type":"uint256[2]"},{"name":"_commitment","type":"bytes32"}],"type":"function"},{"constant":true,"inputs":[],"name":"endSignupPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"commitmentphase","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"question","outputs":[{"name":"","type":"string"}],"type":"function"},{"constant":false,"inputs":[{"name":"addr","type":"address[]"}],"name":"setEligible","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"finishSignupPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"h","type":"bytes32"}],"name":"submitCommitment","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"endCommitmentPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"finishRegistrationPhase","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"submitVote","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"totalcommitted","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"votecast","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"totalvoted","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeReconstructedPublicKeys","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"endVotingPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"commitment","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"registered","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"_question","type":"string"},{"name":"enableCommitmentPhase","type":"bool"},{"name":"_finishSignupPhase","type":"uint256"},{"name":"_endSignupPhase","type":"uint256"},{"name":"_endComputationPhase","type":"uint256"},{"name":"_endCommitmentPhase","type":"uint256"},{"name":"_endVotingPhase","type":"uint256"},{"name":"gap","type":"uint256"}],"name":"beginSignUp","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"name":"","type":"uint8"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"finaltally","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"totalregistered","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"reset","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"voters","outputs":[{"name":"addr","type":"address"},{"name":"commitment","type":"bytes32"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"addresses","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"}];
+var abi = [{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"eligible","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"vG","type":"uint256[3]"},{"name":"r","type":"uint256"}],"name":"register","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[],"name":"computeTally","outputs":[],"type":"function"},{"constant":false,"inputs":[],"name":"withdrawRefund","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"addressid","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"totaleligible","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"getVoter","outputs":[{"name":"_registeredkey","type":"uint256[2]"},{"name":"_reconstructedkey","type":"uint256[2]"},{"name":"_commitment","type":"bytes32"}],"type":"function"},{"constant":true,"inputs":[],"name":"endSignupPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"commitmentphase","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"question","outputs":[{"name":"","type":"string"}],"type":"function"},{"constant":false,"inputs":[{"name":"addr","type":"address[]"}],"name":"setEligible","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"finishSignupPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"endRefundPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"h","type":"bytes32"}],"name":"submitCommitment","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"totalrefunded","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"endCommitmentPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"refundgapmultiplier","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"finishRegistrationPhase","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"submitVote","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"gap","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"totalcommitted","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"votecast","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"totalvoted","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[],"name":"collectLostDeposits","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"endVotingPhase","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"commitment","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"registered","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"_question","type":"string"},{"name":"enableCommitmentPhase","type":"bool"},{"name":"_finishSignupPhase","type":"uint256"},{"name":"_endSignupPhase","type":"uint256"},{"name":"_endCommitmentPhase","type":"uint256"},{"name":"_endVotingPhase","type":"uint256"},{"name":"_endRefundPhase","type":"uint256"},{"name":"_depositrequired","type":"uint256"}],"name":"beginSignUp","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"refunds","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"name":"","type":"uint8"}],"type":"function"},{"constant":true,"inputs":[],"name":"totaltorefund","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"finaltally","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"totalregistered","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[],"name":"deadlineMissed","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"voters","outputs":[{"name":"addr","type":"address"},{"name":"commitment","type":"bytes32"}],"type":"function"},{"constant":true,"inputs":[],"name":"lostdeposit","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"addresses","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":false,"inputs":[{"name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"depositrequired","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[{"name":"_gap","type":"uint256"},{"name":"_refund","type":"uint256"}],"type":"constructor"}];
 var anonymousvoting = web3.eth.contract(abi);
-var anonymousvotingAddr = anonymousvoting.at("0x4537d53c60729171c708168d64b560e1658124d0");
+var anonymousvotingAddr = anonymousvoting.at("0x868de70f2d28ec192e4f06b20403067db8b20d8d");
 
 // Local Crypto Contract
 var abi_crypto = [{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"commitToVote","outputs":[{"name":"","type":"bytes32"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"},{"name":"w","type":"uint256"},{"name":"r2","type":"uint256"},{"name":"d2","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPNoVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"name":"submod","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"x","type":"uint256"},{"name":"v","type":"uint256"},{"name":"xG","type":"uint256[2]"}],"name":"createZKP","outputs":[{"name":"res","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"params","type":"uint256[4]"},{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"},{"name":"y","type":"uint256[2]"},{"name":"a1","type":"uint256[2]"},{"name":"b1","type":"uint256[2]"},{"name":"a2","type":"uint256[2]"},{"name":"b2","type":"uint256[2]"}],"name":"verify1outof2ZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"yG","type":"uint256[2]"},{"name":"w","type":"uint256"},{"name":"r1","type":"uint256"},{"name":"d1","type":"uint256"},{"name":"x","type":"uint256"}],"name":"create1outof2ZKPYesVote","outputs":[{"name":"res","type":"uint256[10]"},{"name":"res2","type":"uint256[4]"}],"type":"function"},{"constant":false,"inputs":[{"name":"xG","type":"uint256[2]"},{"name":"r","type":"uint256"},{"name":"vG","type":"uint256[3]"}],"name":"verifyZKP","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"}];
 var crypto_contract = web3.eth.contract(abi_crypto);
-var cryptoAddr = crypto_contract.at("0xb3974fc8d9af21f13225d2aa58978b17f81f0a9b");
+var cryptoAddr = crypto_contract.at("0xcd1489f9a47917fcb01e49b42614f67e981bf873");
 
 // These are counters to ensure that enough people have finished
 // the stage before moving on
@@ -143,11 +143,9 @@ var eligibleGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber(
 var signupGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
 var finishGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
 var registerGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
-var computeGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
 var commitGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
 var submitVoteGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
 var tallyGas = [new BigNumber('0'), new BigNumber('99999999'), new BigNumber('0'), new BigNumber('0')];
-
 
 // Draw a table on the site to show us the cost for each stage.
 function drawGasTable() {
@@ -155,13 +153,12 @@ function drawGasTable() {
   var eligibleTable = "<tr><td>Eligible</td><td>" + eligibleGas[1].toFormat(0) + "</td><td>" + eligibleGas[2].toFormat(0) + "</td><td>" + eligibleGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + eligibleGas[0].toFormat(0) + "</td></tr>";
   var signupTable = "<tr><td>Transition to SIGNUP</td><td>" + signupGas[1].toFormat(0) + "</td><td>" + signupGas[2].toFormat(0) + "</td><td> -1 </td><td>" + signupGas[0].toFormat(0) + "</td></tr>";
   var registerTable = "<tr><td>Register to Vote</td><td>" + registerGas[1].toFormat(0) + "</td><td>" + registerGas[2].toFormat(0) + "</td><td>" + registerGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + registerGas[0].toFormat(0) + "</td></tr>";
-  var finishTable = "<tr><td>Transition to COMPUTE</td><td>" + finishGas[1].toFormat(0) + "</td><td>" + finishGas[2].toFormat(0) + "</td><td> -1 </td><td>" + finishGas[0].toFormat(0) + "</td></tr>";
-  var computeTable = "<tr><td>Compute Keys</td><td>" + computeGas[1].toFormat(0) + "</td><td>" + computeGas[2].toFormat(0) + "</td><td>" + computeGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + computeGas[0].toFormat(0) + "</td></tr>";
-  var commitTable = "<tr><td>Committments</td><td>" + commitGas[1].toFormat(0) + "</td><td>" + commitGas[2].toFormat(0) + "</td><td>" + commitGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + commitGas[0].toFormat(0) + "</td></tr>";
+  var finishTable = "<tr><td>COMPUTE</td><td>" + finishGas[1].toFormat(0) + "</td><td>" + finishGas[2].toFormat(0) + "</td><td> " + finishGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + finishGas[0].toFormat(0) + "</td></tr>";
+  var commitTable = "<tr><td>Committment</td><td>" + commitGas[1].toFormat(0) + "</td><td>" + commitGas[2].toFormat(0) + "</td><td>" + commitGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + commitGas[0].toFormat(0) + "</td></tr>";
   var submitVoteTable = "<tr><td>Submit Vote</td><td>" + submitVoteGas[1].toFormat(0) + "</td><td>" + submitVoteGas[2].toFormat(0) + "</td><td>" + submitVoteGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + submitVoteGas[0].toFormat(0) + "</td></tr>";
   var tallyTable = "<tr><td>Tally</td><td>" + tallyGas[1].toFormat(0) + "</td><td>" + tallyGas[2].toFormat(0) + "</td><td>" + tallyGas[0].dividedBy(people.length).toFormat(0) + "</td><td>" + tallyGas[0].toFormat(0) + "</td></tr>";
   var table = "<table> <tr><th>Stage</th><th>Lowest Gas</th><th>Highest Gas</th><th>Average Gas</th><th>Total Gas</th></tr>" +
-              eligibleTable + signupTable + registerTable + finishTable + computeTable + commitTable + submitVoteTable + tallyTable + "</table>";
+              eligibleTable + signupTable + registerTable + finishTable + commitTable + submitVoteTable + tallyTable + "</table>";
   document.getElementById('tableresult').innerHTML = table;
 }
 
@@ -171,7 +168,6 @@ var eligibleBool = false;
 var signupSentBool = false;
 var signupBool = false;
 var finishRegBool = false;
-var computeBool = false;
 var commitBool = false;
 var voteBool = false;
 var readyToTallyBool = false;
@@ -255,15 +251,7 @@ function currentState() {
            }
         }
     }
-  } else if(state == 2) { // COMPUTE
-
-    // Have we told Ethereum to compute the voting keys yet?
-    if(!computeBool) {
-      document.getElementById('state').innerHTML = "COMPUTE";
-      computePublicKeys();
-      computeBool = true;
-    }
-  } else if(state == 3) { // Commit
+  } else if(state == 2) {// Commit
 
     // Have we sent out commitments to Ethereum?
     if(!commitBool) {
@@ -285,7 +273,7 @@ function currentState() {
 
     // Once all commitments are sent... we will automatically tansit to VOTING phase
 
-  } else if(state == 4) { // VOTE
+  } else if(state == 3) { // VOTE
 
     // Have we told Ethereum to perform the tally yet?
     if(!readyToTallyBool) {
@@ -324,7 +312,7 @@ function currentState() {
          }
     }
 
-  } else if(state == 5) { // TALLY
+  } else if(state == 4) { // TALLY
 
       if(!tallyBool) {
         var yes = anonymousvotingAddr.finaltally(0);
@@ -350,7 +338,6 @@ var eligibleTx = 0;
 var signuptx = 0;
 var registeredTx = new Array();
 var finishedregtx = 0;
-var computetx = 0;
 var commitTx = new Array();
 var voteTx = new Array();
 var tallytx = 0;
@@ -380,10 +367,6 @@ function dumpTxId() {
     receipt = web3.eth.getTransactionReceipt(finishedregtx);
     trackGas(finishGas, receipt.gasUsed);
 
-    append("Compute TX: " + computetx);
-    receipt = web3.eth.getTransactionReceipt(computetx);
-    trackGas(computeGas, receipt.gasUsed);
-
     for(var i=0; i<commitTx.length; i++) {
       receipt = web3.eth.getTransactionReceipt(commitTx[i]);
       trackGas(commitGas, receipt.gasUsed);
@@ -411,7 +394,7 @@ var openFile = function(event) {
     var text = reader.result.split("\n");
 
 
-    for(var i=1; i<4; i++) {
+    for(var i=1; i<41; i++) {
       var row = text[i].split(",");
       var person = new Array();
 
@@ -461,21 +444,14 @@ function finishRegistrationPhase() {
 }
 
 function topupEther() {
-  var w = new BigNumber(web3.toWei(0.08, "ether"));
+  var w = new BigNumber(web3.toWei(0.3, "ether"));
 
   for(var i=1; i<41; i++) {
-
-    var balance = web3.eth.getBalance(web3.eth.accounts[i]);
-    if(balance.gt(w)) {
-      web3.personal.unlockAccount(web3.eth.accounts[i],password);
-      try {
-        web3.eth.sendTransaction({from:web3.eth.accounts[i], to:web3.eth.accounts[0], value: web3.toWei(0.08, "ether")});
-      } catch(err) {
-
-      }
-    }
+    // var balance = web3.eth.getBalance(web3.eth.accounts[i]);
+    web3.personal.unlockAccount(web3.eth.accounts[0],password);
+    web3.eth.sendTransaction({from:web3.eth.accounts[0], to:web3.eth.accounts[i], value: w});
   }
-  // }
+
 }
 
 function setEligible() {
@@ -488,7 +464,7 @@ function setEligible() {
     for(var i=1; i<web3.eth.accounts.length; i++) {
       var account = web3.eth.accounts[i];
       var balance = web3.eth.getBalance(web3.eth.accounts[i]);
-      append("Key: " + web3.eth.accounts[i] + " Balance: " + balance.toString(10));
+      append("Key: " + web3.eth.accounts[i] + " Balance: " + web3.fromWei(balance.toString(10), "ether"));
 
       addresses.push(web3.eth.accounts[i]);
     }
@@ -508,7 +484,7 @@ function setEligible() {
 
 function allowSignUp() {
   web3.personal.unlockAccount(web3.eth.accounts[0],password);
-  var res = anonymousvotingAddr.beginSignUp.sendTransaction("Should Satoshi Nakamoto reveal his real identity?", true, 3, 4, 5, 6, 7, 1, {from:web3.eth.accounts[0], gas: 4200000});
+  var res = anonymousvotingAddr.beginSignUp.sendTransaction("Should Satoshi Nakamoto reveal his real identity?", true, 3, 1916006400, 1916006411, 1916006442, 1916006453, new BigNumber("1000000000000000"), {from:web3.eth.accounts[0], gas: 4200000});
   signuptx = res;
   append("Allow signup sent from " + web3.eth.accounts[0]);
 
@@ -535,18 +511,10 @@ function register() {
       return;
     }
 
-    var res = anonymousvotingAddr.register.sendTransaction(person[1], vG, zkp[0], {from:person[8], gas: 4200000});
+    var res = anonymousvotingAddr.register.sendTransaction(person[1], vG, zkp[0], {from:person[8], gas: 4200000, value:anonymousvotingAddr.depositrequired()});
     registeredTx.push(res);
     append("Registration for " + person[6] + " TxID: " + res);
   }
-}
-
-function computePublicKeys() {
-  append("====== Compute Reconstructed Public Keys ======");
-  web3.personal.unlockAccount(web3.eth.accounts[0],password);
-  var res = anonymousvotingAddr.computeReconstructedPublicKeys.sendTransaction({from:web3.eth.accounts[0], gas: 4200000});
-  computetx = res;
-  append("Compute public keys TxiD: " + res);
 }
 
 function submitVotes() {
@@ -592,7 +560,7 @@ function submitVotes() {
     }
 
     // We either send a commitment to the vote, or the vote itself!
-    if(state == 3) {
+    if(state == 2) {
       // In the Commitment Phase
       web3.personal.unlockAccount(person[8],password);
 
@@ -604,7 +572,7 @@ function submitVotes() {
       append("We have sent the commitment " + h + " for " + person[6] + " to Ethereum");
       commitTx.push(result);
 
-    } else if(state == 4) {
+    } else if(state == 3) {
 
       web3.personal.unlockAccount(person[8],password);
 
@@ -663,7 +631,7 @@ function reset() {
 for(var i=0; i<web3.eth.accounts.length; i++) {
   var account = web3.eth.accounts[i];
   var balance = web3.eth.getBalance(web3.eth.accounts[i]);
-  append("Key: " + web3.eth.accounts[i] + " Balance: " + balance.toString(10));
+  append("Key: " + web3.eth.accounts[i] + " Balance: " + web3.fromWei(balance.toString(10), "ether"));
 }
 
 setInterval("currentState()", 1000);
