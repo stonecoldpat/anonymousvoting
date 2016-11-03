@@ -937,6 +937,8 @@ contract AnonymousVoting is owned {
          refunds[msg.sender] = 0;
 
          // We can still fail... Safety first.
+         // If failed... voter can call withdrawRefund()
+         // to collect their money once the election has finished.
          if (!msg.sender.send(refund)) {
             refunds[msg.sender] = refund;
          }
@@ -1048,13 +1050,12 @@ contract AnonymousVoting is owned {
     if (!msg.sender.send(refund)) {
        refunds[msg.sender] = refund;
     } else {
-
       // Tell everyone we have issued the refund.
       totalrefunded = totalrefunded + 1;
     }
   }
 
-  // Send lost deposits to the owner
+  // Send lost deposits to the owner TODO: Change to Charity
   function collectLostDeposits() onlyOwner{
 
     // Only send this money to the owner

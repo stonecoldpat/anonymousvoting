@@ -32,7 +32,7 @@ The above allows anyone to verify the execution of the program, and that the pro
 How does it work? 
 ================
 
-The protocol has six phases.
+The protocol has five phases.
 
 SETUP
 
@@ -43,13 +43,14 @@ SIGNUP
 - Voters submit their voting key, and a zero knowledge prove to prove knowledge of the voting key's secret. 
 - Ethereum verifies the correctness of the zero knowledge proof, and stores the voting key. 
 
-COMPUTE
+COMMIT (OPTIONAL)
 
-- Ethereum computes each voter's special reconstructed voting key.
+- Voters submit the hash of their vote. 
+- Why? In The Open Vote Network - the final voter can compute the tally before everyone else. This might give them an unfair advantage. To prevent this problem, this round can commit the voter to their encrypted vote in advance - so they cannot later change their mind. 
 
 VOTE
 
-- Voters submit their vote, and a 1 out of 2 zero knowledge proof that the vote is either 1 or 0. (i.e. yes or no). 
+- Voters submit their ElGamal encrypted vote, and a 1 out of 2 zero knowledge proof that the vote is either 1 or 0. (i.e. yes or no). 
 - Ethereum verifies the 1 out of 2 zero knowledge proof, and stores the vote.
 
 TALLY
@@ -127,7 +128,8 @@ SETUP
 * White list a set of addresses. Only Election Authority can call. 
  * setEligible(address[] addr) 
 * Set question and period of time for voters to sign up. Transition from SETUP to SIGNUP Phase. Only Election Authority can call. 
- * beginSignUp(uint time, string _question)
+ *   beginSignUp(string _question, bool enableCommitmentPhase, uint _finishSignupPhase, uint _endSignupPhase, uint _endCommitmentPhase, uint _endVotingPhase, uint _endRefundPhase, uint _depositrequired) inState(State.SETUP) onlyOwner returns (bool){
+
 
 SIGNUP
 
@@ -136,15 +138,15 @@ SIGNUP
 * Transition from SETUP to COMPUTE Phase. 
  * finishRegistrationPhase()
 
-COMPUTE
+COMMIT 
 
-* Compute each voter's 'special voting key'. Only Election Authority can call. 
- * computeReconstructedPublicKeys() 
-
+* Voters send the hash of their vote. All registered voters can call.
+* submitCommitment(bytes32 h) inState(State.COMMITMENT) {
+ 
 VOTE
 
-* Voters submit their vote. All registered votes can call.
- * submitVote(uint[4] params, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) 
+* Voters submit their vote. All registered voters can call.
+ * submitVote(uint[4] params, uint[2] y, uint[2] a1, uint[2] b1, uint[2] a2, uint[2] b2) inState(State.VOTE) returns (bool) {
 
 TALLY 
 
