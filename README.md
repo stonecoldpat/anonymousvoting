@@ -89,16 +89,6 @@ Some photos of the voting system an be found here:
 
 http://homepages.cs.ncl.ac.uk/patrick.mc-corry/openvotenetwork/
 
-What remains to be implemented?
-============================
-
-This library is still requires peer-review. Anyone is welcome to use the implementation, but it comes with no warranty, etc.
-
-Some small tasks that remain:
-- Registration requires a deposit from voter which is refunded upon submitting a valid vote.
-- Voting and Admin pages require further work (i.e. 'Tally' button should only be usable when all votes have been cast).
-- Extend protocol to allow more than 40 voters.
-
 What functions are available?
 ==============================
 
