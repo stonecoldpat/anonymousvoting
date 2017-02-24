@@ -1,3 +1,5 @@
+pragma solidity 0.4.8;
+
 /**
  * @title ECCMath
  *
@@ -429,7 +431,7 @@ contract owned {
     /* Function to dictate that only the designated owner can call a function */
 	  modifier onlyOwner {
         if(owner != msg.sender) throw;
-        _
+        _;
     }
 
     /* Transfer ownership of this contract to someone else */
@@ -518,7 +520,7 @@ contract AnonymousVoting is owned {
     if(state != s) {
         throw;
     }
-    _
+    _;
   }
 
   // 2 round anonymous voting protocol
@@ -528,13 +530,13 @@ contract AnonymousVoting is owned {
   // finish their entire workload in 1 transaction, then
   // it does the maximum. This way we can chain transactions
   // to complete the job...
-  function AnonymousVoting(uint _gap, address _charity) {
+  function AnonymousVoting() {
     G[0] = Gx;
     G[1] = Gy;
     state = State.SETUP;
     question = "No question set";
-    gap = _gap; // Minimum gap period between stages
-    charity = _charity;
+    gap = 1; // Minimum gap period between stages
+    charity = 0x65663D69e813e511ad57A7231a299F2909D0A64B;
   }
 
   // Owner of contract sets a whitelist of addresses that are eligible to vote.
@@ -558,7 +560,7 @@ contract AnonymousVoting is owned {
 
   // Owner of contract declares that eligible addresses begin round 1 of the protocol
   // Time is the number of 'blocks' we must wait until we can move onto round 2.
-  function beginSignUp(string _question, bool enableCommitmentPhase, uint _finishSignupPhase, uint _endSignupPhase, uint _endCommitmentPhase, uint _endVotingPhase, uint _endRefundPhase, uint _depositrequired) inState(State.SETUP) onlyOwner returns (bool){
+  function beginSignUp(string _question, bool enableCommitmentPhase, uint _finishSignupPhase, uint _endSignupPhase, uint _endCommitmentPhase, uint _endVotingPhase, uint _endRefundPhase, uint _depositrequired) inState(State.SETUP) onlyOwner payable returns (bool){
 
     // We have lots of timers. let's explain each one
     // _finishSignUpPhase - Voters should be signed up before this timer
@@ -776,7 +778,7 @@ contract AnonymousVoting is owned {
 
   // Called by participants to register their voting public key
   // Participant mut be eligible, and can only register the first key sent key.
-  function register(uint[2] xG, uint[3] vG, uint r) inState(State.SIGNUP) returns (bool) {
+  function register(uint[2] xG, uint[3] vG, uint r) inState(State.SIGNUP) payable returns (bool) {
 
      // HARD DEADLINE
      if(block.timestamp > finishSignupPhase) {
