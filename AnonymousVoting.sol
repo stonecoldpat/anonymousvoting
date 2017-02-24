@@ -530,13 +530,13 @@ contract AnonymousVoting is owned {
   // finish their entire workload in 1 transaction, then
   // it does the maximum. This way we can chain transactions
   // to complete the job...
-  function AnonymousVoting() {
+  function AnonymousVoting(uint _gap, uint _charity) {
     G[0] = Gx;
     G[1] = Gy;
     state = State.SETUP;
     question = "No question set";
-    gap = 1; // Minimum gap period between stages
-    charity = 0x65663D69e813e511ad57A7231a299F2909D0A64B;
+    gap = _gap; // Minimum gap period between stages
+    charity = _charity;
   }
 
   // Owner of contract sets a whitelist of addresses that are eligible to vote.
