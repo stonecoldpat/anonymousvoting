@@ -12,7 +12,8 @@ The Open Vote Network (OV-net) is a 2-round decentralized voting protocol with t
 * The voter's privacy protection is maximum - only a full collusion that involves all other voters in the election can uncover the voter's secret vote.
 * The system is dispute-free - everybody can check whether all voters act according to the protocol, hence ensuring the the result is publicly verifiable.
 
-We currently have a paper under review for this work... so the best documents available are the following:
+Our paper was published in Financial Cryptography and Data Security 2017:
+http://fc17.ifca.ai/preproceedings/paper_80.pdf
 
 Our third prize submission to the economist cyber security competition: http://www.economist.com/sites/default/files/newcastle.pdf
 
