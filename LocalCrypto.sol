@@ -1,4 +1,4 @@
-pragma solidity 0.4.8;
+pragma solidity ^0.4.10;
 
 /**
  * @title ECCMath_noconflict
@@ -433,10 +433,17 @@ contract LocalCrypto {
   uint constant Gx = 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798;
   uint constant Gy = 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8;
 
+  // New  point (generator) Y
+  uint constant Yx = 98038005178408974007512590727651089955354106077095278304532603697039577112780;
+  uint constant Yy = 1801119347122147381158502909947365828020117721497557484744596940174906898953;
+
   // Modulus for private keys (sub-group)
   uint constant nn = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141;
 
   uint[2] G;
+  uint[2] Y;
+
+  event Debug(uint x1, uint x2);
 
   // 2 round anonymous voting protocol
   // TODO: Right now due to gas limits there is an upper limit
@@ -448,6 +455,9 @@ contract LocalCrypto {
   function LocalCrypto() {
     G[0] = Gx;
     G[1] = Gy;
+
+    Y[0] = Yx;
+    Y[1] = Yy;
   }
 
   // Retrieve the commitment hash for a voters vote.
@@ -780,5 +790,226 @@ contract LocalCrypto {
       }
 
       return true;
+    }
+
+    // Expects random factor 'r' and commitment 'b'. Generators are hard-coded into this contract.
+    function createCommitment(uint r, uint b) returns (uint[2]){
+
+      uint[3] memory bG = Secp256k1_noconflict._mul(b,G);
+
+      uint[3] memory rY = Secp256k1_noconflict._mul(r,Y);
+
+      uint[3] memory c = Secp256k1_noconflict._add(bG,rY);
+
+      ECCMath_noconflict.toZ1(c, pp);
+
+      uint[2] memory c_affine;
+      c_affine[0] = c[0];
+      c_affine[1] = c[1];
+
+      // Sanity check that everything worked as expected.
+      if(!Secp256k1_noconflict.isPubKey(c_affine)) {
+          throw; //Must be on the curve!
+      }
+
+      return c_affine;
+    }
+
+    // We need to re-create the commitment and check that it matches c.
+    function openCommitment(uint[2] c, uint r, uint b) returns (bool) {
+
+      uint[2] memory c_computed = createCommitment(r,b);
+
+      // Check that the commitments match...
+      if(c[0] == c_computed[0] && c[1] == c_computed[1]) {
+        return true;
+      }
+
+      return false;
+    }
+
+    // Equality of commitments...
+    // 1. Compute t = r3*Y
+    // 2. Compute h = H(ID, G, Y, C1, C2, t), where G,Y are generators, C1, C2 are both commitments, and t is random factor.
+    // 3. Compute n = h*(r1,r2) + r3.
+    // return t,n.
+    function createEqualityProof(uint r1, uint r2, uint r3, uint[2] c1, uint[2] c2) returns (uint[2] t, uint n) {
+
+      if(!Secp256k1_noconflict.isPubKey(c1)) {
+          throw; //Must be on the curve!
+      }
+
+      if(!Secp256k1_noconflict.isPubKey(c2)) {
+          throw; //Must be on the curve!
+      }
+
+      uint[3] memory r3Y = Secp256k1_noconflict._mul(r3,Y);
+      ECCMath_noconflict.toZ1(r3Y, pp);
+
+      t[0] = r3Y[0];
+      t[1] = r3Y[1];
+
+      // TODO: add msg.sender
+      uint h = uint(sha256(msg.sender, G, Y, c1, c2, t));
+
+      uint subr1r2 = submod(r1, r2);
+      uint modrh = mulmod(subr1r2,h,nn);
+      n = addmod(modrh,r3,nn);
+    }
+
+    // We compute h*(c1-c2) + t
+    function computeFirstHalfEquality(uint[2] c1, uint[2] c2, uint h, uint[2] t) returns (uint[2] left){
+
+      uint[3] memory negative_c2;
+      // Negate the 'y' co-ordinate of C2
+      negative_c2[0] = c2[0];
+      negative_c2[1] = pp - c2[1];
+      negative_c2[2] = 1;
+
+      // c1 - c2
+      uint[3] memory added_commitments_jacob = Secp256k1_noconflict._addMixed(negative_c2,c1);
+
+      // convert to affine points
+      ECCMath_noconflict.toZ1(added_commitments_jacob,pp);
+      uint[2] memory added_commitments;
+      added_commitments[0] = added_commitments_jacob[0];
+      added_commitments[1] = added_commitments_jacob[1];
+
+      // h*(c1-c2) + t
+      uint[3] memory left_jacob = Secp256k1_noconflict._addMixed(Secp256k1_noconflict._mul(h,added_commitments),t);
+      ECCMath_noconflict.toZ1(left_jacob,pp);
+      left[0] = left_jacob[0];
+      left[1] = left_jacob[1];
+
+
+    }
+
+    // Verify equality proof of two pedersen commitments
+    // 1. Compute h = H(ID, G, Y, C1, C2, t), where G,Y are generators, C1, C2 are both commitments, and t is random factor.
+    // 2. Does nY == h*(c1-c2) + t
+    function verifyEqualityProof(uint r1, uint r2, uint r3, uint n,  uint[2] c1, uint[2] c2, uint[2] t) returns (bool) {
+      if(!Secp256k1_noconflict.isPubKey(c1)) { throw; }
+      if(!Secp256k1_noconflict.isPubKey(c2)) { throw; }
+      if(!Secp256k1_noconflict.isPubKey(t)) { throw; }
+
+      // Time to start trying to verify it... will be moved to another function
+      uint[2] memory temp;
+
+      uint h = uint(sha256(msg.sender, G, Y, c1, c2, t));
+
+      uint[2] memory left = computeFirstHalfEquality(c1,c2,h,t);
+
+      // n * Y
+      uint[3] memory right = Secp256k1_noconflict._mul(n,Y);
+
+      ECCMath_noconflict.toZ1(right, pp);
+
+      if(left[0] == right[0] && left[1] == right[1]) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    // Create inequality of commitments...
+    // 1. t1 = r3*G, t2 = r4*Y
+    // 2. Compute h = H(ID, G, Y, c1, c2, t1, t2), where G,Y generators, c1,c2 commitments, t1,t2 inequality proof
+    // 3. n1 = h*(b1-b2) + r3, n2 = h*(r1-r2) + r4.
+    // return random factors t1,t2 and proofs n1,n2.
+    function createInequalityProof(uint b1, uint b2, uint r1, uint r2, uint r3, uint r4, uint[2] c1, uint[2] c2) returns (uint[2] t1, uint[2] t2, uint n1, uint n2) {
+
+      if(!Secp256k1_noconflict.isPubKey(c1)) { throw; }
+      if(!Secp256k1_noconflict.isPubKey(c2)) { throw; }
+
+      // r3 * G
+      uint[3] memory temp = Secp256k1_noconflict._mul(r3,G);
+      ECCMath_noconflict.toZ1(temp, pp);
+      t1[0] = temp[0];
+      t1[1] = temp[1];
+
+      // r4 * Y
+      temp = Secp256k1_noconflict._mul(r4,Y);
+      ECCMath_noconflict.toZ1(temp, pp);
+      t2[0] = temp[0];
+      t2[1] = temp[1];
+
+      // TODO: add msg.sender
+      uint h = uint(sha256(msg.sender, G, Y, c1, c2, t1, t2));
+
+      // h(b1-b2) + r3
+      n1 = submod(b1,b2);
+      uint helper = mulmod(n1,h,nn);
+      n1 = addmod(helper,r3,nn);
+
+      // h(r1-r2) + r4
+      n2 = submod(r1,r2);
+      helper = mulmod(n2,h,nn);
+      n2 = addmod(helper,r4,nn);
+
+    }
+
+    // We are computing h(c1 - c2) + t2
+    function computeSecondHalfInequality(uint[2] c1, uint[2] c2, uint[2] t2, uint h) returns (uint[3] right) {
+      uint[3] memory negative_c2;
+      // Negate the 'y' co-ordinate of C2
+      negative_c2[0] = c2[0];
+      negative_c2[1] = pp - c2[1];
+      negative_c2[2] = 1;
+
+      // c1 - c2
+      uint[3] memory added_commitments_jacob = Secp256k1_noconflict._addMixed(negative_c2,c1);
+
+      // convert to affine points
+      ECCMath_noconflict.toZ1(added_commitments_jacob,pp);
+      uint[2] memory added_commitments;
+      added_commitments[0] = added_commitments_jacob[0];
+      added_commitments[1] = added_commitments_jacob[1];
+
+      // h(c1-c2)
+      uint[3] memory h_mul_c1c2 = Secp256k1_noconflict._mul(h,added_commitments);
+
+      // right hand side h(c1-c2) + t2
+      right = Secp256k1_noconflict._addMixed(h_mul_c1c2,t2);
+      ECCMath_noconflict.toZ1(right,pp);
+
+    }
+
+    // Verify inequality of commitments
+    // 1. Compute h = H(ID, G, Y, c1, c2, t1, t2), where G,Y generators, c1,c2 commitments, t1,t2 inequality proof
+    // 2. Verify n1G + n2Y = h*(c1-c2) + t1 + t2
+    // 3. Verify n2Y != h*(c1-c2) + t2
+    function verifyInequalityProof(uint[2] c1, uint[2] c2, uint[2] t1, uint[2] t2, uint n1, uint n2) returns (bool) {
+      if(!Secp256k1_noconflict.isPubKey(c1)) { throw; }
+      if(!Secp256k1_noconflict.isPubKey(c2)) { throw; }
+      if(!Secp256k1_noconflict.isPubKey(t1)) { throw; }
+      if(!Secp256k1_noconflict.isPubKey(t2)) { throw; }
+
+      uint h = uint(sha256(msg.sender, G, Y, c1, c2, t1, t2));
+
+      // h(c1 - c2) + t2
+      uint[3] memory right = computeSecondHalfInequality(c1, c2, t2, h);
+
+      // n2 * Y
+      uint[3] memory n2Y = Secp256k1_noconflict._mul(n2,Y);
+      ECCMath_noconflict.toZ1(n2Y,pp); // convert to affine
+
+      if(n2Y[0] != right[0] && n2Y[1] != right[1]) {
+
+        // h(c1 - c2) + t2 + t1
+        uint[3] memory h_c1c2_t2_t1 = Secp256k1_noconflict._addMixed(right, t1);
+        ECCMath_noconflict.toZ1(h_c1c2_t2_t1,pp); // convert to affine
+        right[0] = h_c1c2_t2_t1[0];
+        right[1] = h_c1c2_t2_t1[1];
+
+        // n1G + n2Y
+        uint[3] memory n1Gn2Y = Secp256k1_noconflict._add(Secp256k1_noconflict._mul(n1, G),n2Y);
+        ECCMath_noconflict.toZ1(n1Gn2Y,pp); // convert to affine
+
+        if(n1Gn2Y[0] == right[0] && n1Gn2Y[1] == right[1]) {
+          return true;
+        }
+      }
+
+      return false;
     }
 }

@@ -1,3 +1,5 @@
+pragma solidity ^0.4.10;
+
 import 'dapple/test.sol'; // virtual "dapple" package imported when `dapple test` is run
 import 'LocalCrypto.sol';
 
@@ -57,6 +59,81 @@ contract SecondAccount {
 
         return con.verify1outof2ZKP(params, xG, yG, y, a1, b1, a2, b2);
     }
+
+    // Submit voting key to Ethereum
+    function inequalityProof() returns (bool) {
+      // Accepts as input random factor 'r', and our commitment 'b'.
+      uint r1 = 100792359988221257522464744073694181557998811287873941943642234039632667801743;
+      uint r2 = 73684597056470802520640839675442817373247702535850643999083350831860051477001;
+      uint b1 = 23;
+      uint b2 = 24;
+
+      // Create two commitments to the same value (b)
+      uint[2] memory c1 = con.createCommitment(r1,b1);
+
+      if(!con.openCommitment(c1,r1,b1)) {
+        return false;
+      }
+
+      uint[2] memory c2 = con.createCommitment(r2,b2);
+
+      if(!con.openCommitment(c2,r2,b2)) {
+        return false;
+      }
+
+      // Create an equality proof
+      // 1. Prover computes a random nonce
+      uint r3 = 106554628258140934843991940734271727557510876833354296893443127816727132563340;
+      uint r4 = 50011181273477635355105934748199911221235256089199741271573814847024879061829;
+      uint[2] memory t1;
+      uint[2] memory t2;
+      uint n1;
+      uint n2;
+
+      (t1,t2,n1,n2) = con.createInequalityProof(b1, b2, r1, r2, r3, r4, c1, c2);
+
+      if(!con.verifyInequalityProof(c1,c2,t1,t2,n1,n2)) {
+        return false;
+      }
+
+      return true;
+    }
+
+    function equalityProof() returns (bool) {
+      // Accepts as input random factor 'r', and our commitment 'b'.
+      uint r1 = 100792359988221257522464744073694181557998811287873941943642234039631667801743;
+      uint r2 = 73684597056470802520640839675442817373247702535850643999083350831860052477001;
+      uint b = 23;
+
+      // Create two commitments to the same value (b)
+      uint[2] memory c1 = con.createCommitment(r1,b);
+
+      if(!con.openCommitment(c1,r1,b)) {
+        return false;
+      }
+
+      uint[2] memory c2 = con.createCommitment(r2,b);
+
+      if(!con.openCommitment(c2,r2,b)) {
+        return false;
+      }
+
+      // Create an equality proof
+      // 1. Prover computes a random nonce
+      uint r3 = 106554628258140934843991940734271727557510876833354296893443127816727132563840;
+      uint[2] memory t;
+      uint n;
+
+      (t,n) = con.createEqualityProof(r1, r2, r3, c1, c2);
+
+      // Verify equality proof
+      if(!con.verifyEqualityProof(r1,r2,r3,n, c1,c2,t)) {
+        return false;
+      }
+
+      return true;
+    }
+
 }
 
 // Deriving from `Test` marks the contract as a test and gives you access to various test helpers.
@@ -67,7 +144,7 @@ contract LocalCryptoTest is Test {
     SecondAccount B;
     SecondAccount C;
 
-    event Debug(uint r, uint yG_x, uint yG_y, uint yG_z);
+    event Debug(uint x1, uint x2);
 
 
     // The function called "setUp" with no arguments is
@@ -95,6 +172,16 @@ contract LocalCryptoTest is Test {
         C = new SecondAccount(con, xG, yG, x);
     }
 
+    // Test Equality Proof
+    function testEqualityCommitmentProofs() {
+      assertTrue(A.equalityProof());
+    }
+
+    // Test Inequality Proof
+    function testInequalityCommitmentProofs() {
+      assertTrue(A.inequalityProof());
+    }
+
     // All voters submit their voting key
     function verifySingleZKP() returns (bool[3]){
 
@@ -103,8 +190,6 @@ contract LocalCryptoTest is Test {
 
         uint v = 114941333558360567695678851060848045245826375581561159846926673173053566932687;
         (res[0],nums) = A.singleZKP(v);
-
-        Debug(nums[0], nums[1], nums[2], nums[3]);
 
         v = 28201629513124344311667277080113205903076096953435080012961531044913135153251;
         (res[1],nums) = B.singleZKP(v);
@@ -190,5 +275,4 @@ contract LocalCryptoTest is Test {
       // Wrong private key used...
       assertFalse(res);
     }
-
 }
