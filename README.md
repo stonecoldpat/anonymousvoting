@@ -164,12 +164,12 @@ Ideas:
 
 To Fix:
 * We have changed the code since the Economist Challenge... and the unit testing still needs updated.
-* GUI was changed during the Economist Challenge (my old and very reliable gui was too geeky/ugly!). It should WORK fine! But bugs might exist... Ideally would like to revamp GUI from scratch. Are you a designer? Get in touch!
+* GUI was changed during the Economist Challenge (my old and very reliable gui was too geeky/ugly!). It should WORK fine! But bugs might exist... Ideally would like to revamp GUI from scratch. Are you a designer? Get in in touch! 
 
 This project demonstrates the current limitation of cryptographic protocols on the Ethereum network.
 
-So... we need to think of how Ethereum can better natively support cryptography... to avoid the limits we reached.
+We need to think of how Ethereum can better natively support cryptography... to avoid the limits we reached.
 
-Until then - please play with this code! Do what you want! Completely open-source :)
+I release this code under the MIT license https://choosealicense.com/licenses/mit/
 
 p.s. If you find any bugs in our code - then fix it and provide a pull request :) ... or at least tell me about them... patrick.mccorry@ncl.ac.uk
