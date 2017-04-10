@@ -28,7 +28,7 @@ Why Ethereum?
 Ethereum is a platform for Smart Contracts that provides the following:
 
 * A public communication channel (i.e. its peer to peer network).
-* All communication is authenticated (i.e. transactions are signed by the voter's Ethereum addresss)
+* All communication is authenticated (i.e. transactions are signed by the voter's Ethereum address)
 * An immutable public ledger to store the voting information (i.e. eligibility white list, voting keys and votes).
 * Economic majority must reach consensus on a program's execution.
 
@@ -45,8 +45,8 @@ SETUP
 
 SIGNUP
 
-- Voters submit their voting key, and a zero knowledge prove to prove knowledge of the voting key's secret.
-- Ethereum verifies the correctness of the zero knowledge proof, and stores the voting key.
+- Voters submit their voting key, and a zero knowledge proof to prove knowledge of the voting key's secret.
+- Ethereum verifies the correctness of the zero knowledge proof and stores the voting key.
 
 COMMIT (OPTIONAL)
 
@@ -56,7 +56,7 @@ COMMIT (OPTIONAL)
 VOTE
 
 - Voters submit their ElGamal encrypted vote, and a 1 out of 2 zero knowledge proof that the vote is either 1 or 0. (i.e. yes or no).
-- Ethereum verifies the 1 out of 2 zero knowledge proof, and stores the vote.
+- Ethereum verifies the 1 out of 2 zero knowledge proof and stores the vote.
 
 TALLY
 
@@ -86,7 +86,7 @@ You need to run 'Geth' in the background:
 
 An example 'voter.txt' has been included, and a Java Program 'votingcodes.jar' is included that can compute these numbers for the voter.
 
-Some photos of the voting system an be found here:
+Some photos of the voting system can be found here:
 
 http://homepages.cs.ncl.ac.uk/patrick.mc-corry/openvotenetwork/
 
