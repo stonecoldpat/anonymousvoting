@@ -1,4 +1,4 @@
-pragma solidity 0.4.8;
+pragma solidity ^0.4.3;
 
 /**
  * @title ECCMath
@@ -530,7 +530,7 @@ contract AnonymousVoting is owned {
   // finish their entire workload in 1 transaction, then
   // it does the maximum. This way we can chain transactions
   // to complete the job...
-  function AnonymousVoting(uint _gap, uint _charity) {
+  function AnonymousVoting(uint _gap, address _charity) {
     G[0] = Gx;
     G[1] = Gy;
     state = State.SETUP;
