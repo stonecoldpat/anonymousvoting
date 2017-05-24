@@ -69,6 +69,8 @@ You need to run 'Geth' in the background:
 
 1. geth <OPTIONAL: --dev/testnet> --rpc --rpcapi="db,eth,net,web3,personal" --rpcport "8545" --rpcaddr "127.0.0.1" --rpccorsdomain "*" console
 
+Example: ./geth --dev --rpc --ipcpath "~/Library/Ethereum/geth.ipc" --rpcapi="db,eth,net,web3,personal" --rpcport "8545" --rpcaddr "127.0.0.1" --rpccorsdomain "*" console
+ 
 2. Compile the .SOL, and send it to the Ethereum Network.
 
 3. Update vote.html, admin.html livetally.html with the correct abi/contract address.
