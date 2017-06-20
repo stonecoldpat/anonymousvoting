@@ -12,6 +12,9 @@ The Open Vote Network (OV-net) is a 2-round decentralized voting protocol with t
 * The voter's privacy protection is maximum - only a full collusion that involves all other voters in the election can uncover the voter's secret vote.
 * The system is dispute-free - everybody can check whether all voters act according to the protocol, hence ensuring the the result is publicly verifiable.
 
+A video tutorial on how to deploy and install the Open Vote Network can be found here:
+https://youtu.be/5wch2_WhPvg
+
 Our paper was published in Financial Cryptography and Data Security 2017:
 http://fc17.ifca.ai/preproceedings/paper_80.pdf
 
@@ -64,6 +67,8 @@ TALLY
 
 How can I pick up this library and go?
 =====================================
+
+Video tutorial: https://youtu.be/5wch2_WhPvg
 
 You need to run 'Geth' in the background:
 
