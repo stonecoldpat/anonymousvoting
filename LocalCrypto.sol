@@ -48,6 +48,7 @@ library ECCMath_noconflict {
             throw;
         r = 1;
         uint bit = 2 ** 255;
+        bit = bit;
         assembly {
             loop:
                 jumpi(end, iszero(bit))
@@ -362,6 +363,8 @@ library Secp256k1_noconflict {
                 jump(loop)
             loop_end:
         }
+        
+        dwPtr = dwPtr;
 
         // Pre calculation
         uint[3][8] memory PREC; // P, 3P, 5P, 7P, 9P, 11P, 13P, 15P
@@ -887,14 +890,12 @@ contract LocalCrypto {
     // Verify equality proof of two pedersen commitments
     // 1. Compute h = H(ID, G, Y, C1, C2, t), where G,Y are generators, C1, C2 are both commitments, and t is random factor.
     // 2. Does nY == h*(c1-c2) + t
-    function verifyEqualityProof(uint r1, uint r2, uint r3, uint n,  uint[2] c1, uint[2] c2, uint[2] t) returns (bool) {
+    function verifyEqualityProof(uint n,  uint[2] c1, uint[2] c2, uint[2] t) returns (bool) {
       if(!Secp256k1_noconflict.isPubKey(c1)) { throw; }
       if(!Secp256k1_noconflict.isPubKey(c2)) { throw; }
       if(!Secp256k1_noconflict.isPubKey(t)) { throw; }
 
       // Time to start trying to verify it... will be moved to another function
-      uint[2] memory temp;
-
       uint h = uint(sha256(msg.sender, G, Y, c1, c2, t));
 
       uint[2] memory left = computeFirstHalfEquality(c1,c2,h,t);
