@@ -48,6 +48,7 @@ library ECCMath {
             throw;
         r = 1;
         uint bit = 2 ** 255;
+        bit = bit;
         assembly {
             loop:
                 jumpi(end, iszero(bit))
@@ -362,6 +363,8 @@ library Secp256k1 {
                 jump(loop)
             loop_end:
         }
+        
+        dwPtr = dwPtr;
 
         // Pre calculation
         uint[3][8] memory PREC; // P, 3P, 5P, 7P, 9P, 11P, 13P, 15P
